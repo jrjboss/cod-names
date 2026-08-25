@@ -2097,31 +2097,91 @@ let guestConn = null;
 let localRoomCache = null;
 let roomListenerCallback = null;
 let connectionAttempts = 0;
+let pendingRoomResolve = null;
+let pendingRoomReject = null;
 const MAX_ATTEMPTS = 3;
 
-// PeerJS servers
 const PEER_SERVERS = [
     { host: '0.peerjs.com', port: 443, path: '/' },
     { host: '1.peerjs.com', port: 443, path: '/' },
     { host: '2.peerjs.com', port: 443, path: '/' }
 ];
 
-// STUN servers
 const ICE_SERVERS = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' }
 ];
 
+// ==========================================
+// 🧱 NORMALIZE ROOM DATA
+// ==========================================
+// The game expects room.teams.red / room.teams.blue to
+// always exist. This prevents the lobby from crashing when
+// a room is received before all fields have been populated.
+function normalizeRoom(room, code) {
+    if (!room || typeof room !== 'object' || Array.isArray(room)) {
+        room = {};
+    }
+
+    if (!room.teams || typeof room.teams !== 'object') {
+        room.teams = { red: [], blue: [] };
+    }
+
+    if (!Array.isArray(room.teams.red)) {
+        room.teams.red = [];
+    }
+
+    if (!Array.isArray(room.teams.blue)) {
+        room.teams.blue = [];
+    }
+
+    if (!Array.isArray(room.players)) {
+        room.players = [];
+    }
+
+    if (typeof room.phase !== 'string') {
+        room.phase = 'lobby';
+    }
+
+    if (!room.settings || typeof room.settings !== 'object') {
+        room.settings = {
+            assassinCount: 1,
+            difficulty: 'normal',
+            timer: 60,
+            category: 'all'
+        };
+    } else {
+        if (room.settings.assassinCount == null) room.settings.assassinCount = 1;
+        if (!room.settings.difficulty) room.settings.difficulty = 'normal';
+        if (room.settings.timer == null) room.settings.timer = 60;
+        if (!room.settings.category) room.settings.category = 'all';
+    }
+
+    if (code && !room.code) {
+        room.code = String(code).trim().toUpperCase();
+    }
+
+    if (!Array.isArray(room.cards)) room.cards = [];
+    if (!room.turn) room.turn = 'red';
+    if (room.clue === undefined) room.clue = null;
+    if (room.gameOver === undefined) room.gameOver = false;
+    if (room.winner === undefined) room.winner = null;
+    if (room.reason === undefined) room.reason = '';
+    if (room.assassinCount == null) room.assassinCount = room.settings.assassinCount || 1;
+    if (room.assassinRevealed == null) room.assassinRevealed = 0;
+    if (room.timer == null) room.timer = room.settings.timer || 0;
+    if (!room.category) room.category = room.settings.category || 'all';
+    if (room.turnDeadline === undefined) room.turnDeadline = null;
+
+    return room;
+}
 
 // ==========================================
-// CREATE PEER WITH RETRIES
+// CREATE A RELIABLE PEER WITH RETRIES
 // ==========================================
 function createReliablePeer(peerId = undefined) {
     return new Promise((resolve, reject) => {
-
-        const server =
-            PEER_SERVERS[connectionAttempts % PEER_SERVERS.length];
-
+        const server = PEER_SERVERS[connectionAttempts % PEER_SERVERS.length];
         connectionAttempts++;
 
         console.log(
@@ -2134,258 +2194,133 @@ function createReliablePeer(peerId = undefined) {
             path: server.path,
             secure: true,
             debug: 2,
-
-            config: {
-                iceServers: ICE_SERVERS
-            }
+            config: { iceServers: ICE_SERVERS }
         });
 
         let finished = false;
 
         const timeout = setTimeout(() => {
-
             if (finished) return;
-
             finished = true;
 
             console.warn('⚠️ PeerJS connection timeout');
 
-            try {
-                peerInstance.destroy();
-            } catch (e) {}
-
+            try { peerInstance.destroy(); } catch (e) {}
             reject(new Error('Connection timeout'));
-
         }, 15000);
 
-
         peerInstance.on('open', (id) => {
-
             if (finished) return;
-
             finished = true;
-
             clearTimeout(timeout);
 
             console.log('✅ PeerJS connected with ID:', id);
-
             resolve(peerInstance);
         });
 
-
         peerInstance.on('error', (err) => {
-
             if (finished) return;
-
             finished = true;
-
             clearTimeout(timeout);
 
             console.error('❌ PeerJS error:', err);
 
-            try {
-                peerInstance.destroy();
-            } catch (e) {}
-
+            try { peerInstance.destroy(); } catch (e) {}
             reject(err);
         });
     });
 }
-
-
 
 // ==========================================
 // CREATE HOST PEER
 // ==========================================
 function createHostPeer() {
     return new Promise((resolve, reject) => {
-
         connectionAttempts = 0;
-
         let lastError = null;
 
         function tryCreate(attempt) {
-
             if (attempt >= MAX_ATTEMPTS) {
-
-                reject(
-                    new Error(
-                        'Failed to create room: ' +
-                        (lastError
-                            ? lastError.message
-                            : 'unknown')
-                    )
-                );
-
+                reject(new Error(
+                    'Failed to create room: ' +
+                    (lastError ? lastError.message : 'unknown')
+                ));
                 return;
             }
-
 
             console.log(
                 `🔄 Creating room attempt ${attempt + 1}/${MAX_ATTEMPTS}...`
             );
 
-
-            /*
-             * IMPORTANT FIX
-             *
-             * The roomCode must be the actual PeerJS ID.
-             *
-             * Example:
-             *
-             * roomCode = ABC12
-             *
-             * Host Peer ID = ABC12
-             *
-             * Guest connects to = ABC12
-             *
-             */
-
             if (!roomCode) {
-
-                reject(
-                    new Error('Room code was not created before createHostPeer()')
-                );
-
+                reject(new Error(
+                    'Room code was not created before createHostPeer()'
+                ));
                 return;
             }
 
+            const requestedPeerId = String(roomCode)
+                .trim()
+                .toUpperCase();
 
-            const requestedPeerId =
-                String(roomCode)
-                    .trim()
-                    .toUpperCase();
-
-
+            // The room code IS the host PeerJS ID.
             createReliablePeer(requestedPeerId)
-
                 .then((newPeer) => {
-
                     peer = newPeer;
-
                     isHost = true;
 
-                    console.log(
-                        '🏠 HOST PEER ID:',
-                        peer.id
-                    );
+                    console.log('🏠 HOST PEER ID:', peer.id);
+                    console.log('🔑 ROOM CODE:', requestedPeerId);
 
-                    console.log(
-                        '🔑 ROOM CODE:',
+                    localRoomCache = normalizeRoom(
+                        localRoomCache,
                         requestedPeerId
                     );
 
-
-                    // --------------------------------------
-                    // Guest connection
-                    // --------------------------------------
                     peer.on('connection', (conn) => {
-
                         console.log(
                             '📡 New guest connection:',
                             conn.peer
                         );
 
                         hostConns.push(conn);
-
-
-                        // Remove closed connections
-                        conn.on('close', () => {
-
-                            console.log(
-                                '🔌 Guest disconnected:',
-                                conn.peer
-                            );
-
-                            hostConns =
-                                hostConns.filter(
-                                    c => c !== conn
-                                );
-                        });
-
-
-                        conn.on('error', (err) => {
-
-                            console.error(
-                                '❌ Guest connection error:',
-                                err
-                            );
-
-                            hostConns =
-                                hostConns.filter(
-                                    c => c !== conn
-                                );
-                        });
-
-
                         setupConnectionHandlers(conn);
 
-
-                        // Wait until connection is fully open
-                        if (conn.open) {
+                        const sendState = () => {
+                            if (!conn.open) return;
 
                             try {
-                                conn.send(
-                                    JSON.stringify({
-                                        type: 'state',
-                                        room: localRoomCache
-                                    })
+                                conn.send({
+                                    type: 'state',
+                                    room: normalizeRoom(
+                                        localRoomCache,
+                                        requestedPeerId
+                                    )
+                                });
+
+                                console.log(
+                                    '📤 Room state sent to:',
+                                    conn.peer
                                 );
                             } catch (e) {
-
                                 console.error(
-                                    '❌ Failed sending initial room:',
+                                    '❌ Failed sending room state:',
                                     e
                                 );
                             }
+                        };
 
+                        if (conn.open) {
+                            sendState();
                         } else {
-
-                            conn.on('open', () => {
-
-                                console.log(
-                                    '✅ Guest connection opened:',
-                                    conn.peer
-                                );
-
-                                try {
-
-                                    conn.send(
-                                        JSON.stringify({
-                                            type: 'state',
-                                            room: localRoomCache
-                                        })
-                                    );
-
-                                } catch (e) {
-
-                                    console.error(
-                                        '❌ Failed sending initial state:',
-                                        e
-                                    );
-                                }
-                            });
+                            conn.on('open', sendState);
                         }
-
                     });
 
-
-                    console.log(
-                        '✅ ROOM CREATED SUCCESSFULLY!'
-                    );
-
-                    console.log(
-                        '🔑 Players should join with:',
-                        requestedPeerId
-                    );
-
-
+                    console.log('✅ Room created successfully!');
                     resolve();
-
                 })
-
                 .catch((error) => {
-
                     lastError = error;
 
                     console.warn(
@@ -2393,16 +2328,10 @@ function createHostPeer() {
                         error.message
                     );
 
-
                     if (peer) {
-
-                        try {
-                            peer.destroy();
-                        } catch (e) {}
-
+                        try { peer.destroy(); } catch (e) {}
                         peer = null;
                     }
-
 
                     setTimeout(
                         () => tryCreate(attempt + 1),
@@ -2411,259 +2340,166 @@ function createHostPeer() {
                 });
         }
 
-
         tryCreate(0);
     });
 }
-
-
 
 // ==========================================
 // CONNECT AS GUEST
 // ==========================================
 function connectAsGuest(roomCodeToJoin) {
     return new Promise((resolve, reject) => {
-
         connectionAttempts = 0;
-
         let lastError = null;
 
-
-        // Clean room code
-        roomCodeToJoin =
-            String(roomCodeToJoin || '')
-                .trim()
-                .toUpperCase();
-
+        roomCodeToJoin = String(roomCodeToJoin || '')
+            .trim()
+            .toUpperCase();
 
         if (!roomCodeToJoin) {
-
-            reject(
-                new Error('Room code is empty')
-            );
-
+            reject(new Error('Room code is empty'));
             return;
         }
 
+        // If a previous attempt was still waiting, cancel it.
+        pendingRoomResolve = null;
+        pendingRoomReject = null;
 
         function tryConnect(attempt) {
-
             if (attempt >= MAX_ATTEMPTS) {
-
-                reject(
-                    new Error(
-                        'Failed to join room: ' +
-                        (lastError
-                            ? lastError.message
-                            : 'unknown')
-                    )
-                );
-
+                reject(new Error(
+                    'Failed to join room: ' +
+                    (lastError ? lastError.message : 'unknown')
+                ));
                 return;
             }
-
 
             console.log(
                 `🔄 Joining room attempt ${attempt + 1}/${MAX_ATTEMPTS}...`
             );
 
-
-            /*
-             * Guest gets its own random PeerJS ID.
-             *
-             * Then it connects to the HOST'S PeerJS ID,
-             * which is the room code.
-             */
-
             createReliablePeer()
-
                 .then((newPeer) => {
-
                     peer = newPeer;
-
                     isHost = false;
 
-
-                    console.log(
-                        '👤 Guest Peer ID:',
-                        peer.id
-                    );
-
+                    console.log('👤 Guest Peer ID:', peer.id);
                     console.log(
                         '📡 Connecting to HOST:',
                         roomCodeToJoin
                     );
 
-
-                    guestConn =
-                        peer.connect(
-                            roomCodeToJoin,
-                            {
-                                reliable: true,
-                                serialization: 'json'
-                            }
-                        );
-
+                    guestConn = peer.connect(
+                        roomCodeToJoin,
+                        {
+                            reliable: true,
+                            serialization: 'json'
+                        }
+                    );
 
                     if (!guestConn) {
-
                         throw new Error(
                             'PeerJS failed to create connection'
                         );
                     }
 
-
                     let connectionFinished = false;
+                    let roomReceived = false;
 
+                    const cleanupAttempt = () => {
+                        try {
+                            if (guestConn) guestConn.close();
+                        } catch (e) {}
 
-                    const timeout =
-                        setTimeout(() => {
+                        try {
+                            if (peer) peer.destroy();
+                        } catch (e) {}
 
-                            if (connectionFinished) return;
+                        guestConn = null;
+                        peer = null;
+                    };
 
-                            connectionFinished = true;
-
-                            lastError =
-                                new Error(
-                                    'Connection timeout'
-                                );
-
-
-                            console.warn(
-                                '⏰ Guest connection timeout'
-                            );
-
-
-                            try {
-                                guestConn.close();
-                            } catch (e) {}
-
-
-                            try {
-                                peer.destroy();
-                            } catch (e) {}
-
-
-                            guestConn = null;
-                            peer = null;
-
-
-                            setTimeout(
-                                () => tryConnect(attempt + 1),
-                                1000
-                            );
-
-                        }, 15000);
-
-
-                    guestConn.on('open', () => {
-
+                    const retry = (error) => {
                         if (connectionFinished) return;
-
                         connectionFinished = true;
 
+                        lastError = error instanceof Error
+                            ? error
+                            : new Error(String(error || 'Connection failed'));
+
+                        pendingRoomResolve = null;
+                        pendingRoomReject = null;
+
+                        cleanupAttempt();
+
+                        setTimeout(
+                            () => tryConnect(attempt + 1),
+                            1000
+                        );
+                    };
+
+                    const timeout = setTimeout(() => {
+                        if (connectionFinished) return;
+                        retry(new Error('Connection timeout'));
+                    }, 20000);
+
+                    // The promise resolves ONLY after the host's room
+                    // state has actually arrived. This fixes the old
+                    // race where the lobby rendered before room.teams.
+                    pendingRoomResolve = (room) => {
+                        if (connectionFinished || roomReceived) return;
+                        roomReceived = true;
+                        connectionFinished = true;
                         clearTimeout(timeout);
 
+                        localRoomCache = normalizeRoom(
+                            room,
+                            roomCodeToJoin
+                        );
+
+                        setConnDot(true);
 
                         console.log(
                             '✅ CONNECTED TO ROOM:',
                             roomCodeToJoin
                         );
 
+                        resolve(localRoomCache);
+                    };
 
-                        setupConnectionHandlers(
-                            guestConn
+                    pendingRoomReject = (error) => {
+                        if (connectionFinished) return;
+                        retry(error);
+                    };
+
+                    guestConn.on('open', () => {
+                        console.log(
+                            '🔗 Guest connection opened:',
+                            roomCodeToJoin
                         );
 
-
+                        setupConnectionHandlers(guestConn);
                         setConnDot(true);
-
-
-                        /*
-                         * Tell host that this player joined.
-                         *
-                         * This is important because the old
-                         * transport only established the connection
-                         * but did not identify the joining player.
-                         */
-
-                        try {
-
-                            guestConn.send(
-                                JSON.stringify({
-                                    type: 'join',
-                                    name: me.name,
-                                    team: me.team
-                                })
-                            );
-
-                        } catch (e) {
-
-                            console.error(
-                                '❌ Failed sending join message:',
-                                e
-                            );
-                        }
-
-
-                        resolve(
-                            localRoomCache
-                        );
                     });
 
-
                     guestConn.on('error', (err) => {
-
-                        if (connectionFinished) return;
-
-                        connectionFinished = true;
-
-                        clearTimeout(timeout);
-
-
                         console.error(
                             '❌ Guest connection error:',
                             err
                         );
-
-
-                        lastError = err;
-
-
-                        try {
-                            guestConn.close();
-                        } catch (e) {}
-
-
-                        try {
-                            peer.destroy();
-                        } catch (e) {}
-
-
-                        guestConn = null;
-                        peer = null;
-
-
-                        setTimeout(
-                            () => tryConnect(attempt + 1),
-                            1000
-                        );
+                        retry(err);
                     });
-
 
                     guestConn.on('close', () => {
-
-                        console.log(
-                            '🔌 Guest connection closed'
-                        );
-
+                        console.log('🔌 Guest connection closed');
                         setConnDot(false);
+
+                        if (!roomReceived && !connectionFinished) {
+                            retry(new Error('Connection closed before room state arrived'));
+                        }
                     });
-
                 })
-
                 .catch((error) => {
-
                     lastError = error;
 
                     console.warn(
@@ -2671,19 +2507,12 @@ function connectAsGuest(roomCodeToJoin) {
                         error.message
                     );
 
-
                     if (peer) {
-
-                        try {
-                            peer.destroy();
-                        } catch (e) {}
-
+                        try { peer.destroy(); } catch (e) {}
                         peer = null;
                     }
 
-
                     guestConn = null;
-
 
                     setTimeout(
                         () => tryConnect(attempt + 1),
@@ -2692,28 +2521,22 @@ function connectAsGuest(roomCodeToJoin) {
                 });
         }
 
-
         tryConnect(0);
     });
 }
-
-
 
 // ==========================================
 // SETUP CONNECTION HANDLERS
 // ==========================================
 function setupConnectionHandlers(conn) {
+    if (!conn) return;
 
     conn.on('data', (raw) => {
-
         try {
-
             let msg = raw;
 
-
-            // PeerJS can already deserialize JSON
+            // PeerJS JSON serialization can already return an object.
             if (typeof raw === 'string') {
-
                 try {
                     msg = JSON.parse(raw);
                 } catch (e) {
@@ -2725,169 +2548,130 @@ function setupConnectionHandlers(conn) {
                 }
             }
 
-
-            if (!msg || !msg.type) {
+            if (!msg || typeof msg !== 'object' || !msg.type) {
                 return;
             }
 
-
-            // --------------------------------------
-            // Room state
-            // --------------------------------------
+            // ======================================
+            // 📦 ROOM STATE
+            // ======================================
             if (msg.type === 'state') {
-
-                localRoomCache = msg.room;
-
+                localRoomCache = normalizeRoom(
+                    msg.room,
+                    roomCode
+                );
 
                 if (roomListenerCallback) {
-                    roomListenerCallback(
-                        localRoomCache
-                    );
+                    try {
+                        roomListenerCallback(localRoomCache);
+                    } catch (callbackError) {
+                        console.error(
+                            '❌ Room listener error:',
+                            callbackError
+                        );
+                    }
                 }
 
                 setConnDot(true);
+
+                // connectAsGuest waits for the first valid state.
+                if (!isHost && pendingRoomResolve) {
+                    const resolveRoom = pendingRoomResolve;
+                    pendingRoomResolve = null;
+                    pendingRoomReject = null;
+                    resolveRoom(localRoomCache);
+                }
+
+                return;
             }
 
-
-            // --------------------------------------
-            // Guest joined
-            // --------------------------------------
-            else if (msg.type === 'join') {
-
+            // ======================================
+            // 👤 JOIN MESSAGE
+            // ======================================
+            if (msg.type === 'join') {
                 console.log(
                     '👤 Join request:',
                     msg.name,
                     msg.team
                 );
-
-
-                /*
-                 * Host receives join requests here.
-                 *
-                 * If your existing game already has
-                 * its own player/lobby logic, you can
-                 * handle msg.name and msg.team there.
-                 */
+                return;
             }
 
+            // ======================================
+            // 📝 ROOM UPDATE FROM GUEST
+            // ======================================
+            if (msg.type === 'setRoom') {
+                if (!isHost) return;
 
-            // --------------------------------------
-            // Room update request from guest
-            // --------------------------------------
-            else if (msg.type === 'setRoom') {
+                localRoomCache = normalizeRoom(
+                    msg.room,
+                    roomCode
+                );
 
-                /*
-                 * Only the host should accept room writes.
-                 */
+                broadcastState();
 
-                if (isHost) {
-
-                    localRoomCache =
-                        msg.room;
-
-                    broadcastState();
-
-                    if (roomListenerCallback) {
-                        roomListenerCallback(
-                            localRoomCache
+                if (roomListenerCallback) {
+                    try {
+                        roomListenerCallback(localRoomCache);
+                    } catch (callbackError) {
+                        console.error(
+                            '❌ Room listener error:',
+                            callbackError
                         );
                     }
                 }
+
+                return;
             }
-
-
         } catch (e) {
-
             console.error(
-                '❌ Failed to handle message:',
+                '❌ Failed to process PeerJS message:',
                 e
             );
         }
     });
-
 
     conn.on('close', () => {
-
-        console.log(
-            '🔌 Connection closed'
-        );
-
-        setConnDot(false);
-
+        console.log('🔌 Connection closed');
 
         if (isHost) {
-
-            hostConns =
-                hostConns.filter(
-                    c => c !== conn
-                );
+            hostConns = hostConns.filter(
+                c => c && c !== conn
+            );
         }
-    });
-
-
-    conn.on('error', (err) => {
-
-        console.error(
-            '❌ Connection error:',
-            err
-        );
 
         setConnDot(false);
     });
 
-
-    // --------------------------------------
-    // Host sends initial state
-    // --------------------------------------
-    if (isHost && conn.open) {
-
-        try {
-
-            conn.send(
-                JSON.stringify({
-                    type: 'state',
-                    room: localRoomCache
-                })
-            );
-
-        } catch (e) {
-
-            console.error(
-                '❌ Failed to send initial state:',
-                e
-            );
-        }
-    }
+    conn.on('error', (err) => {
+        console.error('❌ Connection error:', err);
+        setConnDot(false);
+    });
 }
-
-
 
 // ==========================================
 // BROADCAST STATE TO ALL HOST CONNECTIONS
 // ==========================================
 function broadcastState() {
+    localRoomCache = normalizeRoom(
+        localRoomCache,
+        roomCode
+    );
 
-    const msg =
-        JSON.stringify({
-            type: 'state',
-            room: localRoomCache
-        });
+    const msg = {
+        type: 'state',
+        room: localRoomCache
+    };
 
-
-    hostConns =
-        hostConns.filter(
-            c => c && c.open
-        );
-
+    hostConns = hostConns.filter(
+        c => c && c.open
+    );
 
     hostConns.forEach((c) => {
-
         try {
-
+            // Send an object because PeerJS is configured for JSON.
             c.send(msg);
-
         } catch (e) {
-
             console.error(
                 '❌ Failed broadcasting state:',
                 e
@@ -2896,61 +2680,76 @@ function broadcastState() {
     });
 }
 
-
-
 // ==========================================
 // WRITE ROOM DATA
 // ==========================================
-function writeRoom(data) {
+// Supports BOTH forms already used by the game:
+//   writeRoom(room)
+//   writeRoom(roomCode, room)
+// This is important because the old one-argument function
+// was receiving roomCode as the room and turning localRoomCache
+// into a string, which caused room.teams.red to crash.
+function writeRoom(roomCodeOrData, maybeData) {
+    let data;
 
-    localRoomCache = data;
+    if (arguments.length >= 2) {
+        data = maybeData;
+    } else {
+        data = roomCodeOrData;
+    }
 
+    if (!data || typeof data !== 'object') {
+        console.warn(
+            '⚠️ writeRoom ignored invalid room data:',
+            data
+        );
+        return;
+    }
+
+    localRoomCache = normalizeRoom(
+        data,
+        roomCode
+    );
 
     if (isHost) {
-
         broadcastState();
 
-
         if (roomListenerCallback) {
-
-            roomListenerCallback(
-                localRoomCache
-            );
+            try {
+                roomListenerCallback(localRoomCache);
+            } catch (e) {
+                console.error(
+                    '❌ Room listener error:',
+                    e
+                );
+            }
         }
 
-    } else if (
-        guestConn &&
-        guestConn.open
-    ) {
-
+    } else if (guestConn && guestConn.open) {
         try {
-
-            guestConn.send(
-                JSON.stringify({
-                    type: 'setRoom',
-                    room: data
-                })
-            );
-
+            guestConn.send({
+                type: 'setRoom',
+                room: localRoomCache
+            });
         } catch (e) {
-
             console.error(
                 '❌ Failed sending room update:',
                 e
             );
         }
 
-
         if (roomListenerCallback) {
-
-            roomListenerCallback(
-                localRoomCache
-            );
+            try {
+                roomListenerCallback(localRoomCache);
+            } catch (e) {
+                console.error(
+                    '❌ Room listener error:',
+                    e
+                );
+            }
         }
     }
 }
-
-
 
 // ==========================================
 // READ ROOM DATA
@@ -2959,45 +2758,39 @@ function readRoom() {
     return localRoomCache;
 }
 
-
-
 // ==========================================
 // LISTEN TO ROOM UPDATES
 // ==========================================
-function listenToRoom(callback) {
-
-    roomListenerCallback = callback;
+// Supports BOTH forms:
+//   listenToRoom(callback)
+//   listenToRoom(roomCode, callback)
+function listenToRoom(roomCodeOrCallback, maybeCallback) {
+    roomListenerCallback =
+        typeof maybeCallback === 'function'
+            ? maybeCallback
+            : roomCodeOrCallback;
 
     return () => {
         roomListenerCallback = null;
     };
 }
 
-
-
 // ==========================================
 // CONNECTION STATUS
 // ==========================================
 function setConnDot(ok) {
-
-    const el =
-        document.getElementById(
-            'connectionStatus'
-        );
+    const el = document.getElementById('connectionStatus');
 
     if (el) {
-
         el.className =
             'online-status ' +
-            (ok
-                ? 'connected'
-                : 'disconnected');
+            (ok ? 'connected' : 'disconnected');
     }
 }
 
         
-
-        // ==========================================
+        
+// ==========================================
         // PARTICLES
         // ==========================================
         function createParticles() {
@@ -3818,6 +3611,7 @@ function setConnDot(ok) {
             gameSettings.category = category;
 
             var room = {
+                code: roomCode,
                 phase: 'lobby',
                 teams: { red: [], blue: [] },
                 cards: [],
@@ -3932,6 +3726,8 @@ function setConnDot(ok) {
 
         function renderLobbyFromRoom(room) {
             if (!room) return;
+            room = normalizeRoom(room, roomCode);
+            localRoomCache = room;
             var redList = document.getElementById('oRedList');
             var blueList = document.getElementById('oBlueList');
             redList.innerHTML = (room.teams.red || []).length ? '' : '<div class="empty-hint">لا يوجد لاعبون بعد</div>';
@@ -4049,6 +3845,11 @@ function setConnDot(ok) {
             }
 
             return el;
+        }
+
+        function getPlayerCount(room) {
+            room = normalizeRoom(room, roomCode);
+            return (room.teams.red || []).length + (room.teams.blue || []).length;
         }
 
         function updatePlayerCount(room) {

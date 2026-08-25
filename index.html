@@ -2152,11 +2152,46 @@ const FREE_ICE_SERVERS = [
 // Keep this name for compatibility with any existing code.
 const BASE_ICE_SERVERS = FREE_ICE_SERVERS;
 
+// Cloudflare TURN Worker. The Worker keeps the Cloudflare API token
+// off the public game page and returns short-lived TURN credentials.
+const TURN_CREDENTIALS_URL =
+    'https://spring-credit-54d1codenames-turn.junaidalbalushi123456789.workers.dev/api/turn-credentials';
+
 async function getIceServers() {
-    // Keep this asynchronous so the rest of the matchmaking code
-    // does not need to change if a private TURN service is added
-    // in the future.
-    return FREE_ICE_SERVERS;
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(TURN_CREDENTIALS_URL, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            cache: 'no-store',
+            signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+            throw new Error(`TURN Worker HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data || !Array.isArray(data.iceServers) || !data.iceServers.length) {
+            throw new Error('TURN Worker returned no ICE servers');
+        }
+
+        // Put Cloudflare TURN first for difficult NAT/firewall cases,
+        // while keeping the existing free STUN/TURN fallback available.
+        const cloudflareIce = data.iceServers.filter(Boolean);
+        return [...cloudflareIce, ...FREE_ICE_SERVERS];
+    } catch (error) {
+        console.warn(
+            '⚠️ Cloudflare TURN unavailable; using free fallback ICE servers:',
+            error
+        );
+        return FREE_ICE_SERVERS;
+    }
 }
 
 // ------------------------------------------------------------

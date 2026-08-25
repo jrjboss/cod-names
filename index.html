@@ -2088,215 +2088,219 @@
 
     <script>
         // ==========================================
-        // 🌐 PEERJS TRANSPORT (RELIABLE VERSION)
-        // ==========================================
+        // 🌐 PEERJS TRANSPORT (RELIABLE VERSION) WITH ICE SERVERS
+// ==========================================
 
-        let isHost = false;
-        let peer = null;
-        let hostConns = [];
-        let guestConn = null;
-        let localRoomCache = null;
-        let roomListenerCallback = null;
-        let connectionAttempts = 0;
-        const MAX_ATTEMPTS = 3;
+let isHost = false;
+let peer = null;
+let hostConns = [];
+let guestConn = null;
+let localRoomCache = null;
+let roomListenerCallback = null;
+let connectionAttempts = 0;
+const MAX_ATTEMPTS = 3;
 
-        const PEER_SERVERS = [
-            { host: '0.peerjs.com', port: 443, path: '/' },
-            { host: '1.peerjs.com', port: 443, path: '/' },
-            { host: '2.peerjs.com', port: 443, path: '/' }
-        ];
+const PEER_SERVERS = [
+    { host: '0.peerjs.com', port: 443, path: '/' },
+    { host: '1.peerjs.com', port: 443, path: '/' },
+    { host: '2.peerjs.com', port: 443, path: '/' }
+];
 
-        function createReliablePeer() {
-            return new Promise(function(resolve, reject) {
-                var server = PEER_SERVERS[connectionAttempts % PEER_SERVERS.length];
-                connectionAttempts++;
+// Public STUN server for better NAT traversal
+const ICE_SERVERS = [
+    { urls: 'stun:stun.l.google.com:19302' }
+];
 
-                console.log('🔄 Trying PeerJS server: ' + server.host + ' (Attempt ' + connectionAttempts + ')');
+function createReliablePeer() {
+    return new Promise(function(resolve, reject) {
+        var server = PEER_SERVERS[connectionAttempts % PEER_SERVERS.length];
+        connectionAttempts++;
 
-                var newPeer = new Peer(undefined, {
-                    host: server.host,
-                    port: server.port,
-                    path: server.path,
-                    secure: true,
-                    debug: 2
-                });
+        console.log('🔄 Trying PeerJS server: ' + server.host + ' (Attempt ' + connectionAttempts + ')');
 
-                var timeout = setTimeout(function() {
-                    newPeer.destroy();
-                    reject(new Error('Connection timeout'));
-                }, 10000);
-
-                newPeer.on('open', function(id) {
-                    clearTimeout(timeout);
-                    console.log('✅ PeerJS connected with ID:', id);
-                    resolve(newPeer);
-                });
-
-                newPeer.on('error', function(err) {
-                    clearTimeout(timeout);
-                    console.error('❌ PeerJS error:', err);
-                    reject(err);
-                });
-            });
-        }
-
-        function createHostPeer(code) {
-            return new Promise(function(resolve, reject) {
-                connectionAttempts = 0;
-                var lastError = null;
-
-                function tryCreate(attempt) {
-                    if (attempt >= MAX_ATTEMPTS) {
-                        reject(new Error('Failed to create room: ' + (lastError ? lastError.message : 'unknown')));
-                        return;
-                    }
-                    console.log('🔄 Creating room attempt ' + (attempt + 1) + '/' + MAX_ATTEMPTS + '...');
-                    createReliablePeer().then(function(newPeer) {
-                        peer = newPeer;
-                        isHost = true;
-
-                        peer.on('connection', function(conn) {
-                            hostConns.push(conn);
-                            console.log('📡 New connection accepted');
-                            conn.on('open', function() {
-                                conn.send(JSON.stringify({ type: 'state', room: localRoomCache }));
-                            });
-                            conn.on('data', function(raw) {
-                                try {
-                                    var msg = JSON.parse(raw);
-                                    if (msg.type === 'setRoom') {
-                                        localRoomCache = msg.room;
-                                        broadcastState();
-                                        if (roomListenerCallback) roomListenerCallback(
-                                        localRoomCache);
-                                    }
-                                } catch (e) {}
-                            });
-                            conn.on('close', function() {
-                                hostConns = hostConns.filter(function(c) { return c !== conn; });
-                            });
-                        });
-
-                        console.log('✅ Room created successfully!');
-                        resolve();
-                    }).catch(function(error) {
-                        lastError = error;
-                        console.warn('⚠️ Attempt ' + (attempt + 1) + ' failed:', error.message);
-                        if (peer) { peer.destroy();
-                            peer = null; }
-                        setTimeout(function() { tryCreate(attempt + 1); }, 1000);
-                    });
-                }
-                tryCreate(0);
-            });
-        }
-
-        function connectAsGuest(code) {
-            return new Promise(function(resolve, reject) {
-                connectionAttempts = 0;
-                var lastError = null;
-
-                function tryConnect(attempt) {
-                    if (attempt >= MAX_ATTEMPTS) {
-                        reject(new Error('Failed to join room: ' + (lastError ? lastError.message : 'unknown')));
-                        return;
-                    }
-                    console.log('🔄 Joining room attempt ' + (attempt + 1) + '/' + MAX_ATTEMPTS + '...');
-                    createReliablePeer().then(function(newPeer) {
-                        peer = newPeer;
-                        isHost = false;
-
-                        console.log('📡 Connecting to room: ' + code);
-                        guestConn = peer.connect(code, { reliable: true });
-
-                        var connPromise = new Promise(function(resolveConn, rejectConn) {
-                            var timeout = setTimeout(function() { rejectConn(new Error(
-                                'Connection timeout')); }, 15000);
-                            guestConn.on('open', function() {
-                                clearTimeout(timeout);
-                                console.log('✅ Connected to room:', code);
-                                resolveConn();
-                            });
-                            guestConn.on('error', function(err) {
-                                clearTimeout(timeout);
-                                rejectConn(err);
-                            });
-                        });
-
-                        connPromise.then(function() {
-                            guestConn.on('data', function(raw) {
-                                try {
-                                    var msg = JSON.parse(raw);
-                                    if (msg.type === 'state') {
-                                        localRoomCache = msg.room;
-                                        if (roomListenerCallback) roomListenerCallback(
-                                        localRoomCache);
-                                    }
-                                } catch (e) {}
-                            });
-
-                            guestConn.on('close', function() {
-                                console.log('🔌 Connection closed');
-                                setConnDot(false);
-                            });
-
-                            console.log('✅ Successfully joined room!');
-                            resolve(localRoomCache);
-                        }).catch(function(error) {
-                            lastError = error;
-                            console.warn('⚠️ Attempt ' + (attempt + 1) + ' failed:', error.message);
-                            if (peer) { peer.destroy();
-                                peer = null; }
-                            if (guestConn) { guestConn = null; }
-                            setTimeout(function() { tryConnect(attempt + 1); }, 1000);
-                        });
-                    }).catch(function(error) {
-                        lastError = error;
-                        console.warn('⚠️ Attempt ' + (attempt + 1) + ' failed:', error.message);
-                        if (peer) { peer.destroy();
-                            peer = null; }
-                        if (guestConn) { guestConn = null; }
-                        setTimeout(function() { tryConnect(attempt + 1); }, 1000);
-                    });
-                }
-                tryConnect(0);
-            });
-        }
-
-        function broadcastState() {
-            var msg = JSON.stringify({ type: 'state', room: localRoomCache });
-            hostConns.forEach(function(c) { if (c.open) c.send(msg); });
-        }
-
-        function writeRoom(roomCode, data) {
-            localRoomCache = data;
-            if (isHost) {
-                broadcastState();
-                if (roomListenerCallback) roomListenerCallback(localRoomCache);
-            } else if (guestConn && guestConn.open) {
-                guestConn.send(JSON.stringify({ type: 'setRoom', room: data }));
-                if (roomListenerCallback) roomListenerCallback(localRoomCache);
+        var newPeer = new Peer(undefined, {
+            host: server.host,
+            port: server.port,
+            path: server.path,
+            secure: true,
+            debug: 2,
+            config: {
+                iceServers: ICE_SERVERS
             }
-        }
+        });
 
-        function readRoom(roomCode) {
-            return localRoomCache;
-        }
+        var timeout = setTimeout(function() {
+            newPeer.destroy();
+            reject(new Error('Connection timeout'));
+        }, 10000);
 
-        function listenToRoom(roomCode, callback) {
-            roomListenerCallback = callback;
-            return function() { roomListenerCallback = null; };
-        }
+        newPeer.on('open', function(id) {
+            clearTimeout(timeout);
+            console.log('✅ PeerJS connected with ID:', id);
+            resolve(newPeer);
+        });
 
-        function getPlayerCount(room) {
-            if (!room || !room.teams) return 0;
-            return (room.teams.red || []).length + (room.teams.blue || []).length;
-        }
+        newPeer.on('error', function(err) {
+            clearTimeout(timeout);
+            console.error('❌ PeerJS error:', err);
+            reject(err);
+        });
+    });
+}
 
-        function setConnDot(ok) {
-            var el = document.getElementById('connectionStatus');
-            if (el) el.className = 'online-status ' + (ok ? 'connected' : 'disconnected');
+function createHostPeer(code) {
+    return new Promise(function(resolve, reject) {
+        connectionAttempts = 0;
+        let lastError = null;
+
+        function tryCreate(attempt) {
+            if (attempt >= MAX_ATTEMPTS) {
+                reject(new Error('Failed to create room: ' + (lastError ? lastError.message : 'unknown')));
+                return;
+            }
+            console.log('🔄 Creating room attempt ' + (attempt + 1) + '/' + MAX_ATTEMPTS + '...');
+            createReliablePeer().then(function(newPeer) {
+                peer = newPeer;
+                isHost = true;
+
+                peer.on('connection', function(conn) {
+                    hostConns.push(conn);
+                    console.log('📡 New connection accepted');
+                    conn.on('open', function() {
+                        conn.send(JSON.stringify({ type: 'state', room: localRoomCache }));
+                    });
+                    conn.on('data', function(raw) {
+                        try {
+                            var msg = JSON.parse(raw);
+                            if (msg.type === 'setRoom') {
+                                localRoomCache = msg.room;
+                                broadcastState();
+                                if (roomListenerCallback) roomListenerCallback(localRoomCache);
+                            }
+                        } catch (e) { }
+                    });
+                    conn.on('close', function() {
+                        hostConns = hostConns.filter(function(c) { return c !== conn; });
+                    });
+                });
+
+                console.log('✅ Room created successfully!');
+                resolve();
+            }).catch(function(error) {
+                lastError = error;
+                console.warn('⚠️ Attempt ' + (attempt + 1) + ' failed:', error.message);
+                if (peer) { peer.destroy(); peer = null; }
+                setTimeout(function() { tryCreate(attempt + 1); }, 1000);
+            });
         }
+        tryCreate(0);
+    });
+}
+
+function connectAsGuest(code) {
+    return new Promise(function(resolve, reject) {
+        connectionAttempts = 0;
+        let lastError = null;
+
+        function tryConnect(attempt) {
+            if (attempt >= MAX_ATTEMPTS) {
+                reject(new Error('Failed to join room: ' + (lastError ? lastError.message : 'unknown')));
+                return;
+            }
+            console.log('🔄 Joining room attempt ' + (attempt + 1) + '/' + MAX_ATTEMPTS + '...');
+            createReliablePeer().then(function(newPeer) {
+                peer = newPeer;
+                isHost = false;
+
+                console.log('📡 Connecting to room: ' + code);
+                guestConn = peer.connect(code, { reliable: true });
+
+                var connPromise = new Promise(function(resolveConn, rejectConn) {
+                    var timeout = setTimeout(function() { rejectConn(new Error('Connection timeout')); }, 15000);
+                    guestConn.on('open', function() {
+                        clearTimeout(timeout);
+                        console.log('✅ Connected to room:', code);
+                        resolveConn();
+                    });
+                    guestConn.on('error', function(err) {
+                        clearTimeout(timeout);
+                        rejectConn(err);
+                    });
+                });
+
+                connPromise.then(function() {
+                    guestConn.on('data', function(raw) {
+                        try {
+                            var msg = JSON.parse(raw);
+                            if (msg.type === 'state') {
+                                localRoomCache = msg.room;
+                                if (roomListenerCallback) roomListenerCallback(localRoomCache);
+                            }
+                        } catch (e) { }
+                    });
+
+                    guestConn.on('close', function() {
+                        console.log('🔌 Connection closed');
+                        setConnDot(false);
+                    });
+
+                    console.log('✅ Successfully joined room!');
+                    resolve(localRoomCache);
+                }).catch(function(error) {
+                    lastError = error;
+                    console.warn('⚠️ Attempt ' + (attempt + 1) + ' failed:', error.message);
+                    if (peer) { peer.destroy(); peer = null; }
+                    if (guestConn) { guestConn = null; }
+                    setTimeout(function() { tryConnect(attempt + 1); }, 1000);
+                });
+            }).catch(function(error) {
+                lastError = error;
+                console.warn('⚠️ Attempt ' + (attempt + 1) + ' failed:', error.message);
+                if (peer) { peer.destroy(); peer = null; }
+                if (guestConn) { guestConn = null; }
+                setTimeout(function() { tryConnect(attempt + 1); }, 1000);
+            });
+        }
+        tryConnect(0);
+    });
+}
+
+function broadcastState() {
+    var msg = JSON.stringify({ type: 'state', room: localRoomCache });
+    hostConns.forEach(function(c) { if (c.open) c.send(msg); });
+}
+
+function writeRoom(roomCode, data) {
+    localRoomCache = data;
+    if (isHost) {
+        broadcastState();
+        if (roomListenerCallback) roomListenerCallback(localRoomCache);
+    } else if (guestConn && guestConn.open) {
+        guestConn.send(JSON.stringify({ type: 'setRoom', room: data }));
+        if (roomListenerCallback) roomListenerCallback(localRoomCache);
+    }
+}
+
+function readRoom(roomCode) {
+    return localRoomCache;
+}
+
+function listenToRoom(roomCode, callback) {
+    roomListenerCallback = callback;
+    return function() { roomListenerCallback = null; };
+}
+
+function getPlayerCount(room) {
+    if (!room || !room.teams) return 0;
+    return (room.teams.red || []).length + (room.teams.blue || []).length;
+}
+
+function setConnDot(ok) {
+    var el = document.getElementById('connectionStatus');
+    if (el) el.className = 'online-status ' + (ok ? 'connected' : 'disconnected');
+}
+
+        
 
         // ==========================================
         // PARTICLES

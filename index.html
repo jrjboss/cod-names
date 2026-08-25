@@ -7,49 +7,33 @@
     <!-- ===== GOOGLE VERIFICATION ===== -->
     <meta name="google-site-verification" content="25be7cf5605470fb" />
 
-    <!-- ===== ADS (Adsterra) - Using safer loading ===== -->
+    <!-- ===== ADS (Adsterra) ===== -->
+    <script src="https://pl30995493.profitableratecpmnetwork.com/d9/4d/a2/d94da24bbe7f00a10f8399faf8ca20c3.js"></script>
     <script>
-        // Load ads safely after page load
-        window.addEventListener('load', function() {
-            try {
-                var script1 = document.createElement('script');
-                script1.src = 'https://pl30995493.profitableratecpmnetwork.com/d9/4d/a2/d94da24bbe7f00a10f8399faf8ca20c3.js';
-                document.head.appendChild(script1);
-                
-                window.atOptions = {
-                    'key': '783790e3d4578487cde96b7633fba16',
-                    'format': 'iframe',
-                    'height': 60,
-                    'width': 468,
-                    'params': {}
-                };
-                
-                var script2 = document.createElement('script');
-                script2.src = 'https://www.highrevenueformat.com/783790e3d4578487cde96b7633fba16/invoke.js';
-                document.head.appendChild(script2);
-                
-                window.atOptions = {
-                    'key': '4fc93d102705c840aa0d8e7b8624d6e8',
-                    'format': 'iframe',
-                    'height': 250,
-                    'width': 300,
-                    'params': {}
-                };
-                
-                var script3 = document.createElement('script');
-                script3.src = 'https://www.highrevenueformat.com/4fc93d102705c840aa0d8e7b8624d6e8/invoke.js';
-                document.head.appendChild(script3);
-            } catch(e) {
-                console.log('Ad loading skipped:', e);
-            }
-        });
+        atOptions = {
+            'key': '783790e3d4578487cde96b7633fba16',
+            'format': 'iframe',
+            'height': 60,
+            'width': 468,
+            'params': {}
+        };
     </script>
+    <script src="https://www.highrevenueformat.com/783790e3d4578487cde96b7633fba16/invoke.js"></script>
+    <script>
+        atOptions = {
+            'key': '4fc93d102705c840aa0d8e7b8624d6e8',
+            'format': 'iframe',
+            'height': 250,
+            'width': 300,
+            'params': {}
+        };
+    </script>
+    <script src="https://www.highrevenueformat.com/4fc93d102705c840aa0d8e7b8624d6e8/invoke.js"></script>
 
     <title>كود نيمز — لعبة الجواسيس المتطورة</title>
 
-    <!-- ===== Firebase SDK ===== -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- PeerJS -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2104,20 +2088,215 @@
 
     <script>
         // ==========================================
-        // 🔥 FIREBASE CONFIGURATION
+        // 🌐 PEERJS TRANSPORT (RELIABLE VERSION)
         // ==========================================
-        var firebaseConfig = {
-            apiKey: "AIzaSyB0a6l5C8hXyLQy7V6fPzM5mYp2tQ4zV8A",
-            authDomain: "spywords-b792c.firebaseapp.com",
-            databaseURL: "https://spywords-b792c-default-rtdb.firebaseio.com",
-            projectId: "spywords-b792c",
-            storageBucket: "spywords-b792c.appspot.com",
-            messagingSenderId: "1091424496377",
-            appId: "1:1091424496377:web:a1b2c3d4e5f67890"
-        };
 
-        firebase.initializeApp(firebaseConfig);
-        var database = firebase.database();
+        let isHost = false;
+        let peer = null;
+        let hostConns = [];
+        let guestConn = null;
+        let localRoomCache = null;
+        let roomListenerCallback = null;
+        let connectionAttempts = 0;
+        const MAX_ATTEMPTS = 3;
+
+        const PEER_SERVERS = [
+            { host: '0.peerjs.com', port: 443, path: '/' },
+            { host: '1.peerjs.com', port: 443, path: '/' },
+            { host: '2.peerjs.com', port: 443, path: '/' }
+        ];
+
+        function createReliablePeer() {
+            return new Promise(function(resolve, reject) {
+                var server = PEER_SERVERS[connectionAttempts % PEER_SERVERS.length];
+                connectionAttempts++;
+
+                console.log('🔄 Trying PeerJS server: ' + server.host + ' (Attempt ' + connectionAttempts + ')');
+
+                var newPeer = new Peer(undefined, {
+                    host: server.host,
+                    port: server.port,
+                    path: server.path,
+                    secure: true,
+                    debug: 2
+                });
+
+                var timeout = setTimeout(function() {
+                    newPeer.destroy();
+                    reject(new Error('Connection timeout'));
+                }, 10000);
+
+                newPeer.on('open', function(id) {
+                    clearTimeout(timeout);
+                    console.log('✅ PeerJS connected with ID:', id);
+                    resolve(newPeer);
+                });
+
+                newPeer.on('error', function(err) {
+                    clearTimeout(timeout);
+                    console.error('❌ PeerJS error:', err);
+                    reject(err);
+                });
+            });
+        }
+
+        function createHostPeer(code) {
+            return new Promise(function(resolve, reject) {
+                connectionAttempts = 0;
+                var lastError = null;
+
+                function tryCreate(attempt) {
+                    if (attempt >= MAX_ATTEMPTS) {
+                        reject(new Error('Failed to create room: ' + (lastError ? lastError.message : 'unknown')));
+                        return;
+                    }
+                    console.log('🔄 Creating room attempt ' + (attempt + 1) + '/' + MAX_ATTEMPTS + '...');
+                    createReliablePeer().then(function(newPeer) {
+                        peer = newPeer;
+                        isHost = true;
+
+                        peer.on('connection', function(conn) {
+                            hostConns.push(conn);
+                            console.log('📡 New connection accepted');
+                            conn.on('open', function() {
+                                conn.send(JSON.stringify({ type: 'state', room: localRoomCache }));
+                            });
+                            conn.on('data', function(raw) {
+                                try {
+                                    var msg = JSON.parse(raw);
+                                    if (msg.type === 'setRoom') {
+                                        localRoomCache = msg.room;
+                                        broadcastState();
+                                        if (roomListenerCallback) roomListenerCallback(
+                                        localRoomCache);
+                                    }
+                                } catch (e) {}
+                            });
+                            conn.on('close', function() {
+                                hostConns = hostConns.filter(function(c) { return c !== conn; });
+                            });
+                        });
+
+                        console.log('✅ Room created successfully!');
+                        resolve();
+                    }).catch(function(error) {
+                        lastError = error;
+                        console.warn('⚠️ Attempt ' + (attempt + 1) + ' failed:', error.message);
+                        if (peer) { peer.destroy();
+                            peer = null; }
+                        setTimeout(function() { tryCreate(attempt + 1); }, 1000);
+                    });
+                }
+                tryCreate(0);
+            });
+        }
+
+        function connectAsGuest(code) {
+            return new Promise(function(resolve, reject) {
+                connectionAttempts = 0;
+                var lastError = null;
+
+                function tryConnect(attempt) {
+                    if (attempt >= MAX_ATTEMPTS) {
+                        reject(new Error('Failed to join room: ' + (lastError ? lastError.message : 'unknown')));
+                        return;
+                    }
+                    console.log('🔄 Joining room attempt ' + (attempt + 1) + '/' + MAX_ATTEMPTS + '...');
+                    createReliablePeer().then(function(newPeer) {
+                        peer = newPeer;
+                        isHost = false;
+
+                        console.log('📡 Connecting to room: ' + code);
+                        guestConn = peer.connect(code, { reliable: true });
+
+                        var connPromise = new Promise(function(resolveConn, rejectConn) {
+                            var timeout = setTimeout(function() { rejectConn(new Error(
+                                'Connection timeout')); }, 15000);
+                            guestConn.on('open', function() {
+                                clearTimeout(timeout);
+                                console.log('✅ Connected to room:', code);
+                                resolveConn();
+                            });
+                            guestConn.on('error', function(err) {
+                                clearTimeout(timeout);
+                                rejectConn(err);
+                            });
+                        });
+
+                        connPromise.then(function() {
+                            guestConn.on('data', function(raw) {
+                                try {
+                                    var msg = JSON.parse(raw);
+                                    if (msg.type === 'state') {
+                                        localRoomCache = msg.room;
+                                        if (roomListenerCallback) roomListenerCallback(
+                                        localRoomCache);
+                                    }
+                                } catch (e) {}
+                            });
+
+                            guestConn.on('close', function() {
+                                console.log('🔌 Connection closed');
+                                setConnDot(false);
+                            });
+
+                            console.log('✅ Successfully joined room!');
+                            resolve(localRoomCache);
+                        }).catch(function(error) {
+                            lastError = error;
+                            console.warn('⚠️ Attempt ' + (attempt + 1) + ' failed:', error.message);
+                            if (peer) { peer.destroy();
+                                peer = null; }
+                            if (guestConn) { guestConn = null; }
+                            setTimeout(function() { tryConnect(attempt + 1); }, 1000);
+                        });
+                    }).catch(function(error) {
+                        lastError = error;
+                        console.warn('⚠️ Attempt ' + (attempt + 1) + ' failed:', error.message);
+                        if (peer) { peer.destroy();
+                            peer = null; }
+                        if (guestConn) { guestConn = null; }
+                        setTimeout(function() { tryConnect(attempt + 1); }, 1000);
+                    });
+                }
+                tryConnect(0);
+            });
+        }
+
+        function broadcastState() {
+            var msg = JSON.stringify({ type: 'state', room: localRoomCache });
+            hostConns.forEach(function(c) { if (c.open) c.send(msg); });
+        }
+
+        function writeRoom(roomCode, data) {
+            localRoomCache = data;
+            if (isHost) {
+                broadcastState();
+                if (roomListenerCallback) roomListenerCallback(localRoomCache);
+            } else if (guestConn && guestConn.open) {
+                guestConn.send(JSON.stringify({ type: 'setRoom', room: data }));
+                if (roomListenerCallback) roomListenerCallback(localRoomCache);
+            }
+        }
+
+        function readRoom(roomCode) {
+            return localRoomCache;
+        }
+
+        function listenToRoom(roomCode, callback) {
+            roomListenerCallback = callback;
+            return function() { roomListenerCallback = null; };
+        }
+
+        function getPlayerCount(room) {
+            if (!room || !room.teams) return 0;
+            return (room.teams.red || []).length + (room.teams.blue || []).length;
+        }
+
+        function setConnDot(ok) {
+            var el = document.getElementById('connectionStatus');
+            if (el) el.className = 'online-status ' + (ok ? 'connected' : 'disconnected');
+        }
 
         // ==========================================
         // PARTICLES
@@ -2219,7 +2398,6 @@
         var gameSettings = { assassinCount: 1, difficulty: 'normal', timer: 60, category: 'all' };
         var timerInterval = null;
         var isTimerRunning = false;
-        var pollInterval = null;
 
         // ==========================================
         // WORD POOL
@@ -2310,60 +2488,8 @@
             return names[cat] || 'جميع الكلمات';
         }
 
-        function getPlayerCount(room) {
-            if (!room || !room.teams) return 0;
-            return (room.teams.red || []).length + (room.teams.blue || []).length;
-        }
-
         function isRoomLeader(room) {
             return room && room.leader === me.name;
-        }
-
-        function setConnDot(ok) {
-            var el = document.getElementById('connectionStatus');
-            if (el) el.className = 'online-status ' + (ok ? 'connected' : 'disconnected');
-        }
-
-        // ==========================================
-        // FIREBASE ROOM FUNCTIONS
-        // ==========================================
-        function getRoomRef(code) {
-            return database.ref('rooms/' + code);
-        }
-
-        function createRoom(code, data) {
-            var ref = getRoomRef(code);
-            return ref.set(data).then(function() { return data; });
-        }
-
-        function getRoom(code) {
-            var ref = getRoomRef(code);
-            return ref.once('value').then(function(snapshot) {
-                return snapshot.val();
-            });
-        }
-
-        function updateRoom(code, data) {
-            var ref = getRoomRef(code);
-            return ref.update(data);
-        }
-
-        function deleteRoom(code) {
-            var ref = getRoomRef(code);
-            return ref.remove();
-        }
-
-        function listenRoom(code, callback) {
-            var ref = database.ref('rooms/' + code);
-            var handler = ref.on('value', function(snapshot) {
-                var room = snapshot.val();
-                if (room) {
-                    callback(room);
-                }
-            });
-            return function() {
-                ref.off('value', handler);
-            };
         }
 
         // ==========================================
@@ -2429,12 +2555,8 @@
                     stopTimer();
                     if (mode === 'local') {
                         passTurn();
-                    } else if (mode === 'online') {
-                        getRoom(roomCode).then(function(room) {
-                            if (room && isRoomLeader(room)) {
-                                passTurn();
-                            }
-                        });
+                    } else if (mode === 'online' && isRoomLeader(localRoomCache)) {
+                        passTurn();
                     }
                 }
             };
@@ -2808,21 +2930,20 @@
 
         function syncGameState() {
             if (mode !== 'online' || !roomCode) return;
-            getRoom(roomCode).then(function(room) {
-                if (!room) return;
-                room.cards = state.cards;
-                room.turn = state.turn;
-                room.clue = state.clue;
-                room.gameOver = state.gameOver;
-                room.winner = state.winner;
-                room.reason = state.reason;
-                room.assassinCount = state.assassinCount;
-                room.assassinRevealed = state.assassinRevealed;
-                room.timer = state.timer;
-                room.category = state.category;
-                room.turnDeadline = state.turnDeadline || null;
-                return updateRoom(roomCode, room);
-            });
+            var room = localRoomCache;
+            if (!room) return;
+            room.cards = state.cards;
+            room.turn = state.turn;
+            room.clue = state.clue;
+            room.gameOver = state.gameOver;
+            room.winner = state.winner;
+            room.reason = state.reason;
+            room.assassinCount = state.assassinCount;
+            room.assassinRevealed = state.assassinRevealed;
+            room.timer = state.timer;
+            room.category = state.category;
+            room.turnDeadline = state.turnDeadline || null;
+            writeRoom(roomCode, room);
         }
 
         // ==========================================
@@ -2839,31 +2960,29 @@
                     if (mode === 'local') {
                         newGame();
                     } else {
-                        getRoom(roomCode).then(function(room) {
-                            if (!room || room.leader !== me.name) return;
-                            var assassinCount = gameSettings.assassinCount || 1;
-                            var difficulty = gameSettings.difficulty || 'normal';
-                            var timer = gameSettings.timer || 60;
-                            var category = gameSettings.category || 'all';
-                            var built = buildBoard(assassinCount, difficulty, category);
-                            state = {
-                                cards: built.cards,
-                                turn: built.turn,
-                                clue: null,
-                                gameOver: false,
-                                winner: null,
-                                reason: '',
-                                assassinCount: built.assassinCount,
-                                assassinRevealed: 0,
-                                timer: timer,
-                                category: category,
-                                turnDeadline: timer > 0 ? Date.now() + timer * 1000 : null
-                            };
-                            document.getElementById('overlay').classList.remove('show');
-                            render();
-                            syncGameState();
-                            if (timer > 0) startTimer(timer);
-                        });
+                        if (!localRoomCache || localRoomCache.leader !== me.name) return;
+                        var assassinCount = gameSettings.assassinCount || 1;
+                        var difficulty = gameSettings.difficulty || 'normal';
+                        var timer = gameSettings.timer || 60;
+                        var category = gameSettings.category || 'all';
+                        var built = buildBoard(assassinCount, difficulty, category);
+                        state = {
+                            cards: built.cards,
+                            turn: built.turn,
+                            clue: null,
+                            gameOver: false,
+                            winner: null,
+                            reason: '',
+                            assassinCount: built.assassinCount,
+                            assassinRevealed: 0,
+                            timer: timer,
+                            category: category,
+                            turnDeadline: timer > 0 ? Date.now() + timer * 1000 : null
+                        };
+                        document.getElementById('overlay').classList.remove('show');
+                        render();
+                        syncGameState();
+                        if (timer > 0) startTimer(timer);
                     }
                 }
             }, {
@@ -3014,19 +3133,20 @@
                 category: category },
                 leader: null
             };
-            createRoom(roomCode, room).then(function() {
+
+            // Store the room data
+            localRoomCache = room;
+
+            createHostPeer(roomCode).then(function() {
                 document.getElementById('lobbyCode').textContent = roomCode;
                 document.getElementById('onlineErr').textContent = '';
                 setConnDot(true);
                 show('lobbyScreen');
                 startListening();
-                updatePlayerCount(room);
                 room.leader = me.name;
-                return updateRoom(roomCode, { leader: me.name });
-            }).then(function() {
-                return getRoom(roomCode);
-            }).then(function(updatedRoom) {
-                renderLobbyFromRoom(updatedRoom);
+                writeRoom(roomCode, room);
+                renderLobbyFromRoom(room);
+                updatePlayerCount(room);
             }).catch(function(e) {
                 document.getElementById('onlineErr').textContent = '❌ تعذّر إنشاء الغرفة، حاول مجدداً.';
                 console.error(e);
@@ -3041,7 +3161,8 @@
             var err = document.getElementById('onlineErr');
             err.textContent = '';
             if (!code) { err.textContent = '✏️ اكتب رمز الغرفة.'; return; }
-            getRoom(code).then(function(room) {
+
+            connectAsGuest(code).then(function(room) {
                 if (!room) {
                     err.textContent = '❌ لا توجد غرفة بهذا الرمز.';
                     return;
@@ -3059,7 +3180,7 @@
                 }
                 updatePlayerCount(room);
             }).catch(function(e) {
-                err.textContent = '❌ تعذّر الاتصال بالغرفة.';
+                err.textContent = '❌ تعذّر الاتصال بالغرفة: ' + e.message;
                 console.error(e);
             });
         });
@@ -3081,26 +3202,18 @@
             var err = document.getElementById('oErr');
             err.textContent = '';
             if (!name) { err.textContent = '✏️ اكتب اسمك أولاً.'; return; }
-            getRoom(roomCode).then(function(room) {
-                if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.'; return; }
-                var allNames = (room.teams.red || []).concat(room.teams.blue || []).map(function(p) { return p
-                        .name; });
-                if (allNames.includes(name)) { err.textContent = '⚠️ هذا الاسم مستخدم في الغرفة بالفعل.'; return; }
-                if (!room.teams[pickedTeamOnline]) room.teams[pickedTeamOnline] = [];
-                room.teams[pickedTeamOnline].push({ name: name, spymaster: room.teams[pickedTeamOnline]
-                        .length === 0 });
-                if (!room.leader) room.leader = name;
-                return updateRoom(roomCode, room);
-            }).then(function() {
-                me = { name: name, team: pickedTeamOnline };
-                return getRoom(roomCode);
-            }).then(function(updatedRoom) {
-                renderLobbyFromRoom(updatedRoom);
-                updatePlayerCount(updatedRoom);
-            }).catch(function(e) {
-                err.textContent = '❌ حدث خطأ أثناء الانضمام.';
-                console.error(e);
-            });
+
+            var room = localRoomCache;
+            if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.'; return; }
+            var allNames = (room.teams.red || []).concat(room.teams.blue || []).map(function(p) { return p.name; });
+            if (allNames.includes(name)) { err.textContent = '⚠️ هذا الاسم مستخدم في الغرفة بالفعل.'; return; }
+            if (!room.teams[pickedTeamOnline]) room.teams[pickedTeamOnline] = [];
+            room.teams[pickedTeamOnline].push({ name: name, spymaster: room.teams[pickedTeamOnline].length === 0 });
+            if (!room.leader) room.leader = name;
+            me = { name: name, team: pickedTeamOnline };
+            writeRoom(roomCode, room);
+            renderLobbyFromRoom(room);
+            updatePlayerCount(room);
         });
 
         document.getElementById('oBack').addEventListener('click', leaveRoom);
@@ -3108,17 +3221,13 @@
         function leaveRoom() {
             if (roomListener) { roomListener();
                 roomListener = null; }
-            if (pollInterval) { clearInterval(pollInterval);
-                pollInterval = null; }
+            if (peer) { peer.destroy();
+                peer = null; }
+            hostConns = [];
+            guestConn = null;
+            localRoomCache = null;
             roomCode = null;
             me = { name: '', team: 'red' };
-            if (mode === 'online') {
-                getRoom(roomCode).then(function(room) {
-                    if (room && room.leader === me.name) {
-                        return deleteRoom(roomCode);
-                    }
-                }).catch(function() {});
-            }
             show('modeScreen');
         }
 
@@ -3155,7 +3264,7 @@
                 };
                 if (JSON.stringify(nextSettings) !== JSON.stringify(room.settings || {})) {
                     room.settings = nextSettings;
-                    updateRoom(roomCode, { settings: nextSettings }).catch(function() {});
+                    writeRoom(roomCode, room);
                 }
             }
 
@@ -3204,16 +3313,11 @@
             if (!isMe) star.style.opacity = '0.35';
             star.addEventListener('click', function() {
                 if (!isMe || room.phase === 'playing') return;
-                getRoom(roomCode).then(function(roomData) {
-                    if (!roomData) return;
-                    (roomData.teams[team] || []).forEach(function(pl) { pl.spymaster = (pl.name === p
-                        .name); });
-                    return updateRoom(roomCode, { teams: roomData.teams });
-                }).then(function() {
-                    return getRoom(roomCode);
-                }).then(function(updatedRoom) {
-                    renderLobbyFromRoom(updatedRoom);
-                });
+                var roomData = localRoomCache;
+                if (!roomData) return;
+                (roomData.teams[team] || []).forEach(function(pl) { pl.spymaster = (pl.name === p.name); });
+                writeRoom(roomCode, roomData);
+                renderLobbyFromRoom(roomData);
             });
 
             var name = document.createElement('span');
@@ -3229,21 +3333,17 @@
                 kickBtn.title = 'طرد اللاعب';
                 kickBtn.addEventListener('click', function() {
                     if (confirm('هل تريد طرد ' + p.name + '؟')) {
-                        getRoom(roomCode).then(function(roomData) {
-                            if (!roomData) return;
-                            roomData.teams[team] = roomData.teams[team].filter(function(pl) { return pl
-                                    .name !== p.name; });
-                            if (!roomData.teams[team].some(function(pl) { return pl.spymaster; }) &&
-                                roomData.teams[team].length) {
-                                roomData.teams[team][0].spymaster = true;
-                            }
-                            return updateRoom(roomCode, { teams: roomData.teams });
-                        }).then(function() {
-                            return getRoom(roomCode);
-                        }).then(function(updatedRoom) {
-                            renderLobbyFromRoom(updatedRoom);
-                            updatePlayerCount(updatedRoom);
-                        });
+                        var roomData = localRoomCache;
+                        if (!roomData) return;
+                        roomData.teams[team] = roomData.teams[team].filter(function(pl) { return pl.name !== p
+                                .name; });
+                        if (!roomData.teams[team].some(function(pl) { return pl.spymaster; }) && roomData
+                            .teams[team].length) {
+                            roomData.teams[team][0].spymaster = true;
+                        }
+                        writeRoom(roomCode, roomData);
+                        renderLobbyFromRoom(roomData);
+                        updatePlayerCount(roomData);
                     }
                 });
                 el.appendChild(kickBtn);
@@ -3263,54 +3363,45 @@
         document.getElementById('oStart').addEventListener('click', function() {
             var err = document.getElementById('oErr');
             err.textContent = '';
-            getRoom(roomCode).then(function(room) {
-                if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.'; return; }
+            var room = localRoomCache;
+            if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.'; return; }
 
-                if (room.leader !== me.name) {
-                    err.textContent = '⚠️ فقط قائد الغرفة يمكنه بدء المهمة.';
-                    return;
-                }
+            if (room.leader !== me.name) {
+                err.textContent = '⚠️ فقط قائد الغرفة يمكنه بدء المهمة.';
+                return;
+            }
 
-                if (!room.teams.red || room.teams.red.length < 2 || !room.teams.blue || room.teams.blue
-                    .length < 2) {
-                    err.textContent = '⚠️ كل فريق يحتاج 2 لاعبين على الأقل (4 لاعبين إجمالاً).';
-                    return;
-                }
+            if (!room.teams.red || room.teams.red.length < 2 || !room.teams.blue || room.teams.blue.length < 2) {
+                err.textContent = '⚠️ كل فريق يحتاج 2 لاعبين على الأقل (4 لاعبين إجمالاً).';
+                return;
+            }
 
-                if (!me.name) { err.textContent = '⚠️ انضم لأحد الفريقين أولاً.'; return; }
+            if (!me.name) { err.textContent = '⚠️ انضم لأحد الفريقين أولاً.'; return; }
 
-                if (!room.teams.red.some(function(p) { return p.spymaster; })) room.teams.red[0].spymaster =
-                    true;
-                if (!room.teams.blue.some(function(p) { return p.spymaster; })) room.teams.blue[0].spymaster =
-                    true;
+            if (!room.teams.red.some(function(p) { return p.spymaster; })) room.teams.red[0].spymaster = true;
+            if (!room.teams.blue.some(function(p) { return p.spymaster; })) room.teams.blue[0].spymaster = true;
 
-                var assassinCount = room.settings && room.settings.assassinCount || 1;
-                var difficulty = room.settings && room.settings.difficulty || 'normal';
-                var timer = room.settings && room.settings.timer || 0;
-                var category = room.settings && room.settings.category || 'all';
-                var built = buildBoard(assassinCount, difficulty, category);
+            var assassinCount = room.settings && room.settings.assassinCount || 1;
+            var difficulty = room.settings && room.settings.difficulty || 'normal';
+            var timer = room.settings && room.settings.timer || 0;
+            var category = room.settings && room.settings.category || 'all';
+            var built = buildBoard(assassinCount, difficulty, category);
 
-                room.phase = 'playing';
-                room.cards = built.cards;
-                room.turn = built.turn;
-                room.clue = null;
-                room.gameOver = false;
-                room.winner = null;
-                room.reason = '';
-                room.assassinCount = built.assassinCount;
-                room.assassinRevealed = 0;
-                room.timer = timer;
-                room.category = category;
-                room.turnDeadline = timer > 0 ? Date.now() + timer * 1000 : null;
-                return updateRoom(roomCode, room);
-            }).then(function() {
-                return getRoom(roomCode);
-            }).then(function(updatedRoom) {
-                enterOnlineGame(updatedRoom);
-            }).catch(function(e) {
-                err.textContent = '❌ تعذّر بدء اللعبة.';
-                console.error(e);
-            });
+            room.phase = 'playing';
+            room.cards = built.cards;
+            room.turn = built.turn;
+            room.clue = null;
+            room.gameOver = false;
+            room.winner = null;
+            room.reason = '';
+            room.assassinCount = built.assassinCount;
+            room.assassinRevealed = 0;
+            room.timer = timer;
+            room.category = category;
+            room.turnDeadline = timer > 0 ? Date.now() + timer * 1000 : null;
+
+            writeRoom(roomCode, room);
+            enterOnlineGame(room);
         });
 
         // ==========================================
@@ -3357,8 +3448,9 @@
         function startListening() {
             if (roomListener) { roomListener();
                 roomListener = null; }
-            roomListener = listenRoom(roomCode, function(room) {
+            roomListener = listenToRoom(roomCode, function(room) {
                 if (!room) return;
+                localRoomCache = room;
                 var currentScreen = document.getElementById('lobbyScreen');
                 if (!currentScreen.classList.contains('hidden')) {
                     renderLobbyFromRoom(room);
@@ -3403,30 +3495,28 @@
             if (mode === 'local') {
                 newGame();
             } else {
-                getRoom(roomCode).then(function(room) {
-                    if (!room || room.leader !== me.name) return;
-                    var assassinCount = gameSettings.assassinCount || 1;
-                    var difficulty = gameSettings.difficulty || 'normal';
-                    var timer = gameSettings.timer || 60;
-                    var category = gameSettings.category || 'all';
-                    var built = buildBoard(assassinCount, difficulty, category);
-                    state = {
-                        cards: built.cards,
-                        turn: built.turn,
-                        clue: null,
-                        gameOver: false,
-                        winner: null,
-                        reason: '',
-                        assassinCount: built.assassinCount,
-                        assassinRevealed: 0,
-                        timer: timer,
-                        category: category,
-                        turnDeadline: timer > 0 ? Date.now() + timer * 1000 : null
-                    };
-                    render();
-                    syncGameState();
-                    if (timer > 0) startTimer(timer);
-                });
+                if (!localRoomCache || localRoomCache.leader !== me.name) return;
+                var assassinCount = gameSettings.assassinCount || 1;
+                var difficulty = gameSettings.difficulty || 'normal';
+                var timer = gameSettings.timer || 60;
+                var category = gameSettings.category || 'all';
+                var built = buildBoard(assassinCount, difficulty, category);
+                state = {
+                    cards: built.cards,
+                    turn: built.turn,
+                    clue: null,
+                    gameOver: false,
+                    winner: null,
+                    reason: '',
+                    assassinCount: built.assassinCount,
+                    assassinRevealed: 0,
+                    timer: timer,
+                    category: category,
+                    turnDeadline: timer > 0 ? Date.now() + timer * 1000 : null
+                };
+                render();
+                syncGameState();
+                if (timer > 0) startTimer(timer);
             }
         });
 
@@ -3489,9 +3579,9 @@
         renderLocalTeams();
         show('modeScreen');
 
-        console.log('🕵️ كود نيمز - النسخة النهائية');
+        console.log('🕵️ كود نيمز - النسخة النهائية مع PeerJS');
         console.log('✅ جميع الأزرار تعمل بشكل صحيح');
-        console.log('✅ Firebase متكامل بالكامل');
+        console.log('✅ PeerJS متكامل بالكامل');
         console.log('✅ مؤقت لكل دور');
         console.log('✅ فئات الكلمات المتعددة');
         console.log('✅ نظام قائد الغرفة');

@@ -2087,7 +2087,7 @@
     </div>
 
     <script>
-    // ===========================
+   // ===========================
 // 🌐 PEERJS TRANSPORT (RELIABLE VERSION) WITH ICE SERVERS
 // ===========================
 let isHost = false;
@@ -2099,195 +2099,900 @@ let roomListenerCallback = null;
 let connectionAttempts = 0;
 const MAX_ATTEMPTS = 3;
 
+// PeerJS servers
 const PEER_SERVERS = [
     { host: '0.peerjs.com', port: 443, path: '/' },
     { host: '1.peerjs.com', port: 443, path: '/' },
     { host: '2.peerjs.com', port: 443, path: '/' }
 ];
 
-// Public STUN server for NAT traversal
+// STUN servers
 const ICE_SERVERS = [
-    { urls: 'stun:stun.l.google.com:19302' }
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' }
 ];
 
-// Function to create a reliable Peer with retries
-function createReliablePeer() {
-    return new Promise((resolve, reject) => {
-        const server = PEER_SERVERS[connectionAttempts % PEER_SERVERS.length];
-        connectionAttempts++;
-        console.log(`🔄 Trying PeerJS server: ${server.host} (Attempt ${connectionAttempts})`);
 
-        const peerInstance = new Peer(undefined, {
+// ==========================================
+// CREATE PEER WITH RETRIES
+// ==========================================
+function createReliablePeer(peerId = undefined) {
+    return new Promise((resolve, reject) => {
+
+        const server =
+            PEER_SERVERS[connectionAttempts % PEER_SERVERS.length];
+
+        connectionAttempts++;
+
+        console.log(
+            `🔄 Trying PeerJS server: ${server.host} | Attempt ${connectionAttempts}`
+        );
+
+        const peerInstance = new Peer(peerId, {
             host: server.host,
             port: server.port,
             path: server.path,
             secure: true,
             debug: 2,
-            config: { iceServers: ICE_SERVERS }
+
+            config: {
+                iceServers: ICE_SERVERS
+            }
         });
 
+        let finished = false;
+
         const timeout = setTimeout(() => {
-            peerInstance.destroy();
+
+            if (finished) return;
+
+            finished = true;
+
+            console.warn('⚠️ PeerJS connection timeout');
+
+            try {
+                peerInstance.destroy();
+            } catch (e) {}
+
             reject(new Error('Connection timeout'));
-        }, 10000);
+
+        }, 15000);
+
 
         peerInstance.on('open', (id) => {
+
+            if (finished) return;
+
+            finished = true;
+
             clearTimeout(timeout);
+
             console.log('✅ PeerJS connected with ID:', id);
+
             resolve(peerInstance);
         });
 
+
         peerInstance.on('error', (err) => {
+
+            if (finished) return;
+
+            finished = true;
+
             clearTimeout(timeout);
+
             console.error('❌ PeerJS error:', err);
-            peerInstance.destroy();
+
+            try {
+                peerInstance.destroy();
+            } catch (e) {}
+
             reject(err);
         });
     });
 }
 
-// Create a host peer
+
+
+// ==========================================
+// CREATE HOST PEER
+// ==========================================
 function createHostPeer() {
     return new Promise((resolve, reject) => {
+
         connectionAttempts = 0;
+
         let lastError = null;
 
         function tryCreate(attempt) {
+
             if (attempt >= MAX_ATTEMPTS) {
-                reject(new Error('Failed to create room: ' + (lastError ? lastError.message : 'unknown')));
+
+                reject(
+                    new Error(
+                        'Failed to create room: ' +
+                        (lastError
+                            ? lastError.message
+                            : 'unknown')
+                    )
+                );
+
                 return;
             }
-            console.log(`🔄 Creating room attempt ${attempt + 1}/${MAX_ATTEMPTS}...`);
-            createReliablePeer().then((newPeer) => {
-                peer = newPeer;
-                isHost = true;
 
-                peer.on('connection', (conn) => {
-                    hostConns.push(conn);
-                    console.log('📡 New connection accepted');
-                    setupConnectionHandlers(conn);
+
+            console.log(
+                `🔄 Creating room attempt ${attempt + 1}/${MAX_ATTEMPTS}...`
+            );
+
+
+            /*
+             * IMPORTANT FIX
+             *
+             * The roomCode must be the actual PeerJS ID.
+             *
+             * Example:
+             *
+             * roomCode = ABC12
+             *
+             * Host Peer ID = ABC12
+             *
+             * Guest connects to = ABC12
+             *
+             */
+
+            if (!roomCode) {
+
+                reject(
+                    new Error('Room code was not created before createHostPeer()')
+                );
+
+                return;
+            }
+
+
+            const requestedPeerId =
+                String(roomCode)
+                    .trim()
+                    .toUpperCase();
+
+
+            createReliablePeer(requestedPeerId)
+
+                .then((newPeer) => {
+
+                    peer = newPeer;
+
+                    isHost = true;
+
+                    console.log(
+                        '🏠 HOST PEER ID:',
+                        peer.id
+                    );
+
+                    console.log(
+                        '🔑 ROOM CODE:',
+                        requestedPeerId
+                    );
+
+
+                    // --------------------------------------
+                    // Guest connection
+                    // --------------------------------------
+                    peer.on('connection', (conn) => {
+
+                        console.log(
+                            '📡 New guest connection:',
+                            conn.peer
+                        );
+
+                        hostConns.push(conn);
+
+
+                        // Remove closed connections
+                        conn.on('close', () => {
+
+                            console.log(
+                                '🔌 Guest disconnected:',
+                                conn.peer
+                            );
+
+                            hostConns =
+                                hostConns.filter(
+                                    c => c !== conn
+                                );
+                        });
+
+
+                        conn.on('error', (err) => {
+
+                            console.error(
+                                '❌ Guest connection error:',
+                                err
+                            );
+
+                            hostConns =
+                                hostConns.filter(
+                                    c => c !== conn
+                                );
+                        });
+
+
+                        setupConnectionHandlers(conn);
+
+
+                        // Wait until connection is fully open
+                        if (conn.open) {
+
+                            try {
+                                conn.send(
+                                    JSON.stringify({
+                                        type: 'state',
+                                        room: localRoomCache
+                                    })
+                                );
+                            } catch (e) {
+
+                                console.error(
+                                    '❌ Failed sending initial room:',
+                                    e
+                                );
+                            }
+
+                        } else {
+
+                            conn.on('open', () => {
+
+                                console.log(
+                                    '✅ Guest connection opened:',
+                                    conn.peer
+                                );
+
+                                try {
+
+                                    conn.send(
+                                        JSON.stringify({
+                                            type: 'state',
+                                            room: localRoomCache
+                                        })
+                                    );
+
+                                } catch (e) {
+
+                                    console.error(
+                                        '❌ Failed sending initial state:',
+                                        e
+                                    );
+                                }
+                            });
+                        }
+
+                    });
+
+
+                    console.log(
+                        '✅ ROOM CREATED SUCCESSFULLY!'
+                    );
+
+                    console.log(
+                        '🔑 Players should join with:',
+                        requestedPeerId
+                    );
+
+
+                    resolve();
+
+                })
+
+                .catch((error) => {
+
+                    lastError = error;
+
+                    console.warn(
+                        `⚠️ Host attempt ${attempt + 1} failed:`,
+                        error.message
+                    );
+
+
+                    if (peer) {
+
+                        try {
+                            peer.destroy();
+                        } catch (e) {}
+
+                        peer = null;
+                    }
+
+
+                    setTimeout(
+                        () => tryCreate(attempt + 1),
+                        1000
+                    );
                 });
-
-                console.log('✅ Room created successfully!');
-                resolve();
-            }).catch((error) => {
-                lastError = error;
-                console.warn(`⚠️ Attempt ${attempt + 1} failed:`, error.message);
-                if (peer) { peer.destroy(); peer = null; }
-                setTimeout(() => tryCreate(attempt + 1), 1000);
-            });
         }
+
 
         tryCreate(0);
     });
 }
 
-// Connect as a guest
-function connectAsGuest(roomCode) {
+
+
+// ==========================================
+// CONNECT AS GUEST
+// ==========================================
+function connectAsGuest(roomCodeToJoin) {
     return new Promise((resolve, reject) => {
+
         connectionAttempts = 0;
+
         let lastError = null;
 
+
+        // Clean room code
+        roomCodeToJoin =
+            String(roomCodeToJoin || '')
+                .trim()
+                .toUpperCase();
+
+
+        if (!roomCodeToJoin) {
+
+            reject(
+                new Error('Room code is empty')
+            );
+
+            return;
+        }
+
+
         function tryConnect(attempt) {
+
             if (attempt >= MAX_ATTEMPTS) {
-                reject(new Error('Failed to join room: ' + (lastError ? lastError.message : 'unknown')));
+
+                reject(
+                    new Error(
+                        'Failed to join room: ' +
+                        (lastError
+                            ? lastError.message
+                            : 'unknown')
+                    )
+                );
+
                 return;
             }
-            console.log(`🔄 Joining room attempt ${attempt + 1}/${MAX_ATTEMPTS}...`);
-            createReliablePeer().then((newPeer) => {
-                peer = newPeer;
-                isHost = false;
-                console.log('📡 Connecting to room:', roomCode);
-                guestConn = peer.connect(roomCode, { reliable: true });
 
-                const timeout = setTimeout(() => {
-                    reject(new Error('Connection timeout'));
-                }, 15000);
 
-                guestConn.on('open', () => {
-                    clearTimeout(timeout);
-                    console.log('✅ Connected to room:', roomCode);
-                    setupConnectionHandlers(guestConn);
-                    resolve(localRoomCache);
+            console.log(
+                `🔄 Joining room attempt ${attempt + 1}/${MAX_ATTEMPTS}...`
+            );
+
+
+            /*
+             * Guest gets its own random PeerJS ID.
+             *
+             * Then it connects to the HOST'S PeerJS ID,
+             * which is the room code.
+             */
+
+            createReliablePeer()
+
+                .then((newPeer) => {
+
+                    peer = newPeer;
+
+                    isHost = false;
+
+
+                    console.log(
+                        '👤 Guest Peer ID:',
+                        peer.id
+                    );
+
+                    console.log(
+                        '📡 Connecting to HOST:',
+                        roomCodeToJoin
+                    );
+
+
+                    guestConn =
+                        peer.connect(
+                            roomCodeToJoin,
+                            {
+                                reliable: true,
+                                serialization: 'json'
+                            }
+                        );
+
+
+                    if (!guestConn) {
+
+                        throw new Error(
+                            'PeerJS failed to create connection'
+                        );
+                    }
+
+
+                    let connectionFinished = false;
+
+
+                    const timeout =
+                        setTimeout(() => {
+
+                            if (connectionFinished) return;
+
+                            connectionFinished = true;
+
+                            lastError =
+                                new Error(
+                                    'Connection timeout'
+                                );
+
+
+                            console.warn(
+                                '⏰ Guest connection timeout'
+                            );
+
+
+                            try {
+                                guestConn.close();
+                            } catch (e) {}
+
+
+                            try {
+                                peer.destroy();
+                            } catch (e) {}
+
+
+                            guestConn = null;
+                            peer = null;
+
+
+                            setTimeout(
+                                () => tryConnect(attempt + 1),
+                                1000
+                            );
+
+                        }, 15000);
+
+
+                    guestConn.on('open', () => {
+
+                        if (connectionFinished) return;
+
+                        connectionFinished = true;
+
+                        clearTimeout(timeout);
+
+
+                        console.log(
+                            '✅ CONNECTED TO ROOM:',
+                            roomCodeToJoin
+                        );
+
+
+                        setupConnectionHandlers(
+                            guestConn
+                        );
+
+
+                        setConnDot(true);
+
+
+                        /*
+                         * Tell host that this player joined.
+                         *
+                         * This is important because the old
+                         * transport only established the connection
+                         * but did not identify the joining player.
+                         */
+
+                        try {
+
+                            guestConn.send(
+                                JSON.stringify({
+                                    type: 'join',
+                                    name: me.name,
+                                    team: me.team
+                                })
+                            );
+
+                        } catch (e) {
+
+                            console.error(
+                                '❌ Failed sending join message:',
+                                e
+                            );
+                        }
+
+
+                        resolve(
+                            localRoomCache
+                        );
+                    });
+
+
+                    guestConn.on('error', (err) => {
+
+                        if (connectionFinished) return;
+
+                        connectionFinished = true;
+
+                        clearTimeout(timeout);
+
+
+                        console.error(
+                            '❌ Guest connection error:',
+                            err
+                        );
+
+
+                        lastError = err;
+
+
+                        try {
+                            guestConn.close();
+                        } catch (e) {}
+
+
+                        try {
+                            peer.destroy();
+                        } catch (e) {}
+
+
+                        guestConn = null;
+                        peer = null;
+
+
+                        setTimeout(
+                            () => tryConnect(attempt + 1),
+                            1000
+                        );
+                    });
+
+
+                    guestConn.on('close', () => {
+
+                        console.log(
+                            '🔌 Guest connection closed'
+                        );
+
+                        setConnDot(false);
+                    });
+
+                })
+
+                .catch((error) => {
+
+                    lastError = error;
+
+                    console.warn(
+                        `⚠️ Join attempt ${attempt + 1} failed:`,
+                        error.message
+                    );
+
+
+                    if (peer) {
+
+                        try {
+                            peer.destroy();
+                        } catch (e) {}
+
+                        peer = null;
+                    }
+
+
+                    guestConn = null;
+
+
+                    setTimeout(
+                        () => tryConnect(attempt + 1),
+                        1000
+                    );
                 });
-
-                guestConn.on('error', (err) => {
-                    clearTimeout(timeout);
-                    console.error('Connection error:', err);
-                    reject(err);
-                });
-            }).catch((error) => {
-                lastError = error;
-                console.warn(`⚠️ Attempt ${attempt + 1} failed:`, error.message);
-                if (peer) { peer.destroy(); peer = null; }
-                if (guestConn) { guestConn = null; }
-                setTimeout(() => tryConnect(attempt + 1), 1000);
-            });
         }
+
 
         tryConnect(0);
     });
 }
 
-// Setup handlers for a connection
+
+
+// ==========================================
+// SETUP CONNECTION HANDLERS
+// ==========================================
 function setupConnectionHandlers(conn) {
+
     conn.on('data', (raw) => {
+
         try {
-            const msg = JSON.parse(raw);
-            if (msg.type === 'state') {
-                localRoomCache = msg.room;
-                if (roomListenerCallback) roomListenerCallback(localRoomCache);
+
+            let msg = raw;
+
+
+            // PeerJS can already deserialize JSON
+            if (typeof raw === 'string') {
+
+                try {
+                    msg = JSON.parse(raw);
+                } catch (e) {
+                    console.warn(
+                        '⚠️ Received non-JSON data:',
+                        raw
+                    );
+                    return;
+                }
             }
+
+
+            if (!msg || !msg.type) {
+                return;
+            }
+
+
+            // --------------------------------------
+            // Room state
+            // --------------------------------------
+            if (msg.type === 'state') {
+
+                localRoomCache = msg.room;
+
+
+                if (roomListenerCallback) {
+                    roomListenerCallback(
+                        localRoomCache
+                    );
+                }
+
+                setConnDot(true);
+            }
+
+
+            // --------------------------------------
+            // Guest joined
+            // --------------------------------------
+            else if (msg.type === 'join') {
+
+                console.log(
+                    '👤 Join request:',
+                    msg.name,
+                    msg.team
+                );
+
+
+                /*
+                 * Host receives join requests here.
+                 *
+                 * If your existing game already has
+                 * its own player/lobby logic, you can
+                 * handle msg.name and msg.team there.
+                 */
+            }
+
+
+            // --------------------------------------
+            // Room update request from guest
+            // --------------------------------------
+            else if (msg.type === 'setRoom') {
+
+                /*
+                 * Only the host should accept room writes.
+                 */
+
+                if (isHost) {
+
+                    localRoomCache =
+                        msg.room;
+
+                    broadcastState();
+
+                    if (roomListenerCallback) {
+                        roomListenerCallback(
+                            localRoomCache
+                        );
+                    }
+                }
+            }
+
+
         } catch (e) {
-            console.error('Failed to parse message:', e);
+
+            console.error(
+                '❌ Failed to handle message:',
+                e
+            );
         }
     });
 
+
     conn.on('close', () => {
-        console.log('🔌 Connection closed');
-        // Optional: implement reconnection logic here
+
+        console.log(
+            '🔌 Connection closed'
+        );
+
+        setConnDot(false);
+
+
+        if (isHost) {
+
+            hostConns =
+                hostConns.filter(
+                    c => c !== conn
+                );
+        }
+    });
+
+
+    conn.on('error', (err) => {
+
+        console.error(
+            '❌ Connection error:',
+            err
+        );
+
         setConnDot(false);
     });
 
-    // Send initial state if host
-    if (isHost) {
-        conn.send(JSON.stringify({ type: 'state', room: localRoomCache }));
+
+    // --------------------------------------
+    // Host sends initial state
+    // --------------------------------------
+    if (isHost && conn.open) {
+
+        try {
+
+            conn.send(
+                JSON.stringify({
+                    type: 'state',
+                    room: localRoomCache
+                })
+            );
+
+        } catch (e) {
+
+            console.error(
+                '❌ Failed to send initial state:',
+                e
+            );
+        }
     }
 }
 
-// Broadcast state to all host connections
+
+
+// ==========================================
+// BROADCAST STATE TO ALL HOST CONNECTIONS
+// ==========================================
 function broadcastState() {
-    const msg = JSON.stringify({ type: 'state', room: localRoomCache });
-    hostConns.forEach(c => { if (c.open) c.send(msg); });
+
+    const msg =
+        JSON.stringify({
+            type: 'state',
+            room: localRoomCache
+        });
+
+
+    hostConns =
+        hostConns.filter(
+            c => c && c.open
+        );
+
+
+    hostConns.forEach((c) => {
+
+        try {
+
+            c.send(msg);
+
+        } catch (e) {
+
+            console.error(
+                '❌ Failed broadcasting state:',
+                e
+            );
+        }
+    });
 }
 
-// Write room data
+
+
+// ==========================================
+// WRITE ROOM DATA
+// ==========================================
 function writeRoom(data) {
+
     localRoomCache = data;
+
+
     if (isHost) {
+
         broadcastState();
-        if (roomListenerCallback) roomListenerCallback(localRoomCache);
-    } else if (guestConn && guestConn.open) {
-        guestConn.send(JSON.stringify({ type: 'setRoom', room: data }));
-        if (roomListenerCallback) roomListenerCallback(localRoomCache);
+
+
+        if (roomListenerCallback) {
+
+            roomListenerCallback(
+                localRoomCache
+            );
+        }
+
+    } else if (
+        guestConn &&
+        guestConn.open
+    ) {
+
+        try {
+
+            guestConn.send(
+                JSON.stringify({
+                    type: 'setRoom',
+                    room: data
+                })
+            );
+
+        } catch (e) {
+
+            console.error(
+                '❌ Failed sending room update:',
+                e
+            );
+        }
+
+
+        if (roomListenerCallback) {
+
+            roomListenerCallback(
+                localRoomCache
+            );
+        }
     }
 }
 
-// Read room data
+
+
+// ==========================================
+// READ ROOM DATA
+// ==========================================
 function readRoom() {
     return localRoomCache;
 }
 
-// Listen to room updates
+
+
+// ==========================================
+// LISTEN TO ROOM UPDATES
+// ==========================================
 function listenToRoom(callback) {
+
     roomListenerCallback = callback;
-    return () => { roomListenerCallback = null; };
+
+    return () => {
+        roomListenerCallback = null;
+    };
 }
 
-// Set connection status indicator
+
+
+// ==========================================
+// CONNECTION STATUS
+// ==========================================
 function setConnDot(ok) {
-    const el = document.getElementById('connectionStatus');
-    if (el) el.className = 'online-status ' + (ok ? 'connected' : 'disconnected');
+
+    const el =
+        document.getElementById(
+            'connectionStatus'
+        );
+
+    if (el) {
+
+        el.className =
+            'online-status ' +
+            (ok
+                ? 'connected'
+                : 'disconnected');
+    }
 }
 
         

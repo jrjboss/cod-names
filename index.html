@@ -3,15 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ===== GOOGLE VERIFICATION ===== -->
+<meta name="google-site-verification" content="25be7cf5605470fb" />
+
 <!-- ===== ADS (Adsterra) ===== -->
-
-<!-- 1. Popunder Ad (Full Page) -->
 <script src="https://pl30995493.profitableratecpmnetwork.com/d9/4d/a2/d94da24bbe7f00a10f8399faf8ca20c3.js"></script>
-
-<!-- 2. Social Bar -->
-<script src="https://pl30995494.profitableratecpmnetwork.com/35/43/06/35430672bf8a34b094c03654a12aa565.js"></script>
-
-<!-- 3. Banner 468x60 -->
 <script>
   atOptions = {
     'key' : '783790e3d4578487cde96b7633f0ba16',
@@ -22,8 +19,6 @@
   };
 </script>
 <script src="https://www.highrevenueformat.com/783790e3d4578487cde96b7633f0ba16/invoke.js"></script>
-
-<!-- 4. Banner 300x250 -->
 <script>
   atOptions = {
     'key' : '4fc93d102705c840aa0d8e7b8624d6e8',
@@ -35,36 +30,9 @@
 </script>
 <script src="https://www.highrevenueformat.com/4fc93d102705c840aa0d8e7b8624d6e8/invoke.js"></script>
 
-<!-- 5. Banner 160x300 -->
-<script>
-  atOptions = {
-    'key' : '46d1a765f1a3391ef1d30fc58cd701d9',
-    'format' : 'iframe',
-    'height' : 300,
-    'width' : 160,
-    'params' : {}
-  };
-</script>
-<script src="https://www.highrevenueformat.com/46d1a765f1a3391ef1d30fc58cd701d9/invoke.js"></script>
-
-<!-- 6. Banner 160x600 -->
-<script>
-  atOptions = {
-    'key' : '977932d4dda979859d907d82d8ee518c',
-    'format' : 'iframe',
-    'height' : 600,
-    'width' : 160,
-    'params' : {}
-  };
-</script>
-<script src="https://www.highrevenueformat.com/977932d4dda979859d907d82d8ee518c/invoke.js"></script>
-
-
-
-  
 <title>كود نيمز — لعبة الجواسيس المتطورة</title>
 
-<!-- PeerJS: direct browser-to-browser connection, no server/account needed -->
+<!-- PeerJS -->
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,9 +40,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 
 <style>
-  /* ==========================================
-     CSS VARIABLES
-     ========================================== */
   :root {
     --bg-primary: #0a0e0a;
     --bg-secondary: #141c18;
@@ -101,13 +66,7 @@
     --radius: 14px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
+  * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     min-height: 100vh;
     background: var(--bg-primary);
@@ -119,26 +78,15 @@
     padding: 20px 16px 40px;
     position: relative;
   }
-
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     pointer-events: none;
-    background:
-      radial-gradient(ellipse at 10% 20%, rgba(232, 200, 74, 0.03), transparent 60%),
-      radial-gradient(ellipse at 90% 80%, rgba(52, 152, 219, 0.03), transparent 60%);
+    background: radial-gradient(ellipse at 10% 20%, rgba(232, 200, 74, 0.03), transparent 60%), radial-gradient(ellipse at 90% 80%, rgba(52, 152, 219, 0.03), transparent 60%);
     z-index: 0;
   }
-
-  .particles {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-  }
-
+  .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
   .particle {
     position: absolute;
     width: 2px;
@@ -147,39 +95,18 @@
     border-radius: 50%;
     animation: float-particle linear infinite;
   }
-
   @keyframes float-particle {
     0% { transform: translateY(100vh) scale(0); opacity: 0; }
     10% { opacity: 1; }
     90% { opacity: 1; }
     100% { transform: translateY(-10vh) scale(1); opacity: 0; }
   }
+  .wrap { width: 100%; max-width: 1000px; position: relative; z-index: 1; }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+  ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
 
-  .wrap {
-    width: 100%;
-    max-width: 1000px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .hidden {
-    display: none !important;
-  }
-
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--gold);
-    border-radius: 10px;
-  }
-
-  /* ==========================================
-     HEADER
-     ========================================== */
   .header {
     position: relative;
     text-align: center;
@@ -191,7 +118,6 @@
     box-shadow: var(--shadow);
     overflow: hidden;
   }
-
   .header::before {
     content: '';
     position: absolute;
@@ -199,7 +125,6 @@
     background: linear-gradient(135deg, rgba(232, 200, 74, 0.04), transparent 70%);
     pointer-events: none;
   }
-
   .header::after {
     content: '';
     position: absolute;
@@ -210,7 +135,6 @@
     background: linear-gradient(90deg, transparent, var(--gold), transparent);
     opacity: 0.3;
   }
-
   .stamp {
     position: absolute;
     top: 16px;
@@ -226,7 +150,6 @@
     opacity: 0.7;
     background: rgba(231, 76, 60, 0.05);
   }
-
   .title {
     font-family: 'Cairo', sans-serif;
     font-weight: 900;
@@ -239,24 +162,20 @@
     letter-spacing: 2px;
     position: relative;
   }
-
   @keyframes shimmer {
     0%, 100% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
   }
-
   .title-icon {
     -webkit-text-fill-color: initial;
     margin-left: 10px;
     display: inline-block;
     animation: pulse-icon 2s ease-in-out infinite;
   }
-
   @keyframes pulse-icon {
     0%, 100% { transform: scale(1) rotate(0deg); }
     50% { transform: scale(1.1) rotate(5deg); }
   }
-
   .subtitle {
     font-size: 15px;
     color: var(--text-secondary);
@@ -265,15 +184,8 @@
     margin-top: 6px;
     -webkit-text-fill-color: initial;
   }
+  .subtitle span { color: var(--gold); -webkit-text-fill-color: var(--gold); }
 
-  .subtitle span {
-    color: var(--gold);
-    -webkit-text-fill-color: var(--gold);
-  }
-
-  /* ==========================================
-     CARD BOX
-     ========================================== */
   .card-box {
     background: linear-gradient(145deg, rgba(30, 42, 34, 0.95), rgba(20, 28, 24, 0.98));
     border: 1px solid rgba(232, 200, 74, 0.08);
@@ -283,11 +195,7 @@
     box-shadow: var(--shadow);
     transition: var(--transition);
   }
-
-  .card-box:hover {
-    border-color: rgba(232, 200, 74, 0.15);
-  }
-
+  .card-box:hover { border-color: rgba(232, 200, 74, 0.15); }
   .intro {
     font-size: 16px;
     color: var(--text-secondary);
@@ -295,20 +203,9 @@
     line-height: 2;
     text-align: center;
   }
+  .intro b { color: var(--gold); }
 
-  .intro b {
-    color: var(--gold);
-  }
-
-  /* ==========================================
-     MODE SELECTION
-     ========================================== */
-  .mode-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
-  }
-
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .mode-btn {
     background: linear-gradient(145deg, var(--bg-card), var(--bg-secondary));
     border: 1px solid rgba(232, 200, 74, 0.1);
@@ -321,7 +218,6 @@
     position: relative;
     overflow: hidden;
   }
-
   .mode-btn::before {
     content: '';
     position: absolute;
@@ -330,37 +226,16 @@
     opacity: 0;
     transition: var(--transition);
   }
-
   .mode-btn:hover {
     border-color: var(--gold);
     transform: translateY(-4px);
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), 0 0 40px rgba(232, 200, 74, 0.04);
   }
+  .mode-btn:hover::before { opacity: 1; }
+  .mode-btn .ic { font-size: 40px; margin-bottom: 14px; display: block; }
+  .mode-btn .t { font-weight: 700; font-size: 20px; margin-bottom: 6px; }
+  .mode-btn .d { font-size: 14px; color: var(--text-secondary); }
 
-  .mode-btn:hover::before {
-    opacity: 1;
-  }
-
-  .mode-btn .ic {
-    font-size: 40px;
-    margin-bottom: 14px;
-    display: block;
-  }
-
-  .mode-btn .t {
-    font-weight: 700;
-    font-size: 20px;
-    margin-bottom: 6px;
-  }
-
-  .mode-btn .d {
-    font-size: 14px;
-    color: var(--text-secondary);
-  }
-
-  /* ==========================================
-     FORM ELEMENTS
-     ========================================== */
   .add-row {
     display: flex;
     gap: 12px;
@@ -368,7 +243,6 @@
     flex-wrap: wrap;
     align-items: center;
   }
-
   .add-row input {
     flex: 1;
     min-width: 180px;
@@ -381,25 +255,18 @@
     font-size: 16px;
     transition: var(--transition);
   }
-
   .add-row input:focus {
     outline: none;
     border-color: var(--gold);
     box-shadow: 0 0 0 4px rgba(232, 200, 74, 0.06);
   }
-
-  .add-row input::placeholder {
-    color: var(--text-muted);
-    font-size: 14px;
-  }
-
+  .add-row input::placeholder { color: var(--text-muted); font-size: 14px; }
   .team-pick {
     display: flex;
     border-radius: 10px;
     overflow: hidden;
     border: 2px solid rgba(232, 200, 74, 0.12);
   }
-
   .team-pick button {
     font-family: 'Cairo', sans-serif;
     font-weight: 700;
@@ -412,24 +279,16 @@
     opacity: 0.5;
     transition: var(--transition);
   }
-
-  .team-pick button.sel {
-    opacity: 1;
-  }
-
+  .team-pick button.sel { opacity: 1; }
   .team-pick button.red-opt.sel {
     background: linear-gradient(135deg, var(--red-dark), #5a1a12);
     color: #f5d0c8;
   }
-
   .team-pick button.blue-opt.sel {
     background: linear-gradient(135deg, var(--blue-dark), #0e3a55);
     color: #b0d8f0;
   }
-
-  .team-pick button:hover:not(.sel) {
-    opacity: 0.7;
-  }
+  .team-pick button:hover:not(.sel) { opacity: 0.7; }
 
   button.add-btn {
     font-family: 'Cairo', sans-serif;
@@ -444,19 +303,12 @@
     transition: var(--transition);
     box-shadow: 0 4px 20px rgba(232, 200, 74, 0.2);
   }
-
   button.add-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 30px rgba(232, 200, 74, 0.3);
   }
+  button.add-btn:active { transform: translateY(0) scale(0.97); }
 
-  button.add-btn:active {
-    transform: translateY(0) scale(0.97);
-  }
-
-  /* ==========================================
-     GAME SETTINGS
-     ========================================== */
   .settings-row {
     display: flex;
     gap: 16px;
@@ -469,7 +321,6 @@
     border-radius: var(--radius);
     border: 1px solid rgba(232, 200, 74, 0.06);
   }
-
   .settings-row label {
     font-size: 14px;
     color: var(--text-secondary);
@@ -477,7 +328,6 @@
     align-items: center;
     gap: 8px;
   }
-
   .settings-row select {
     background: var(--bg-secondary);
     border: 2px solid rgba(232, 200, 74, 0.12);
@@ -489,27 +339,21 @@
     cursor: pointer;
     transition: var(--transition);
   }
-
   .settings-row select:focus {
     outline: none;
     border-color: var(--gold);
   }
-
   .settings-row .setting-label {
     font-weight: 700;
     color: var(--gold);
   }
 
-  /* ==========================================
-     TEAMS GRID
-     ========================================== */
   .teams-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 18px;
     margin-bottom: 22px;
   }
-
   .team-col {
     background: var(--bg-primary);
     border-radius: var(--radius);
@@ -517,29 +361,16 @@
     min-height: 130px;
     transition: var(--transition);
   }
-
-  .team-col.red-col {
-    border-top: 4px solid var(--red);
-  }
-
-  .team-col.blue-col {
-    border-top: 4px solid var(--blue);
-  }
-
+  .team-col.red-col { border-top: 4px solid var(--red); }
+  .team-col.blue-col { border-top: 4px solid var(--blue); }
   .team-col h3 {
     font-size: 16px;
     margin: 0 0 16px;
     font-weight: 700;
     letter-spacing: 1px;
   }
-
-  .team-col.red-col h3 {
-    color: #f0b8a8;
-  }
-
-  .team-col.blue-col h3 {
-    color: #a8d0e8;
-  }
+  .team-col.red-col h3 { color: #f0b8a8; }
+  .team-col.blue-col h3 { color: #a8d0e8; }
 
   .player-chip {
     display: flex;
@@ -553,18 +384,15 @@
     transition: var(--transition);
     border: 1px solid transparent;
   }
-
   .player-chip:hover {
     border-color: rgba(232, 200, 74, 0.1);
     background: rgba(255, 255, 255, 0.06);
   }
-
   .player-chip .pname {
     display: flex;
     align-items: center;
     gap: 12px;
   }
-
   .player-chip button {
     background: none;
     border: none;
@@ -575,35 +403,40 @@
     line-height: 1;
     transition: var(--transition);
   }
-
   .player-chip .star-btn {
     font-size: 20px;
   }
-
   .player-chip .star-btn.on {
     color: var(--gold);
     text-shadow: 0 0 30px rgba(232, 200, 74, 0.3);
   }
-
-  .player-chip .star-btn:hover:not(:disabled) {
-    transform: scale(1.2);
-  }
-
+  .player-chip .star-btn:hover:not(:disabled) { transform: scale(1.2); }
   .player-chip .star-btn:disabled {
     opacity: 0.3;
     cursor: not-allowed;
   }
-
   .player-chip .del-btn {
     font-size: 18px;
     padding: 2px 6px;
   }
-
   .player-chip .del-btn:hover {
     color: var(--red);
     transform: scale(1.2);
   }
-
+  .player-chip .kick-btn {
+    font-size: 16px;
+    padding: 2px 8px;
+    color: #f0a098;
+  }
+  .player-chip .kick-btn:hover {
+    color: var(--red);
+    transform: scale(1.2);
+  }
+  .player-chip .crown {
+    color: var(--gold);
+    font-size: 18px;
+    margin-right: 6px;
+  }
   .empty-hint {
     font-size: 14px;
     color: var(--text-muted);
@@ -611,16 +444,12 @@
     text-align: center;
   }
 
-  /* ==========================================
-     BUTTONS
-     ========================================== */
   .setup-actions {
     display: flex;
     justify-content: center;
     gap: 16px;
     flex-wrap: wrap;
   }
-
   .setup-err {
     text-align: center;
     color: #f0a098;
@@ -648,61 +477,47 @@
     white-space: nowrap;
     box-shadow: 0 4px 20px rgba(231, 76, 60, 0.15);
   }
-
   button.stamp-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 30px rgba(231, 76, 60, 0.25);
     background: linear-gradient(135deg, var(--red), #7a241a);
   }
-
-  button.stamp-btn:active {
-    transform: translateY(0) scale(0.97);
-  }
-
+  button.stamp-btn:active { transform: translateY(0) scale(0.97); }
   button.stamp-btn.ghost {
     background: var(--bg-secondary);
     border-color: rgba(232, 200, 74, 0.12);
     box-shadow: none;
   }
-
   button.stamp-btn.ghost:hover {
     background: var(--bg-hover);
     border-color: rgba(232, 200, 74, 0.25);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   }
-
   button.stamp-btn.gold {
     background: linear-gradient(135deg, var(--gold), var(--gold-dim));
     color: var(--bg-primary);
     box-shadow: 0 4px 20px rgba(232, 200, 74, 0.2);
   }
-
   button.stamp-btn.gold:hover {
     box-shadow: 0 8px 30px rgba(232, 200, 74, 0.3);
     background: linear-gradient(135deg, #f0d860, var(--gold));
   }
-
   button.stamp-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
     transform: none !important;
   }
 
-  /* ==========================================
-     ROOM CODE
-     ========================================== */
   .room-code {
     text-align: center;
     margin-bottom: 22px;
   }
-
   .room-code .lbl {
     font-size: 14px;
     color: var(--text-secondary);
     letter-spacing: 2px;
     margin-bottom: 10px;
   }
-
   .room-code .code {
     font-family: 'Cairo', sans-serif;
     font-weight: 900;
@@ -717,16 +532,12 @@
     box-shadow: 0 0 60px rgba(232, 200, 74, 0.04);
     text-shadow: 0 0 40px rgba(232, 200, 74, 0.1);
   }
-
   .room-code .code::before {
     content: '🔑 ';
     font-size: 28px;
     letter-spacing: 0;
   }
 
-  /* ==========================================
-     ONLINE STATUS
-     ========================================== */
   .online-status {
     display: inline-block;
     width: 12px;
@@ -735,7 +546,6 @@
     margin-left: 10px;
     animation: status-pulse 2s ease-in-out infinite;
   }
-
   .online-status.connected {
     background: #4caf50;
     box-shadow: 0 0 24px rgba(76, 175, 80, 0.2);
@@ -744,15 +554,11 @@
     background: #f44336;
     box-shadow: 0 0 24px rgba(244, 67, 54, 0.2);
   }
-
   @keyframes status-pulse {
     0%, 100% { opacity: 0.6; transform: scale(1); }
     50% { opacity: 1; transform: scale(1.1); }
   }
 
-  /* ==========================================
-     GAME - CONTROLS
-     ========================================== */
   .roster-strip {
     display: flex;
     justify-content: space-between;
@@ -761,7 +567,6 @@
     font-size: 14px;
     flex-wrap: wrap;
   }
-
   .roster-strip .side {
     flex: 1;
     min-width: 220px;
@@ -770,22 +575,14 @@
     padding: 14px 18px;
     border: 1px solid rgba(232, 200, 74, 0.05);
   }
-
-  .roster-strip .side.red {
-    border-right: 4px solid var(--red);
-  }
-  .roster-strip .side.blue {
-    border-left: 4px solid var(--blue);
-  }
-
+  .roster-strip .side.red { border-right: 4px solid var(--red); }
+  .roster-strip .side.blue { border-left: 4px solid var(--blue); }
   .roster-strip .names {
     color: var(--text-secondary);
     line-height: 2;
     font-size: 15px;
   }
-  .roster-strip .names b {
-    color: var(--gold);
-  }
+  .roster-strip .names b { color: var(--gold); }
 
   .controls {
     display: flex;
@@ -799,14 +596,12 @@
     padding: 16px 22px;
     margin-bottom: 18px;
   }
-
   .score {
     display: flex;
     gap: 14px;
     align-items: center;
     flex-wrap: wrap;
   }
-
   .score-pill {
     display: flex;
     align-items: center;
@@ -819,24 +614,20 @@
     transition: var(--transition);
     font-family: 'Cairo', sans-serif;
   }
-
   .score-pill.red {
     background: rgba(231, 76, 60, 0.12);
     color: #f0b8a8;
     border-color: rgba(231, 76, 60, 0.2);
   }
-
   .score-pill.blue {
     background: rgba(52, 152, 219, 0.12);
     color: #a8d0e8;
     border-color: rgba(52, 152, 219, 0.2);
   }
-
   .score-pill.active {
     box-shadow: 0 0 0 3px var(--gold), 0 0 40px rgba(232, 200, 74, 0.08);
     transform: translateY(-2px);
   }
-
   .turn-label {
     font-size: 16px;
     color: var(--gold);
@@ -846,9 +637,22 @@
     text-align: center;
     font-family: 'Cairo', sans-serif;
   }
-
-  .turn-label .turn-icon {
-    margin-left: 10px;
+  .turn-label .turn-icon { margin-left: 10px; }
+  .timer-display {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--gold);
+    padding: 4px 16px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    min-width: 60px;
+    text-align: center;
+    font-family: 'Cairo', sans-serif;
+  }
+  .timer-display.warning { color: #f0a098; animation: blink 0.5s ease-in-out infinite; }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
   }
 
   .actions {
@@ -870,11 +674,7 @@
     border-radius: 10px;
     transition: var(--transition);
   }
-
-  .toggle-wrap:hover {
-    background: rgba(232, 200, 74, 0.04);
-  }
-
+  .toggle-wrap:hover { background: rgba(232, 200, 74, 0.04); }
   .toggle {
     width: 48px;
     height: 26px;
@@ -885,7 +685,6 @@
     transition: var(--transition);
     flex-shrink: 0;
   }
-
   .toggle::after {
     content: "";
     position: absolute;
@@ -897,21 +696,16 @@
     border-radius: 50%;
     transition: var(--transition);
   }
-
   .toggle.on {
     background: rgba(232, 200, 74, 0.12);
     border-color: var(--gold);
   }
-
   .toggle.on::after {
     transform: translateX(-22px);
     background: var(--gold);
     box-shadow: 0 0 30px rgba(232, 200, 74, 0.3);
   }
 
-  /* ==========================================
-     CLUE BAR
-     ========================================== */
   .clue-bar {
     display: flex;
     align-items: center;
@@ -926,7 +720,6 @@
     min-height: 80px;
     transition: var(--transition);
   }
-
   .clue-bar .clue-word {
     font-family: 'Cairo', sans-serif;
     font-weight: 900;
@@ -935,7 +728,6 @@
     text-shadow: 0 0 50px rgba(232, 200, 74, 0.12);
     letter-spacing: 2px;
   }
-
   .clue-bar .clue-num {
     background: linear-gradient(135deg, var(--gold), var(--gold-dim));
     color: var(--bg-primary);
@@ -949,7 +741,6 @@
     font-size: 17px;
     font-family: 'Cairo', sans-serif;
   }
-
   .clue-bar .guesses {
     font-size: 14px;
     color: var(--text-secondary);
@@ -964,7 +755,6 @@
     justify-content: center;
     width: 100%;
   }
-
   .clue-form input[type=text] {
     width: 180px;
     background: var(--bg-primary);
@@ -977,18 +767,15 @@
     text-align: center;
     transition: var(--transition);
   }
-
   .clue-form input[type=text]:focus {
     outline: none;
     border-color: var(--gold);
     box-shadow: 0 0 0 4px rgba(232, 200, 74, 0.06);
   }
-
   .clue-form input[type=text]::placeholder {
     color: var(--text-muted);
     font-size: 15px;
   }
-
   .clue-form select {
     background: var(--bg-primary);
     border: 2px solid rgba(232, 200, 74, 0.12);
@@ -1000,17 +787,14 @@
     cursor: pointer;
     transition: var(--transition);
   }
-
   .clue-form select:focus {
     outline: none;
     border-color: var(--gold);
   }
-
   .clue-form .stamp-btn {
     font-size: 14px;
     padding: 12px 24px;
   }
-
   .clue-err {
     width: 100%;
     text-align: center;
@@ -1020,15 +804,11 @@
     font-family: 'Cairo', sans-serif;
   }
 
-  /* ==========================================
-     BOARD - CARD STYLES
-     ========================================== */
   .board-wrap {
     position: relative;
     border-radius: var(--radius);
     overflow: hidden;
   }
-
   .board {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -1054,19 +834,13 @@
     gap: 16px;
     border: 2px solid rgba(232, 200, 74, 0.06);
   }
-
-  .board-lock .lock-icon {
-    font-size: 40px;
-    opacity: 0.5;
-  }
-
+  .board-lock .lock-icon { font-size: 40px; opacity: 0.5; }
   .board-lock .lock-text {
     max-width: 340px;
     font-family: 'Cairo', sans-serif;
     font-weight: 600;
   }
 
-  /* البطاقات العادية */
   .card {
     position: relative;
     aspect-ratio: 1.1/1;
@@ -1090,29 +864,20 @@
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
     word-break: break-word;
   }
-
   .card:hover:not(.revealed):not(.disabled) {
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
     z-index: 2;
   }
 
-  /* ==========================================
-     تلميحات رئيس الجواسيس - البطاقات
-     ========================================== */
   .card.hint-red:not(.revealed) {
     box-shadow: inset 0 0 0 4px var(--red), 0 4px 20px rgba(0, 0, 0, 0.3);
     background: linear-gradient(145deg, #f5eee0, #f0d8d0);
   }
-
   .card.hint-blue:not(.revealed) {
     box-shadow: inset 0 0 0 4px var(--blue), 0 4px 20px rgba(0, 0, 0, 0.3);
     background: linear-gradient(145deg, #f5eee0, #d0e8f0);
   }
-
-  /* ==========================================
-     بطاقة القاتل - أسود مميز
-     ========================================== */
   .card.hint-assassin:not(.revealed) {
     box-shadow: inset 0 0 0 4px #1a1a1a, 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 30px rgba(0, 0, 0, 0.1);
     background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
@@ -1120,7 +885,6 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     position: relative;
   }
-
   .card.hint-assassin:not(.revealed)::before {
     content: '☠';
     position: absolute;
@@ -1130,7 +894,6 @@
     left: 50%;
     transform: translate(-50%, -50%);
   }
-
   .card.hint-assassin:not(.revealed)::after {
     content: '☠';
     position: absolute;
@@ -1139,50 +902,38 @@
     top: 6px;
     right: 8px;
   }
-
   .card.hint-neutral:not(.revealed) {
     box-shadow: inset 0 0 0 4px var(--neutral), 0 4px 20px rgba(0, 0, 0, 0.3);
     background: linear-gradient(145deg, #f5eee0, #e8e0d8);
   }
 
-  /* ==========================================
-     البطاقات المكشوفة
-     ========================================== */
   .card.revealed {
     cursor: default;
     transform: scale(0.96);
     animation: card-reveal 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
-
   @keyframes card-reveal {
     0% { transform: scale(0.85) rotateY(90deg); opacity: 0.5; }
     100% { transform: scale(0.96) rotateY(0); opacity: 1; }
   }
-
   .card.revealed.red {
     background: linear-gradient(145deg, #e74c3c, #922b21);
     color: #ffffff;
     box-shadow: 0 4px 20px rgba(231, 76, 60, 0.3);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   }
-
   .card.revealed.blue {
     background: linear-gradient(145deg, #3498db, #1a5276);
     color: #ffffff;
     box-shadow: 0 4px 20px rgba(52, 152, 219, 0.3);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   }
-
   .card.revealed.neutral {
     background: linear-gradient(145deg, #a89a84, #7a6e5e);
     color: #ffffff;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
-
-  /* ==========================================
-     بطاقة القاتل المكشوفة - أسود مع تأثيرات
-     ========================================== */
   .card.revealed.assassin {
     background: linear-gradient(145deg, #0a0a0a, #1a0505);
     color: #e8c84a;
@@ -1193,7 +944,6 @@
     position: relative;
     overflow: hidden;
   }
-
   .card.revealed.assassin::before {
     content: '';
     position: absolute;
@@ -1203,12 +953,10 @@
     border-radius: 12px;
     z-index: -1;
   }
-
   @keyframes assassin-border {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
-
   .card.revealed.assassin::after {
     content: '💀';
     position: absolute;
@@ -1218,14 +966,12 @@
     left: 50%;
     transform: translate(-50%, -50%);
   }
-
   @keyframes assassin-reveal {
     0% { transform: scale(0.5) rotate(180deg); opacity: 0; }
     30% { transform: scale(1.2) rotate(-10deg); opacity: 1; }
     60% { transform: scale(0.9) rotate(5deg); }
     100% { transform: scale(0.96) rotate(0deg); opacity: 1; }
   }
-
   .card.revealed .word {
     opacity: 0.85;
     font-size: 0.85em;
@@ -1233,9 +979,6 @@
     z-index: 1;
   }
 
-  /* ==========================================
-     ختم البطاقة
-     ========================================== */
   .seal {
     position: absolute;
     width: 38px;
@@ -1255,7 +998,6 @@
     font-family: 'Cairo', sans-serif;
     z-index: 2;
   }
-
   .card.revealed.assassin .seal {
     border-color: var(--gold);
     color: var(--gold);
@@ -1263,15 +1005,11 @@
     box-shadow: 0 0 20px rgba(232, 200, 74, 0.1);
     animation: seal-pulse 2s ease-in-out infinite;
   }
-
   @keyframes seal-pulse {
     0%, 100% { box-shadow: 0 0 20px rgba(232, 200, 74, 0.1); }
     50% { box-shadow: 0 0 40px rgba(232, 200, 74, 0.2); }
   }
 
-  /* ==========================================
-     LEGEND
-     ========================================== */
   .legend {
     display: flex;
     justify-content: center;
@@ -1285,13 +1023,7 @@
     border-radius: var(--radius);
     border: 1px solid rgba(232, 200, 74, 0.05);
   }
-
-  .legend span {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
+  .legend span { display: flex; align-items: center; gap: 10px; }
   .legend i {
     width: 14px;
     height: 14px;
@@ -1299,11 +1031,7 @@
     display: inline-block;
     transition: var(--transition);
   }
-
-  .legend i:hover {
-    transform: scale(1.3);
-  }
-
+  .legend i:hover { transform: scale(1.3); }
   .legend .assassin-icon {
     display: inline-block;
     width: 14px;
@@ -1314,7 +1042,6 @@
     position: relative;
     box-shadow: 0 0 15px rgba(232, 200, 74, 0.05);
   }
-
   .legend .assassin-icon::after {
     content: '☠';
     position: absolute;
@@ -1325,9 +1052,6 @@
     color: var(--gold);
   }
 
-  /* ==========================================
-     OVERLAY
-     ========================================== */
   .overlay {
     position: fixed;
     inset: 0;
@@ -1340,16 +1064,11 @@
     padding: 24px;
     animation: overlay-in 0.3s ease;
   }
-
   @keyframes overlay-in {
     0% { opacity: 0; }
     100% { opacity: 1; }
   }
-
-  .overlay.show {
-    display: flex;
-  }
-
+  .overlay.show { display: flex; }
   .overlay-card {
     background: linear-gradient(145deg, var(--bg-card), var(--bg-secondary));
     color: var(--text-primary);
@@ -1362,12 +1081,10 @@
     border: 1px solid rgba(232, 200, 74, 0.06);
     animation: overlay-card-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
-
   @keyframes overlay-card-in {
     0% { transform: scale(0.9) translateY(30px); opacity: 0; }
     100% { transform: scale(1) translateY(0); opacity: 1; }
   }
-
   .overlay-card h2 {
     font-family: 'Cairo', sans-serif;
     font-weight: 900;
@@ -1377,28 +1094,20 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-
   .overlay-card p {
     font-size: 16px;
     color: var(--text-secondary);
     margin: 0 0 26px;
     line-height: 2;
   }
-
   .overlay-card .row {
     display: flex;
     gap: 14px;
     justify-content: center;
     flex-wrap: wrap;
   }
+  .overlay-card .row .stamp-btn { min-width: 130px; }
 
-  .overlay-card .row .stamp-btn {
-    min-width: 130px;
-  }
-
-  /* ==========================================
-     SYNC NOTE
-     ========================================== */
   .sync-note {
     text-align: center;
     font-size: 13px;
@@ -1409,15 +1118,8 @@
     border-radius: 10px;
     border: 1px solid rgba(232, 200, 74, 0.05);
   }
+  .sync-note b { color: var(--gold); }
 
-  .sync-note b {
-    color: var(--gold);
-  }
-
-
-  /* ==========================================
-     PREMIUM HOME SCREEN
-     ========================================== */
   .home-screen {
     min-height: 520px;
     display: flex;
@@ -1425,7 +1127,6 @@
     justify-content: center;
     position: relative;
   }
-
   .home-hero {
     width: 100%;
     text-align: center;
@@ -1438,7 +1139,6 @@
     box-shadow: 0 30px 100px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);
     overflow: hidden;
   }
-
   .home-hero::before {
     content: 'CLASSIFIED';
     position: absolute;
@@ -1452,7 +1152,6 @@
     letter-spacing: 4px;
     font-size: 10px;
   }
-
   .hero-emblem {
     width: 108px;
     height: 108px;
@@ -1466,12 +1165,10 @@
     box-shadow: 0 0 70px rgba(232,200,74,.1);
     animation: hero-float 3s ease-in-out infinite;
   }
-
   @keyframes hero-float {
     0%,100% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
   }
-
   .hero-kicker {
     color: var(--gold);
     font-size: 12px;
@@ -1479,7 +1176,6 @@
     letter-spacing: 4px;
     margin-bottom: 8px;
   }
-
   .hero-title {
     font-size: clamp(38px, 7vw, 70px);
     font-weight: 900;
@@ -1491,7 +1187,6 @@
     -webkit-text-fill-color: transparent;
     animation: shimmer 4s ease-in-out infinite;
   }
-
   .hero-desc {
     max-width: 650px;
     margin: 0 auto 26px;
@@ -1499,7 +1194,6 @@
     line-height: 1.9;
     font-size: 16px;
   }
-
   .hero-actions {
     display: flex;
     justify-content: center;
@@ -1507,7 +1201,6 @@
     flex-wrap: wrap;
     margin-bottom: 28px;
   }
-
   .hero-primary, .hero-secondary {
     border-radius: 12px;
     padding: 15px 28px;
@@ -1517,38 +1210,32 @@
     cursor: pointer;
     transition: var(--transition);
   }
-
   .hero-primary {
     border: 0;
     color: #111;
     background: linear-gradient(135deg,#ffe889,var(--gold),#b89830);
     box-shadow: 0 10px 35px rgba(232,200,74,.22);
   }
-
   .hero-secondary {
     color: var(--text-primary);
     border: 1px solid rgba(232,200,74,.2);
     background: rgba(255,255,255,.035);
   }
-
   .hero-primary:hover, .hero-secondary:hover {
     transform: translateY(-3px);
     box-shadow: 0 14px 45px rgba(0,0,0,.35);
   }
-
   .feature-grid {
     display: grid;
     grid-template-columns: repeat(4,1fr);
     gap: 10px;
   }
-
   .feature-card {
     padding: 15px 10px;
     border-radius: 14px;
     background: rgba(255,255,255,.025);
     border: 1px solid rgba(255,255,255,.06);
   }
-
   .feature-card .fi { font-size: 25px; margin-bottom: 7px; }
   .feature-card b { display:block; font-size:12px; color:var(--text-primary); }
   .feature-card span { display:block; font-size:10px; color:var(--text-muted); margin-top:3px; }
@@ -1561,7 +1248,6 @@
     background: rgba(0,0,0,.2);
     border: 1px solid rgba(232,200,74,.08);
   }
-
   .howto-panel h3 { color:var(--gold); margin-bottom:12px; }
   .howto-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
   .howto-step {
@@ -1578,7 +1264,6 @@
     justify-content:flex-start;
     margin-bottom:12px;
   }
-
   .screen-back button {
     background:transparent;
     border:1px solid rgba(232,200,74,.12);
@@ -1594,7 +1279,6 @@
     display:grid;
     gap:10px;
   }
-
   .rule-row {
     display:flex;
     gap:12px;
@@ -1622,9 +1306,6 @@
     box-shadow:0 0 12px rgba(76,175,80,.5);
   }
 
-  /* ==========================================
-     RESPONSIVE
-     ========================================== */
   @media (max-width: 768px) {
     .header { padding: 20px 16px 26px; }
     .stamp { top: 10px; left: 12px; font-size: 9px; padding: 2px 10px; }
@@ -1644,6 +1325,7 @@
     .score { justify-content: center; }
     .actions { justify-content: center; }
     .turn-label { min-width: auto; font-size: 14px; }
+    .timer-display { font-size: 18px; min-width: 40px; padding: 2px 10px; }
     .roster-strip { flex-direction: column; gap: 10px; }
     .roster-strip .side { min-width: auto; }
     .room-code .code { font-size: 28px; letter-spacing: 8px; padding: 12px 20px; }
@@ -1694,6 +1376,7 @@
     .howto-steps { grid-template-columns: 1fr; }
     .home-hero { padding: 34px 16px 24px; }
     .hero-desc { font-size: 14px; }
+    .timer-display { font-size: 14px; min-width: 30px; }
   }
 </style>
 </head>
@@ -1806,7 +1489,6 @@
       <b>★</b> النجمة تعيّن <b>رئيس الجواسيس</b> — وهو الوحيد الذي يرى ألوان البطاقات ويكتب التلميح.<br>
       <span style="color:var(--gold);">☠ القاتل: بطاقة سوداء — عند كشفها يخسر الفريق الحالي فوراً!</span></p>
       
-      <!-- إعدادات اللعبة -->
       <div class="settings-row">
         <label>
           <span class="setting-label">☠ القاتلين:</span>
@@ -1822,6 +1504,29 @@
             <option value="easy">سهل</option>
             <option value="normal" selected>متوسط</option>
             <option value="hard">صعب</option>
+          </select>
+        </label>
+        <label>
+          <span class="setting-label">⏱ المدة:</span>
+          <select id="localTimer">
+            <option value="30">30 ثانية</option>
+            <option value="60" selected>60 ثانية</option>
+            <option value="90">90 ثانية</option>
+            <option value="120">120 ثانية</option>
+            <option value="0">بدون مؤقت</option>
+          </select>
+        </label>
+        <label>
+          <span class="setting-label">📂 الفئة:</span>
+          <select id="localCategory">
+            <option value="all">جميع الكلمات</option>
+            <option value="anime">أنمي</option>
+            <option value="films">أفلام</option>
+            <option value="movies">سينما</option>
+            <option value="games">ألعاب</option>
+            <option value="sports">رياضة</option>
+            <option value="food">طعام</option>
+            <option value="animals">حيوانات</option>
           </select>
         </label>
       </div>
@@ -1875,12 +1580,12 @@
       <div style="margin-top:12px;font-size:14px;color:var(--text-secondary);">
         <span class="online-status connected" id="connectionStatus"></span>
         <span id="playerCount">0 لاعب متصل</span>
+        <span style="margin-right:20px;">👑 <span id="leaderName">أنت</span></span>
       </div>
     </div>
     <div class="card-box">
-      <p class="intro" style="margin-bottom:16px;">👤 انضم إلى أحد الفريقين واختر رئيس الجواسيس (★)</p>
+      <p class="intro" style="margin-bottom:16px;">👤 انضم إلى أحد الفريقين <span style="color:var(--gold);">(الحد الأدنى: 2 لاعبين لكل فريق)</span></p>
       
-      <!-- إعدادات اللعبة أونلاين -->
       <div class="settings-row">
         <label>
           <span class="setting-label">☠ القاتلين:</span>
@@ -1896,6 +1601,29 @@
             <option value="easy">سهل</option>
             <option value="normal" selected>متوسط</option>
             <option value="hard">صعب</option>
+          </select>
+        </label>
+        <label>
+          <span class="setting-label">⏱ المدة:</span>
+          <select id="onlineTimer">
+            <option value="30">30 ثانية</option>
+            <option value="60" selected>60 ثانية</option>
+            <option value="90">90 ثانية</option>
+            <option value="120">120 ثانية</option>
+            <option value="0">بدون مؤقت</option>
+          </select>
+        </label>
+        <label>
+          <span class="setting-label">📂 الفئة:</span>
+          <select id="onlineCategory">
+            <option value="all">جميع الكلمات</option>
+            <option value="anime">أنمي</option>
+            <option value="films">أفلام</option>
+            <option value="movies">سينما</option>
+            <option value="games">ألعاب</option>
+            <option value="sports">رياضة</option>
+            <option value="food">طعام</option>
+            <option value="animals">حيوانات</option>
           </select>
         </label>
       </div>
@@ -1915,7 +1643,7 @@
       <div class="setup-err" id="oErr"></div>
       <div class="setup-actions">
         <button class="stamp-btn ghost" id="oBack">🚪 مغادرة</button>
-        <button class="stamp-btn" id="oStart">⚔️ ابدأ المهمة</button>
+        <button class="stamp-btn" id="oStart" disabled>⚔️ ابدأ المهمة (يحتاج 4 لاعبين)</button>
       </div>
       <div class="sync-note">🔄 يتم التحديث تلقائياً لجميع اللاعبين</div>
     </div>
@@ -1933,6 +1661,7 @@
         <div class="score-pill red" id="redPill">🔴 9</div>
         <div class="turn-label" id="turnLabel"><span class="turn-icon">⚔️</span> دور الأحمر</div>
         <div class="score-pill blue" id="bluePill">🔵 8</div>
+        <div class="timer-display" id="timerDisplay">⏱ 60</div>
       </div>
       <div class="actions">
         <div class="toggle-wrap hidden" id="spyToggleWrap">
@@ -1960,6 +1689,7 @@
       <span><i style="background:var(--neutral)"></i> محايد</span>
       <span><span class="assassin-icon"></span> القاتل ☠</span>
       <span id="assassinCountDisplay" style="color:var(--text-muted);font-size:12px;">عدد القاتلين: 1</span>
+      <span id="categoryDisplay" style="color:var(--text-muted);font-size:12px;">📂 جميع الكلمات</span>
     </div>
     <div class="sync-note hidden" id="onlineSyncNote">🌐 وضع أونلاين — رمز الغرفة: <b id="gameRoomCode"></b></div>
   </div>
@@ -1976,7 +1706,7 @@
 </div>
 
 <script>
- // ==========================================
+// ==========================================
 // 🌐 PEERJS TRANSPORT (RELIABLE VERSION - Auto Retry + Multiple Servers)
 // ==========================================
 
@@ -1989,7 +1719,6 @@ let roomListenerCallback = null;
 let connectionAttempts = 0;
 const MAX_ATTEMPTS = 3;
 
-// Multiple PeerJS servers for reliability
 const PEER_SERVERS = [
     { host: '0.peerjs.com', port: 443, path: '/' },
     { host: '1.peerjs.com', port: 443, path: '/' },
@@ -2042,7 +1771,6 @@ function createHostPeer(code) {
                 peer = newPeer;
                 isHost = true;
                 
-                // Setup host connection handling
                 peer.on('connection', (conn) => {
                     hostConns.push(conn);
                     console.log('📡 New connection accepted');
@@ -2175,64 +1903,83 @@ function setConnDot(ok) {
     if (el) el.className = 'online-status ' + (ok ? 'connected' : 'disconnected');
 }
 
-  
+function isRoomLeader(room) {
+    return room && room.leader === me.name;
+}
 
-  // ==========================================
-  // PARTICLES
-  // ==========================================
-  function createParticles() {
+// ==========================================
+// PARTICLES
+// ==========================================
+function createParticles() {
     const container = document.getElementById('particles');
     const count = 30;
     for (let i = 0; i < count; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      p.style.left = Math.random() * 100 + '%';
-      p.style.width = (Math.random() * 3 + 1) + 'px';
-      p.style.height = p.style.width;
-      p.style.animationDuration = (Math.random() * 20 + 15) + 's';
-      p.style.animationDelay = (Math.random() * 15) + 's';
-      p.style.opacity = Math.random() * 0.3 + 0.1;
-      container.appendChild(p);
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.width = (Math.random() * 3 + 1) + 'px';
+        p.style.height = p.style.width;
+        p.style.animationDuration = (Math.random() * 20 + 15) + 's';
+        p.style.animationDelay = (Math.random() * 15) + 's';
+        p.style.opacity = Math.random() * 0.3 + 0.1;
+        container.appendChild(p);
     }
-  }
-  createParticles();
-  // ==========================================
-  // HOME / HELP NAVIGATION
-  // ==========================================
-  function showHomeScreen(screenId) {
+}
+createParticles();
+
+// ==========================================
+// HOME / HELP NAVIGATION
+// ==========================================
+function showHomeScreen(screenId) {
     ['homeScreen','howScreen','rulesScreen','modeScreen'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.toggle('hidden', id !== screenId);
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', id !== screenId);
     });
-  }
+}
 
-  document.getElementById('homePlayBtn').addEventListener('click', () => showHomeScreen('modeScreen'));
-  document.getElementById('homeHowBtn').addEventListener('click', () => showHomeScreen('howScreen'));
-  document.getElementById('homeRulesBtn').addEventListener('click', () => showHomeScreen('rulesScreen'));
-  document.getElementById('howBack').addEventListener('click', () => showHomeScreen('homeScreen'));
-  document.getElementById('rulesBack').addEventListener('click', () => showHomeScreen('homeScreen'));
-  document.getElementById('modeBack').addEventListener('click', () => showHomeScreen('homeScreen'));
+document.getElementById('homePlayBtn').addEventListener('click', () => showHomeScreen('modeScreen'));
+document.getElementById('homeHowBtn').addEventListener('click', () => showHomeScreen('howScreen'));
+document.getElementById('homeRulesBtn').addEventListener('click', () => showHomeScreen('rulesScreen'));
+document.getElementById('howBack').addEventListener('click', () => showHomeScreen('homeScreen'));
+document.getElementById('rulesBack').addEventListener('click', () => showHomeScreen('homeScreen'));
+document.getElementById('modeBack').addEventListener('click', () => showHomeScreen('homeScreen'));
 
+// ==========================================
+// CATEGORIES
+// ==========================================
+const CATEGORIES = {
+    all: WORD_POOL,
+    anime: ["ناروتو", "سون غوكو", "لوفي", "سايتاما", "إيتاشي", "ساسكي", "إيتشيجو", "إرين", "ليفاي", "كونان", "كاكاشي", "جوتارو", "ديو", "نوراغامي", "تسونا", "ريبورن", "غين", "ميكا", "آلين", "إدوارد"],
+    films: ["تيتانيك", "آفاتار", "إنسبشن", "ذا ماتريكس", "غلاديايتر", "بريف هارت", "فورست غامب", "فايت كلوب", "بول فكشن", "بيسي فيولنت", "نو كونتري", "سلاوم دوج", "ميمينتو", "ذا برستيج", "إيترنال صنشاين"],
+    movies: ["العراب", "الخيميائي", "المنتقمون", "الرجل العنكبوت", "باتمان", "سوبرمان", "آيرون مان", "ثور", "كابتن أمريكا", "بلاك بانثر", "دكتور سترينج", "المرعبون", "توي ستوري", "مادا غاسكار", "انترستيلار", "البداية"],
+    games: ["ماين كرافت", "فورتنايت", "كول أوف ديوتي", "جتا", "ريد ديد", "أساسنز كريد", "غود أوف وور", "ذا لاست أوف أس", "أنشارتد", "فال أوت", "سكايرم", "ويتشر", "سايبر بانك", "إيلدن رينغ", "سوبر ماريو", "زيلدا", "بوكيمون", "فاينل فانتازي", "ميتال غير", "سبايرو"],
+    sports: ["كرة القدم", "كرة السلة", "التنس", "السباحة", "الملاكمة", "الجودو", "الكاراتيه", "التايكواندو", "الجمباز", "ألعاب القوى", "كرة الطائرة", "كرة اليد", "الرماية", "الفروسية", "التزلج", "ركوب الأمواج", "الجولف", "البيسبول", "الكريكت", "الرغبي"],
+    food: ["البيتزا", "الباستا", "السوشي", "البرغر", "التاكو", "الكباب", "المندي", "البرياني", "الفلافل", "الحمص", "المحشي", "الكشري", "الكنافة", "البقلاوة", "القطايف", "المعكرونة", "السمبوسة", "المنسف", "المقلوبة", "الدولمة"],
+    animals: ["الأسد", "النمر", "الفيل", "الزرافة", "التمساح", "الدلفين", "الحوت", "النسر", "الصقر", "البومة", "الغراب", "العقرب", "الثعبان", "السلحفاة", "القندس", "الدب", "الذئب", "الثعلب", "الأرنب", "الحصان"]
+};
 
-  // ==========================================
-  // VARIABLES
-  // ==========================================
-  let mode = null;
-  let teams = { red: [], blue: [] };
-  let pickedTeamLocal = 'red';
-  let pickedTeamOnline = 'red';
-  let state = {};
-  let spymasterMode = false;
-  let roomCode = null;
-  let me = { name: '', team: 'red' };
-  let roomListener = null;
-  let roomListenerCallback = null;
-  let gameSettings = { assassinCount: 1, difficulty: 'normal' };
+// ==========================================
+// VARIABLES
+// ==========================================
+let mode = null;
+let teams = { red: [], blue: [] };
+let pickedTeamLocal = 'red';
+let pickedTeamOnline = 'red';
+let state = {};
+let spymasterMode = false;
+let roomCode = null;
+let me = { name: '', team: 'red' };
+let roomListener = null;
+let roomListenerCallback = null;
+let gameSettings = { assassinCount: 1, difficulty: 'normal', timer: 60, category: 'all' };
+let timerInterval = null;
+let timerSeconds = 60;
+let isTimerRunning = false;
 
-  // ==========================================
-  // WORD POOL
-  // ==========================================
-  const WORD_POOL = [
+// ==========================================
+// WORD POOL (Original)
+// ==========================================
+const WORD_POOL = [
     "أسد", "نمر", "فيل", "زرافة", "تمساح", "سلحفاة", "ثعبان", "عقرب",
     "نسر", "صقر", "بومة", "غراب", "حمامة", "بلبل", "عصفور", "نحلة",
     "فراشة", "نملة", "عنكبوت", "سمكة", "حوت", "دولفين", "قنديل", "نجم البحر",
@@ -2257,214 +2004,276 @@ function setConnDot(ok) {
     "كاميرا", "ميكروفون", "سماعة", "شاشة", "لوحة", "فأرة", "طابعة", "ماسح",
     "كتاب", "مجلة", "صحيفة", "مخطوطة", "رسالة", "بطاقة", "دفتر", "قلم",
     "نافورة", "جسر", "سد", "قناة", "أنبوب", "صنبور", "مرآة", "زجاجة"
-  ];
+];
 
-  // ==========================================
-  // UTILITY FUNCTIONS
-  // ==========================================
-  function show(id) {
+// ==========================================
+// UTILITY FUNCTIONS
+// ==========================================
+function show(id) {
     ['modeScreen', 'localSetupScreen', 'onlineEntryScreen', 'lobbyScreen', 'gameScreen'].forEach(s => {
-      document.getElementById(s).classList.toggle('hidden', s !== id);
+        document.getElementById(s).classList.toggle('hidden', s !== id);
     });
-  }
+}
 
-  function shuffle(arr) {
+function shuffle(arr) {
     const a = arr.slice();
     for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
-  }
+}
 
-  function makeCode() {
+function makeCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let c = '';
     for (let i = 0; i < 5; i++) c += chars[Math.floor(Math.random() * chars.length)];
     return c;
-  }
+}
 
-  function isSingleWord(str) {
+function isSingleWord(str) {
     const t = str.trim();
     return t.length > 0 && !/\s/.test(t);
-  }
+}
 
-  // ==========================================
-  // ROOM STORAGE (backed by the PeerJS transport above —
-  // same read/write/listen shape the rest of the file expects)
-  // ==========================================
-  async function writeRoom(roomCode, data) {
+function getWordPool(category) {
+    if (category && CATEGORIES[category]) {
+        return CATEGORIES[category];
+    }
+    return WORD_POOL;
+}
+
+// ==========================================
+// ROOM STORAGE
+// ==========================================
+async function writeRoom(roomCode, data) {
     localRoomCache = data;
     if (isHost) {
-      broadcastState();
-      if (roomListenerCallback) roomListenerCallback(localRoomCache);
+        broadcastState();
+        if (roomListenerCallback) roomListenerCallback(localRoomCache);
     } else if (guestConn && guestConn.open) {
-      guestConn.send(JSON.stringify({ type: 'setRoom', room: data }));
-      if (roomListenerCallback) roomListenerCallback(localRoomCache);
+        guestConn.send(JSON.stringify({ type: 'setRoom', room: data }));
+        if (roomListenerCallback) roomListenerCallback(localRoomCache);
     }
-  }
+}
 
-  async function readRoom(roomCode) {
+async function readRoom(roomCode) {
     return localRoomCache;
-  }
+}
 
-  function listenToRoom(roomCode, callback) {
+function listenToRoom(roomCode, callback) {
     roomListenerCallback = callback;
     return () => { roomListenerCallback = null; };
-  }
+}
 
-  function getPlayerCount(room) {
+function getPlayerCount(room) {
     if (!room || !room.teams) return 0;
     return (room.teams.red || []).length + (room.teams.blue || []).length;
-  }
+}
 
-  // ==========================================
-  // GAME FUNCTIONS
-  // ==========================================
-  function buildBoard(assassinCount = 1, difficulty = 'normal') {
-    const words = shuffle(WORD_POOL).slice(0, 25);
+// ==========================================
+// GAME FUNCTIONS
+// ==========================================
+function buildBoard(assassinCount = 1, difficulty = 'normal', category = 'all') {
+    const wordPool = getWordPool(category);
+    const words = shuffle(wordPool).slice(0, 25);
     const startingTeam = Math.random() < 0.5 ? 'red' : 'blue';
     const otherTeam = startingTeam === 'red' ? 'blue' : 'red';
     
     let roles = [];
-    
-    // عدد البطاقات حسب الصعوبة
     let redCount = 9, blueCount = 8;
-    if (difficulty === 'easy') {
-      redCount = 10;
-      blueCount = 9;
-    } else if (difficulty === 'hard') {
-      redCount = 8;
-      blueCount = 7;
-    }
+    if (difficulty === 'easy') { redCount = 10; blueCount = 9; }
+    else if (difficulty === 'hard') { redCount = 8; blueCount = 7; }
     
-    // إضافة بطاقات الفرق
     for (let i = 0; i < redCount; i++) roles.push(startingTeam);
     for (let i = 0; i < blueCount; i++) roles.push(otherTeam);
     
-    // إضافة القاتلين
     const maxAssassins = Math.min(assassinCount, 25 - redCount - blueCount - 1);
     for (let i = 0; i < maxAssassins; i++) roles.push('assassin');
     
-    // باقي البطاقات محايدة
-    while (roles.length < 25) {
-      roles.push('neutral');
-    }
-    
+    while (roles.length < 25) { roles.push('neutral'); }
     roles = shuffle(roles);
+    
     return {
-      cards: words.map((w, i) => ({ word: w, team: roles[i], revealed: false })),
-      turn: startingTeam,
-      assassinCount: maxAssassins
+        cards: words.map((w, i) => ({ word: w, team: roles[i], revealed: false })),
+        turn: startingTeam,
+        assassinCount: maxAssassins
     };
-  }
+}
 
-  function newGame() {
+function startTimer(seconds) {
+    stopTimer();
+    if (seconds <= 0) {
+        document.getElementById('timerDisplay').textContent = '⏱ ∞';
+        return;
+    }
+    timerSeconds = seconds;
+    isTimerRunning = true;
+    document.getElementById('timerDisplay').textContent = '⏱ ' + timerSeconds;
+    document.getElementById('timerDisplay').classList.remove('warning');
+    
+    timerInterval = setInterval(() => {
+        timerSeconds--;
+        document.getElementById('timerDisplay').textContent = '⏱ ' + timerSeconds;
+        if (timerSeconds <= 5) {
+            document.getElementById('timerDisplay').classList.add('warning');
+        }
+        if (timerSeconds <= 0) {
+            stopTimer();
+            document.getElementById('timerDisplay').textContent = '⏱ 0';
+            // Time's up - auto pass turn
+            if (!state.gameOver && state.clue) {
+                passTurn();
+            }
+        }
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    isTimerRunning = false;
+    document.getElementById('timerDisplay').classList.remove('warning');
+}
+
+function newGame() {
     const assassinCount = parseInt(document.getElementById('localAssassinCount')?.value || '1');
     const difficulty = document.getElementById('localDifficulty')?.value || 'normal';
+    const timer = parseInt(document.getElementById('localTimer')?.value || '60');
+    const category = document.getElementById('localCategory')?.value || 'all';
+    
     gameSettings.assassinCount = assassinCount;
     gameSettings.difficulty = difficulty;
+    gameSettings.timer = timer;
+    gameSettings.category = category;
     
-    const built = buildBoard(assassinCount, difficulty);
+    const built = buildBoard(assassinCount, difficulty, category);
     state = {
-      cards: built.cards,
-      turn: built.turn,
-      clue: null,
-      gameOver: false,
-      winner: null,
-      reason: '',
-      assassinCount: built.assassinCount,
-      assassinRevealed: 0
+        cards: built.cards,
+        turn: built.turn,
+        clue: null,
+        gameOver: false,
+        winner: null,
+        reason: '',
+        assassinCount: built.assassinCount,
+        assassinRevealed: 0,
+        timer: timer,
+        category: category
     };
+    
     document.getElementById('assassinCountDisplay').textContent = `☠ القاتلين: ${state.assassinCount}`;
+    document.getElementById('categoryDisplay').textContent = `📂 ${getCategoryName(category)}`;
     spymasterMode = false;
     document.getElementById('spyToggle').classList.remove('on');
     document.getElementById('overlay').classList.remove('show');
     renderRoster();
     render();
     if (mode === 'online') syncGameState();
-  }
+    if (timer > 0) startTimer(timer);
+}
 
-  function spymasterName(team) {
+function getCategoryName(cat) {
+    const names = {
+        all: 'جميع الكلمات',
+        anime: 'أنمي',
+        films: 'أفلام',
+        movies: 'سينما',
+        games: 'ألعاب',
+        sports: 'رياضة',
+        food: 'طعام',
+        animals: 'حيوانات'
+    };
+    return names[cat] || 'جميع الكلمات';
+}
+
+function spymasterName(team) {
     const p = (teams[team] || []).find(pl => pl.spymaster);
     return p ? p.name : (team === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق');
-  }
+}
 
-  function rosterText(team) {
+function rosterText(team) {
     return (teams[team] || []).map(p => p.spymaster ? ('<b>★ ' + p.name + '</b>') : p.name).join(' · ');
-  }
+}
 
-  function renderRoster() {
+function renderRoster() {
     document.getElementById('redRoster').innerHTML = '🔴 ' + rosterText('red');
     document.getElementById('blueRoster').innerHTML = '🔵 ' + rosterText('blue');
-  }
+}
 
-  function remaining(team) {
+function remaining(team) {
     return (state.cards || []).filter(c => c.team === team && !c.revealed).length;
-  }
+}
 
-  function amISpymaster() {
+function amISpymaster() {
     if (mode !== 'online') return false;
     const p = (teams[me.team] || []).find(pl => pl.name === me.name);
     return !!(p && p.spymaster);
-  }
+}
 
-  function currentSpymasterCanAct() {
+function currentSpymasterCanAct() {
     if (mode === 'local') return spymasterMode;
     return amISpymaster() && me.team === state.turn;
-  }
+}
 
-  // ==========================================
-  // RENDER FUNCTIONS
-  // ==========================================
-  function render() {
+function canRevealCard() {
+    if (state.gameOver) return false;
+    if (!state.clue) return false;
+    if (mode === 'online' && me.team !== state.turn) return false;
+    // Only team members (not spymaster) can reveal cards
+    if (mode === 'online' && amISpymaster()) return false;
+    return true;
+}
+
+// ==========================================
+// RENDER FUNCTIONS
+// ==========================================
+function render() {
     const board = document.getElementById('board');
     board.innerHTML = '';
     const iAmSpyViewing = mode === 'local' ? spymasterMode : (amISpymaster());
     const shouldLockBoard = !state.clue && !iAmSpyViewing && !state.gameOver;
 
     (state.cards || []).forEach((c, idx) => {
-      const el = document.createElement('div');
-      el.className = 'card';
-      
-      if (c.revealed) {
-        el.classList.add('revealed', c.team);
-      }
-      
-      if (iAmSpyViewing && !c.revealed) {
-        el.classList.add('hint-' + c.team);
-      }
-      
-      if (shouldLockBoard) {
-        el.classList.add('disabled');
-        el.style.cursor = 'default';
-      }
-
-      const word = document.createElement('div');
-      word.className = 'word';
-      word.textContent = c.word;
-      el.appendChild(word);
-
-      if (c.revealed) {
-        const seal = document.createElement('div');
-        seal.className = 'seal';
-        if (c.team === 'assassin') {
-          seal.textContent = '☠';
-        } else if (c.team === 'red') {
-          seal.textContent = 'ح';
-        } else if (c.team === 'blue') {
-          seal.textContent = 'ق';
-        } else {
-          seal.textContent = 'م';
+        const el = document.createElement('div');
+        el.className = 'card';
+        
+        if (c.revealed) {
+            el.classList.add('revealed', c.team);
         }
-        el.appendChild(seal);
-      }
+        
+        // Only show hints to spymaster
+        if (iAmSpyViewing && !c.revealed) {
+            el.classList.add('hint-' + c.team);
+        }
+        
+        if (shouldLockBoard) {
+            el.classList.add('disabled');
+            el.style.cursor = 'default';
+        }
 
-      if (!shouldLockBoard && !c.revealed) {
-        el.addEventListener('click', () => revealCard(idx));
-      }
-      
-      board.appendChild(el);
+        const word = document.createElement('div');
+        word.className = 'word';
+        word.textContent = c.word;
+        el.appendChild(word);
+
+        if (c.revealed) {
+            const seal = document.createElement('div');
+            seal.className = 'seal';
+            if (c.team === 'assassin') { seal.textContent = '☠'; }
+            else if (c.team === 'red') { seal.textContent = 'ح'; }
+            else if (c.team === 'blue') { seal.textContent = 'ق'; }
+            else { seal.textContent = 'م'; }
+            el.appendChild(seal);
+        }
+
+        // Only team members (not spymaster) can click cards
+        if (!shouldLockBoard && !c.revealed && canRevealCard()) {
+            el.addEventListener('click', () => revealCard(idx));
+        }
+
+        board.appendChild(el);
     });
 
     document.getElementById('redPill').textContent = '🔴 ' + remaining('red');
@@ -2474,116 +2283,116 @@ function setConnDot(ok) {
 
     const turnLabel = document.getElementById('turnLabel');
     if (state.gameOver) {
-      turnLabel.innerHTML = '🏁 انتهت المهمة';
+        turnLabel.innerHTML = '🏁 انتهت المهمة';
     } else {
-      const icon = state.turn === 'red' ? '🔴' : '🔵';
-      const name = state.turn === 'red' ? 'دور الفريق الأحمر' : 'دور الفريق الأزرق';
-      turnLabel.innerHTML = `<span class="turn-icon">${icon}</span> ${name}`;
+        const icon = state.turn === 'red' ? '🔴' : '🔵';
+        const name = state.turn === 'red' ? 'دور الفريق الأحمر' : 'دور الفريق الأزرق';
+        turnLabel.innerHTML = `<span class="turn-icon">${icon}</span> ${name}`;
     }
 
     document.getElementById('assassinCountDisplay').textContent = `☠ القاتلين: ${state.assassinCount || 1}`;
 
     renderClueBar();
     renderBoardLock(shouldLockBoard);
-  }
+}
 
-  function renderBoardLock(shouldLockBoard) {
+function renderBoardLock(shouldLockBoard) {
     const lock = document.getElementById('boardLock');
     if (shouldLockBoard && !state.gameOver) {
-      lock.classList.remove('hidden');
-      const teamName = state.turn === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق';
-      lock.innerHTML = `
-        <span class="lock-icon">🔒</span>
-        <span class="lock-text">في انتظار تلميح من رئيس جواسيس ${teamName}</span>
-        <span style="font-size:13px;color:var(--text-muted);">👁 رئيس الجواسيس يرى الكلمات والتلميحات</span>
-      `;
+        lock.classList.remove('hidden');
+        const teamName = state.turn === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق';
+        lock.innerHTML = `
+            <span class="lock-icon">🔒</span>
+            <span class="lock-text">في انتظار تلميح من رئيس جواسيس ${teamName}</span>
+            <span style="font-size:13px;color:var(--text-muted);">👁 رئيس الجواسيس يرى الكلمات والتلميحات</span>
+        `;
     } else {
-      lock.classList.add('hidden');
+        lock.classList.add('hidden');
     }
-  }
+}
 
-  function renderClueBar() {
+function renderClueBar() {
     const bar = document.getElementById('clueBar');
     bar.innerHTML = '';
     
     if (state.gameOver) {
-      const assassinMsg = state.assassinCount > 1 ? ` (${state.assassinCount} قاتلين)` : '';
-      bar.innerHTML = `
-        <span style="color:var(--gold);font-weight:900;font-size:20px;font-family:'Cairo',sans-serif;">
-          🏆 ${state.winner === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق'} فاز!
-        </span>
-        <span style="color:var(--text-secondary);font-size:15px;">${state.reason}${assassinMsg}</span>
-      `;
-      return;
+        const assassinMsg = state.assassinCount > 1 ? ` (${state.assassinCount} قاتلين)` : '';
+        bar.innerHTML = `
+            <span style="color:var(--gold);font-weight:900;font-size:20px;font-family:'Cairo',sans-serif;">
+                🏆 ${state.winner === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق'} فاز!
+            </span>
+            <span style="color:var(--text-secondary);font-size:15px;">${state.reason}${assassinMsg}</span>
+        `;
+        return;
     }
 
     if (state.clue) {
-      const wrap = document.createElement('div');
-      wrap.style.cssText = 'display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;';
-      wrap.innerHTML = `
-        <span style="font-size:14px;color:var(--text-secondary);">💡 التلميح:</span>
-        <span class="clue-word">${state.clue.word}</span>
-        <span class="clue-num">${state.clue.number === '∞' ? '∞' : state.clue.number}</span>
-        <span class="guesses">🎯 متبقية: ${state.clue.guessesLeft}</span>
-      `;
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;';
+        wrap.innerHTML = `
+            <span style="font-size:14px;color:var(--text-secondary);">💡 التلميح:</span>
+            <span class="clue-word">${state.clue.word}</span>
+            <span class="clue-num">${state.clue.number === '∞' ? '∞' : state.clue.number}</span>
+            <span class="guesses">🎯 متبقية: ${state.clue.guessesLeft}</span>
+        `;
 
-      const canAct = (mode === 'local' || me.team === state.turn);
-      if (canAct && !state.gameOver) {
-        const endBtn = document.createElement('button');
-        endBtn.className = 'stamp-btn ghost';
-        endBtn.textContent = '⏭ إنهاء الدور';
-        endBtn.style.fontSize = '13px';
-        endBtn.style.padding = '8px 16px';
-        endBtn.addEventListener('click', passTurn);
-        wrap.appendChild(endBtn);
-      }
-      bar.appendChild(wrap);
-      return;
+        const canAct = (mode === 'local' || me.team === state.turn);
+        if (canAct && !state.gameOver && !amISpymaster()) {
+            const endBtn = document.createElement('button');
+            endBtn.className = 'stamp-btn ghost';
+            endBtn.textContent = '⏭ إنهاء الدور';
+            endBtn.style.fontSize = '13px';
+            endBtn.style.padding = '8px 16px';
+            endBtn.addEventListener('click', passTurn);
+            wrap.appendChild(endBtn);
+        }
+        bar.appendChild(wrap);
+        return;
     }
 
     const canGiveClue = currentSpymasterCanAct();
     if (canGiveClue && !state.gameOver) {
-      const form = document.createElement('div');
-      form.className = 'clue-form';
-      form.innerHTML = `
-        <span style="font-size:15px;color:var(--gold);font-weight:700;font-family:'Cairo',sans-serif;">👁 أنت رئيس الجواسيس</span>
-        <input type="text" id="clueWordInput" placeholder="✏️ كلمة واحدة" maxlength="20">
-        <select id="clueNumInput">
-          ${[1,2,3,4,5,6,7,8,9,'∞'].map(n => `<option value="${n}">${n}</option>`).join('')}
-        </select>
-        <button class="stamp-btn" id="sendClueBtn" style="font-size:14px;padding:10px 24px;">📨 إرسال</button>
-        <div class="clue-err" id="clueErr"></div>
-        <div style="width:100%;text-align:center;font-size:13px;color:var(--text-muted);margin-top:4px;">
-          👀 انظر إلى اللوحة أعلاه - الألوان تظهر لك كرئيس جواسيس (${state.assassinCount} قاتلين)
-        </div>
-      `;
-      bar.appendChild(form);
+        const form = document.createElement('div');
+        form.className = 'clue-form';
+        form.innerHTML = `
+            <span style="font-size:15px;color:var(--gold);font-weight:700;font-family:'Cairo',sans-serif;">👁 أنت رئيس الجواسيس</span>
+            <input type="text" id="clueWordInput" placeholder="✏️ كلمة واحدة" maxlength="20">
+            <select id="clueNumInput">
+                ${[1,2,3,4,5,6,7,8,9,'∞'].map(n => `<option value="${n}">${n}</option>`).join('')}
+            </select>
+            <button class="stamp-btn" id="sendClueBtn" style="font-size:14px;padding:10px 24px;">📨 إرسال</button>
+            <div class="clue-err" id="clueErr"></div>
+            <div style="width:100%;text-align:center;font-size:13px;color:var(--text-muted);margin-top:4px;">
+                👀 انظر إلى اللوحة أعلاه - الألوان تظهر لك كرئيس جواسيس (${state.assassinCount} قاتلين)
+            </div>
+        `;
+        bar.appendChild(form);
 
-      document.getElementById('sendClueBtn').addEventListener('click', submitClue);
-      document.getElementById('clueWordInput').addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault();
-          submitClue(); }
-      });
-      setTimeout(() => {
-        const input = document.getElementById('clueWordInput');
-        if (input) input.focus();
-      }, 100);
+        document.getElementById('sendClueBtn').addEventListener('click', submitClue);
+        document.getElementById('clueWordInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); submitClue(); }
+        });
+        setTimeout(() => {
+            const input = document.getElementById('clueWordInput');
+            if (input) input.focus();
+        }, 100);
     } else if (!state.gameOver) {
-      const teamName = state.turn === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق';
-      const spyName = spymasterName(state.turn);
-      bar.innerHTML = `
-        <span style="font-size:15px;color:var(--text-secondary);font-family:'Cairo',sans-serif;">
-          ⏳ في انتظار تلميح من رئيس جواسيس ${teamName}: <b style="color:var(--gold);">${spyName}</b>
-        </span>
-        <span style="font-size:13px;color:var(--text-muted);">☠ ${state.assassinCount} قاتلين على اللوحة</span>
-      `;
+        const teamName = state.turn === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق';
+        const spyName = spymasterName(state.turn);
+        const timerText = state.timer > 0 ? `⏱ ${state.timer}ث` : 'بدون مؤقت';
+        bar.innerHTML = `
+            <span style="font-size:15px;color:var(--text-secondary);font-family:'Cairo',sans-serif;">
+                ⏳ في انتظار تلميح من رئيس جواسيس ${teamName}: <b style="color:var(--gold);">${spyName}</b>
+            </span>
+            <span style="font-size:13px;color:var(--text-muted);">☠ ${state.assassinCount} قاتلين • ${timerText}</span>
+        `;
     }
-  }
+}
 
-  // ==========================================
-  // GAME ACTIONS - مع منطق القاتل الصحيح
-  // ==========================================
-  async function submitClue() {
+// ==========================================
+// GAME ACTIONS
+// ==========================================
+async function submitClue() {
     const wordInput = document.getElementById('clueWordInput');
     const numInput = document.getElementById('clueNumInput');
     const err = document.getElementById('clueErr');
@@ -2591,13 +2400,13 @@ function setConnDot(ok) {
 
     const word = wordInput.value.trim();
     if (!isSingleWord(word)) {
-      err.textContent = '❌ التلميح يجب أن يكون كلمة واحدة فقط';
-      return;
+        err.textContent = '❌ التلميح يجب أن يكون كلمة واحدة فقط';
+        return;
     }
 
     if (state.cards.some(c => c.word === word && !c.revealed)) {
-      err.textContent = '⚠️ هذه الكلمة موجودة على اللوحة! اختر كلمة أخرى.';
-      return;
+        err.textContent = '⚠️ هذه الكلمة موجودة على اللوحة! اختر كلمة أخرى.';
+        return;
     }
 
     const numVal = numInput.value;
@@ -2607,103 +2416,107 @@ function setConnDot(ok) {
     state.clue = { word, number, guessesLeft: guesses };
     render();
     if (mode === 'online') await syncGameState();
-  }
+}
 
-  async function passTurn() {
+async function passTurn() {
+    stopTimer();
     state.turn = state.turn === 'red' ? 'blue' : 'red';
     state.clue = null;
     render();
     if (mode === 'online') await syncGameState();
-  }
+    // Start timer for new turn
+    if (state.timer > 0 && !state.gameOver) {
+        startTimer(state.timer);
+    }
+}
 
-  async function revealCard(idx) {
+async function revealCard(idx) {
     if (state.gameOver) return;
     if (!state.clue) return;
     if (mode === 'online' && me.team !== state.turn) return;
+    if (mode === 'online' && amISpymaster()) {
+        // Spymaster cannot click cards
+        return;
+    }
 
     const card = state.cards[idx];
     if (card.revealed) return;
 
     card.revealed = true;
 
-    // ==========================================
-    // 🎯 منطق القاتل الجديد
-    // ==========================================
     if (card.team === 'assassin') {
-      // الفريق الحالي يخسر فوراً عند كشف القاتل
-      state.gameOver = true;
-      state.winner = state.turn === 'red' ? 'blue' : 'red';
-      const currentTeamName = state.turn === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق';
-      state.reason = `💀 ${currentTeamName} كشف بطاقة القاتل! ${state.winner === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق'} يفوز فوراً!`;
-      render();
-      showEndOverlay();
-      if (mode === 'online') await syncGameState();
-      return;
+        stopTimer();
+        state.gameOver = true;
+        state.winner = state.turn === 'red' ? 'blue' : 'red';
+        const currentTeamName = state.turn === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق';
+        state.reason = `💀 ${currentTeamName} كشف بطاقة القاتل! ${state.winner === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق'} يفوز فوراً!`;
+        render();
+        showEndOverlay();
+        if (mode === 'online') await syncGameState();
+        return;
     }
 
-    // ==========================================
-    // البطاقة من نفس الفريق
-    // ==========================================
     if (card.team === state.turn) {
-      state.clue.guessesLeft -= 1;
+        state.clue.guessesLeft -= 1;
 
-      // فوز الفريق الحالي
-      if (remaining('red') === 0) {
-        state.gameOver = true;
-        state.winner = 'red';
-        state.reason = '🏆 كشف الفريق الأحمر جميع بطاقاته وفاز بالمهمة!';
-        render();
-        showEndOverlay();
-        if (mode === 'online') await syncGameState();
-        return;
-      }
-      if (remaining('blue') === 0) {
-        state.gameOver = true;
-        state.winner = 'blue';
-        state.reason = '🏆 كشف الفريق الأزرق جميع بطاقاته وفاز بالمهمة!';
-        render();
-        showEndOverlay();
-        if (mode === 'online') await syncGameState();
-        return;
-      }
+        if (remaining('red') === 0) {
+            stopTimer();
+            state.gameOver = true;
+            state.winner = 'red';
+            state.reason = '🏆 كشف الفريق الأحمر جميع بطاقاته وفاز بالمهمة!';
+            render();
+            showEndOverlay();
+            if (mode === 'online') await syncGameState();
+            return;
+        }
+        if (remaining('blue') === 0) {
+            stopTimer();
+            state.gameOver = true;
+            state.winner = 'blue';
+            state.reason = '🏆 كشف الفريق الأزرق جميع بطاقاته وفاز بالمهمة!';
+            render();
+            showEndOverlay();
+            if (mode === 'online') await syncGameState();
+            return;
+        }
 
-      // انتهت التخمينات
-      if (state.clue.guessesLeft <= 0) {
+        if (state.clue.guessesLeft <= 0) {
+            stopTimer();
+            state.turn = state.turn === 'red' ? 'blue' : 'red';
+            state.clue = null;
+            if (state.timer > 0) startTimer(state.timer);
+        }
+    } else {
+        stopTimer();
         state.turn = state.turn === 'red' ? 'blue' : 'red';
         state.clue = null;
-      }
-    } else {
-      // ==========================================
-      // البطاقة من الفريق الآخر أو محايدة
-      // ==========================================
-      state.turn = state.turn === 'red' ? 'blue' : 'red';
-      state.clue = null;
 
-      if (remaining('red') === 0) {
-        state.gameOver = true;
-        state.winner = 'red';
-        state.reason = '🏆 كشف الفريق الأحمر جميع بطاقاته وفاز بالمهمة!';
-        render();
-        showEndOverlay();
-        if (mode === 'online') await syncGameState();
-        return;
-      }
-      if (remaining('blue') === 0) {
-        state.gameOver = true;
-        state.winner = 'blue';
-        state.reason = '🏆 كشف الفريق الأزرق جميع بطاقاته وفاز بالمهمة!';
-        render();
-        showEndOverlay();
-        if (mode === 'online') await syncGameState();
-        return;
-      }
+        if (remaining('red') === 0) {
+            state.gameOver = true;
+            state.winner = 'red';
+            state.reason = '🏆 كشف الفريق الأحمر جميع بطاقاته وفاز بالمهمة!';
+            render();
+            showEndOverlay();
+            if (mode === 'online') await syncGameState();
+            return;
+        }
+        if (remaining('blue') === 0) {
+            state.gameOver = true;
+            state.winner = 'blue';
+            state.reason = '🏆 كشف الفريق الأزرق جميع بطاقاته وفاز بالمهمة!';
+            render();
+            showEndOverlay();
+            if (mode === 'online') await syncGameState();
+            return;
+        }
+        if (state.timer > 0) startTimer(state.timer);
     }
 
     render();
     if (mode === 'online') await syncGameState();
-  }
+}
 
-  async function syncGameState() {
+async function syncGameState() {
     if (mode !== 'online' || !roomCode) return;
     const room = await readRoom(roomCode);
     if (!room) return;
@@ -2715,91 +2528,98 @@ function setConnDot(ok) {
     room.reason = state.reason;
     room.assassinCount = state.assassinCount;
     room.assassinRevealed = state.assassinRevealed;
+    room.timer = state.timer;
+    room.category = state.category;
     await writeRoom(roomCode, room);
-  }
+}
 
-  // ==========================================
-  // OVERLAY
-  // ==========================================
-  function showEndOverlay() {
+// ==========================================
+// OVERLAY
+// ==========================================
+function showEndOverlay() {
     const teamName = state.winner === 'red' ? '🔴 الفريق الأحمر' : '🔵 الفريق الأزرق';
     const isAssassinWin = state.reason.includes('القاتل');
     const title = isAssassinWin ? '☠ القاتل!' : `${teamName} 🏆`;
     
     showOverlay(title, state.reason, [{
-      label: '🔄 كلمات جديدة',
-      onClick: async () => {
-        if (mode === 'local') {
-          newGame();
-        } else {
-          const assassinCount = gameSettings.assassinCount || 1;
-          const difficulty = gameSettings.difficulty || 'normal';
-          const built = buildBoard(assassinCount, difficulty);
-          state = {
-            cards: built.cards,
-            turn: built.turn,
-            clue: null,
-            gameOver: false,
-            winner: null,
-            reason: '',
-            assassinCount: built.assassinCount,
-            assassinRevealed: 0
-          };
-          document.getElementById('overlay').classList.remove('show');
-          render();
-          await syncGameState();
+        label: '🔄 كلمات جديدة',
+        onClick: async () => {
+            if (mode === 'local') {
+                newGame();
+            } else {
+                const assassinCount = gameSettings.assassinCount || 1;
+                const difficulty = gameSettings.difficulty || 'normal';
+                const timer = gameSettings.timer || 60;
+                const category = gameSettings.category || 'all';
+                const built = buildBoard(assassinCount, difficulty, category);
+                state = {
+                    cards: built.cards,
+                    turn: built.turn,
+                    clue: null,
+                    gameOver: false,
+                    winner: null,
+                    reason: '',
+                    assassinCount: built.assassinCount,
+                    assassinRevealed: 0,
+                    timer: timer,
+                    category: category
+                };
+                document.getElementById('overlay').classList.remove('show');
+                render();
+                await syncGameState();
+                if (timer > 0) startTimer(timer);
+            }
         }
-      }
     }, {
-      label: mode === 'local' ? '📝 تعديل الفرق' : '🚪 مغادرة',
-      ghost: true,
-      onClick: () => {
-        document.getElementById('overlay').classList.remove('show');
-        if (mode === 'local') {
-          show('localSetupScreen');
-        } else {
-          leaveRoom();
+        label: mode === 'local' ? '📝 تعديل الفرق' : '🚪 مغادرة',
+        ghost: true,
+        onClick: () => {
+            document.getElementById('overlay').classList.remove('show');
+            if (mode === 'local') {
+                show('localSetupScreen');
+            } else {
+                leaveRoom();
+            }
         }
-      }
     }]);
-  }
+}
 
-  function showOverlay(title, text, buttons) {
+function showOverlay(title, text, buttons) {
     document.getElementById('overlayTitle').textContent = title;
     document.getElementById('overlayText').textContent = text;
     const row = document.getElementById('overlayRow');
     row.innerHTML = '';
     buttons.forEach(b => {
-      const btn = document.createElement('button');
-      btn.className = 'stamp-btn' + (b.ghost ? ' ghost' : '') + (b.gold ? ' gold' : '');
-      btn.textContent = b.label;
-      btn.addEventListener('click', b.onClick);
-      row.appendChild(btn);
+        const btn = document.createElement('button');
+        btn.className = 'stamp-btn' + (b.ghost ? ' ghost' : '') + (b.gold ? ' gold' : '');
+        btn.textContent = b.label;
+        btn.addEventListener('click', b.onClick);
+        row.appendChild(btn);
     });
     document.getElementById('overlay').classList.add('show');
-  }
+}
 
-  // ==========================================
-  // LOCAL SETUP
-  // ==========================================
-  document.querySelectorAll('#lTeamPick button').forEach(btn => {
+// ==========================================
+// LOCAL SETUP
+// ==========================================
+document.querySelectorAll('#lTeamPick button').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#lTeamPick button').forEach(b => b.classList.remove('sel'));
-      btn.classList.add('sel');
-      pickedTeamLocal = btn.dataset.team;
+        document.querySelectorAll('#lTeamPick button').forEach(b => b.classList.remove('sel'));
+        btn.classList.add('sel');
+        pickedTeamLocal = btn.dataset.team;
     });
-  });
+});
 
-  function renderLocalTeams() {
+function renderLocalTeams() {
     const redList = document.getElementById('lRedList');
     const blueList = document.getElementById('lBlueList');
     redList.innerHTML = (teams.red || []).length ? '' : '<div class="empty-hint">لا يوجد لاعبون بعد</div>';
     blueList.innerHTML = (teams.blue || []).length ? '' : '<div class="empty-hint">لا يوجد لاعبون بعد</div>';
     (teams.red || []).forEach((p, i) => redList.appendChild(localChip(p, i, 'red')));
     (teams.blue || []).forEach((p, i) => blueList.appendChild(localChip(p, i, 'blue')));
-  }
+}
 
-  function localChip(p, idx, team) {
+function localChip(p, idx, team) {
     const el = document.createElement('div');
     el.className = 'player-chip';
     const nameWrap = document.createElement('div');
@@ -2809,9 +2629,9 @@ function setConnDot(ok) {
     star.textContent = p.spymaster ? '★' : '☆';
     star.title = 'رئيس الجواسيس';
     star.addEventListener('click', () => {
-      (teams[team] || []).forEach(pl => pl.spymaster = false);
-      p.spymaster = true;
-      renderLocalTeams();
+        (teams[team] || []).forEach(pl => pl.spymaster = false);
+        p.spymaster = true;
+        renderLocalTeams();
     });
     const name = document.createElement('span');
     name.textContent = p.name;
@@ -2821,44 +2641,40 @@ function setConnDot(ok) {
     del.className = 'del-btn';
     del.textContent = '✕';
     del.addEventListener('click', () => {
-      teams[team].splice(idx, 1);
-      renderLocalTeams();
+        teams[team].splice(idx, 1);
+        renderLocalTeams();
     });
     el.appendChild(nameWrap);
     el.appendChild(del);
     return el;
-  }
+}
 
-  function addLocalPlayer() {
+function addLocalPlayer() {
     const input = document.getElementById('lPlayerName');
     const name = input.value.trim();
     const err = document.getElementById('lErr');
     err.textContent = '';
-    if (!name) { err.textContent = '✏️ اكتب اسم اللاعب أولاً.';
-      return; }
+    if (!name) { err.textContent = '✏️ اكتب اسم اللاعب أولاً.'; return; }
     const allNames = (teams.red || []).concat(teams.blue || []).map(p => p.name);
-    if (allNames.includes(name)) { err.textContent = '⚠️ هذا الاسم مستخدم بالفعل.';
-      return; }
+    if (allNames.includes(name)) { err.textContent = '⚠️ هذا الاسم مستخدم بالفعل.'; return; }
     if (!teams[pickedTeamLocal]) teams[pickedTeamLocal] = [];
     teams[pickedTeamLocal].push({ name, spymaster: teams[pickedTeamLocal].length === 0 });
     input.value = '';
     input.focus();
     renderLocalTeams();
-  }
+}
 
-  document.getElementById('lAddBtn').addEventListener('click', addLocalPlayer);
-  document.getElementById('lPlayerName').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault();
-      addLocalPlayer(); }
-  });
+document.getElementById('lAddBtn').addEventListener('click', addLocalPlayer);
+document.getElementById('lPlayerName').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addLocalPlayer(); }
+});
 
-  document.getElementById('lStart').addEventListener('click', () => {
+document.getElementById('lStart').addEventListener('click', () => {
     const err = document.getElementById('lErr');
     if (!teams.red || teams.red.length === 0 || !teams.blue || teams.blue.length === 0) {
-      err.textContent = '⚠️ كل فريق يحتاج لاعباً واحداً على الأقل.';
-      return;
+        err.textContent = '⚠️ كل فريق يحتاج لاعباً واحداً على الأقل.';
+        return;
     }
-    // Auto-assign spymaster if none selected (first player in each team becomes spymaster)
     if (!teams.red.some(p => p.spymaster)) teams.red[0].spymaster = true;
     if (!teams.blue.some(p => p.spymaster)) teams.blue[0].spymaster = true;
     err.textContent = '';
@@ -2866,62 +2682,70 @@ function setConnDot(ok) {
     document.getElementById('spyToggleWrap').classList.remove('hidden');
     show('gameScreen');
     newGame();
-  });
+});
 
-  // ==========================================
-  // ONLINE - CREATE ROOM
-  // ==========================================
-  document.getElementById('createRoomBtn').addEventListener('click', async () => {
+// ==========================================
+// ONLINE - CREATE ROOM
+// ==========================================
+document.getElementById('createRoomBtn').addEventListener('click', async () => {
     roomCode = makeCode();
     me = { name: '', team: 'red' };
     const assassinCount = parseInt(document.getElementById('onlineAssassinCount').value);
     const difficulty = document.getElementById('onlineDifficulty').value;
+    const timer = parseInt(document.getElementById('onlineTimer').value);
+    const category = document.getElementById('onlineCategory').value;
     gameSettings.assassinCount = assassinCount;
     gameSettings.difficulty = difficulty;
+    gameSettings.timer = timer;
+    gameSettings.category = category;
     
     const room = {
-      phase: 'lobby',
-      teams: { red: [], blue: [] },
-      cards: [],
-      turn: 'red',
-      clue: null,
-      gameOver: false,
-      winner: null,
-      reason: '',
-      assassinCount: assassinCount,
-      assassinRevealed: 0,
-      settings: { assassinCount, difficulty }
+        phase: 'lobby',
+        teams: { red: [], blue: [] },
+        cards: [],
+        turn: 'red',
+        clue: null,
+        gameOver: false,
+        winner: null,
+        reason: '',
+        assassinCount: assassinCount,
+        assassinRevealed: 0,
+        settings: { assassinCount, difficulty, timer, category },
+        leader: null
     };
     try {
-      await createHostPeer(roomCode);
-      await writeRoom(roomCode, room);
-      document.getElementById('lobbyCode').textContent = roomCode;
-      document.getElementById('onlineErr').textContent = '';
-      setConnDot(true);
-      show('lobbyScreen');
-      startListening();
-      updatePlayerCount(room);
+        await createHostPeer(roomCode);
+        await writeRoom(roomCode, room);
+        document.getElementById('lobbyCode').textContent = roomCode;
+        document.getElementById('onlineErr').textContent = '';
+        setConnDot(true);
+        show('lobbyScreen');
+        startListening();
+        updatePlayerCount(room);
+        // Set leader
+        room.leader = me.name;
+        await writeRoom(roomCode, room);
+        renderLobbyFromRoom(room);
     } catch (e) {
-      document.getElementById('onlineErr').textContent = '❌ تعذّر إنشاء الغرفة، حاول مجدداً.';
-      console.error(e);
+        document.getElementById('onlineErr').textContent = '❌ تعذّر إنشاء الغرفة، حاول مجدداً.';
+        console.error(e);
     }
-  });
+});
 
-  // ==========================================
-  // ONLINE - JOIN ROOM
-  // ==========================================
-  document.getElementById('joinRoomBtn').addEventListener('click', async () => {
+// ==========================================
+// ONLINE - JOIN ROOM
+// ==========================================
+document.getElementById('joinRoomBtn').addEventListener('click', async () => {
     const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
     const err = document.getElementById('onlineErr');
     err.textContent = '';
-    if (!code) { err.textContent = '✏️ اكتب رمز الغرفة.';
-      return; }
+    if (!code) { err.textContent = '✏️ اكتب رمز الغرفة.'; return; }
     let room;
     try {
-      room = await connectAsGuest(code);
+        room = await connectAsGuest(code);
     } catch (e) {
-      err.textContent = '❌ لا توجد غرفة بهذا الرمز، أو تعذّر الاتصال.';
-      return;
+        err.textContent = '❌ لا توجد غرفة بهذا الرمز، أو تعذّر الاتصال.';
+        return;
     }
     roomCode = code;
     me = { name: '', team: 'red' };
@@ -2929,133 +2753,192 @@ function setConnDot(ok) {
     setConnDot(true);
     renderLobbyFromRoom(room);
     if (room.phase === 'playing') {
-      enterOnlineGame(room);
+        enterOnlineGame(room);
     } else {
-      show('lobbyScreen');
-      startListening();
+        show('lobbyScreen');
+        startListening();
     }
     updatePlayerCount(room);
-  });
+});
 
-  // ==========================================
-  // ONLINE - LOBBY
-  // ==========================================
-  document.querySelectorAll('#oTeamPick button').forEach(btn => {
+// ==========================================
+// ONLINE - LOBBY
+// ==========================================
+document.querySelectorAll('#oTeamPick button').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#oTeamPick button').forEach(b => b.classList.remove('sel'));
-      btn.classList.add('sel');
-      pickedTeamOnline = btn.dataset.team;
+        document.querySelectorAll('#oTeamPick button').forEach(b => b.classList.remove('sel'));
+        btn.classList.add('sel');
+        pickedTeamOnline = btn.dataset.team;
     });
-  });
+});
 
-  document.getElementById('oJoinBtn').addEventListener('click', async () => {
+document.getElementById('oJoinBtn').addEventListener('click', async () => {
     const name = document.getElementById('oPlayerName').value.trim();
     const err = document.getElementById('oErr');
     err.textContent = '';
-    if (!name) { err.textContent = '✏️ اكتب اسمك أولاً.';
-      return; }
+    if (!name) { err.textContent = '✏️ اكتب اسمك أولاً.'; return; }
     const room = await readRoom(roomCode);
-    if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.';
-      return; }
+    if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.'; return; }
     const allNames = (room.teams.red || []).concat(room.teams.blue || []).map(p => p.name);
-    if (allNames.includes(name)) { err.textContent = '⚠️ هذا الاسم مستخدم في الغرفة بالفعل.';
-      return; }
+    if (allNames.includes(name)) { err.textContent = '⚠️ هذا الاسم مستخدم في الغرفة بالفعل.'; return; }
     if (!room.teams[pickedTeamOnline]) room.teams[pickedTeamOnline] = [];
-    // Auto-assign spymaster if this is the first player in the team
     room.teams[pickedTeamOnline].push({ name, spymaster: room.teams[pickedTeamOnline].length === 0 });
+    // Set leader if not set
+    if (!room.leader) room.leader = name;
     await writeRoom(roomCode, room);
     me = { name, team: pickedTeamOnline };
     renderLobbyFromRoom(room);
     updatePlayerCount(room);
-  });
+});
 
-  document.getElementById('oBack').addEventListener('click', leaveRoom);
+document.getElementById('oBack').addEventListener('click', leaveRoom);
 
-  function leaveRoom() {
-    if (roomListener) { roomListener();
-      roomListener = null; }
+function leaveRoom() {
+    if (roomListener) { roomListener(); roomListener = null; }
     if (peer) { peer.destroy(); peer = null; }
     hostConns = []; guestConn = null; localRoomCache = null; isHost = false;
     roomCode = null;
     me = { name: '', team: 'red' };
     show('modeScreen');
-  }
+}
 
-  function renderLobbyFromRoom(room) {
+function renderLobbyFromRoom(room) {
     if (!room) return;
     const redList = document.getElementById('oRedList');
     const blueList = document.getElementById('oBlueList');
     redList.innerHTML = (room.teams.red || []).length ? '' : '<div class="empty-hint">لا يوجد لاعبون بعد</div>';
     blueList.innerHTML = (room.teams.blue || []).length ? '' : '<div class="empty-hint">لا يوجد لاعبون بعد</div>';
-    (room.teams.red || []).forEach(p => redList.appendChild(onlineChip(p, 'red')));
-    (room.teams.blue || []).forEach(p => blueList.appendChild(onlineChip(p, 'blue')));
+    (room.teams.red || []).forEach(p => redList.appendChild(onlineChip(p, 'red', room)));
+    (room.teams.blue || []).forEach(p => blueList.appendChild(onlineChip(p, 'blue', room)));
     updatePlayerCount(room);
     
     if (room.settings) {
-      document.getElementById('onlineAssassinCount').value = room.settings.assassinCount || 1;
-      document.getElementById('onlineDifficulty').value = room.settings.difficulty || 'normal';
+        document.getElementById('onlineAssassinCount').value = room.settings.assassinCount || 1;
+        document.getElementById('onlineDifficulty').value = room.settings.difficulty || 'normal';
+        document.getElementById('onlineTimer').value = room.settings.timer || 60;
+        document.getElementById('onlineCategory').value = room.settings.category || 'all';
     }
-  }
+    
+    // Update leader name
+    document.getElementById('leaderName').textContent = room.leader || 'غير معين';
+    
+    // Enable/disable start button
+    const startBtn = document.getElementById('oStart');
+    const redCount = (room.teams.red || []).length;
+    const blueCount = (room.teams.blue || []).length;
+    const total = redCount + blueCount;
+    const isLeader = room.leader === me.name;
+    
+    if (total >= 4 && redCount >= 2 && blueCount >= 2 && isLeader) {
+        startBtn.disabled = false;
+        startBtn.textContent = '⚔️ ابدأ المهمة';
+    } else if (total < 4) {
+        startBtn.disabled = true;
+        startBtn.textContent = `⚔️ يحتاج 4 لاعبين (${total}/4)`;
+    } else if (redCount < 2 || blueCount < 2) {
+        startBtn.disabled = true;
+        startBtn.textContent = '⚔️ كل فريق يحتاج 2 لاعبين';
+    } else if (!isLeader) {
+        startBtn.disabled = true;
+        startBtn.textContent = '⚔️ انتظر قائد الغرفة';
+    }
+}
 
-  function onlineChip(p, team) {
+function onlineChip(p, team, room) {
     const el = document.createElement('div');
     el.className = 'player-chip';
     const nameWrap = document.createElement('div');
     nameWrap.className = 'pname';
-    const star = document.createElement('button');
+    
     const isMe = me.name === p.name && me.team === team;
+    const isLeader = room && room.leader === p.name;
+    
+    // Crown for leader
+    if (isLeader) {
+        const crown = document.createElement('span');
+        crown.className = 'crown';
+        crown.textContent = '👑';
+        nameWrap.appendChild(crown);
+    }
+    
+    const star = document.createElement('button');
     star.className = 'star-btn' + (p.spymaster ? ' on' : '');
     star.textContent = p.spymaster ? '★' : '☆';
     star.title = 'رئيس الجواسيس';
     star.disabled = !isMe;
     if (!isMe) star.style.opacity = '0.35';
     star.addEventListener('click', async () => {
-      if (!isMe) return;
-      const room = await readRoom(roomCode);
-      if (!room) return;
-      (room.teams[team] || []).forEach(pl => pl.spymaster = (pl.name === p.name));
-      await writeRoom(roomCode, room);
-      renderLobbyFromRoom(room);
+        if (!isMe) return;
+        const roomData = await readRoom(roomCode);
+        if (!roomData) return;
+        (roomData.teams[team] || []).forEach(pl => pl.spymaster = (pl.name === p.name));
+        await writeRoom(roomCode, roomData);
+        renderLobbyFromRoom(roomData);
     });
+    
     const name = document.createElement('span');
     name.textContent = p.name + (isMe ? ' (أنت)' : '');
     nameWrap.appendChild(star);
     nameWrap.appendChild(name);
     el.appendChild(nameWrap);
+    
+    // Kick button for leader
+    if (room && room.leader === me.name && !isMe) {
+        const kickBtn = document.createElement('button');
+        kickBtn.className = 'kick-btn';
+        kickBtn.textContent = '🚫';
+        kickBtn.title = 'طرد اللاعب';
+        kickBtn.addEventListener('click', async () => {
+            if (confirm(`هل تريد طرد ${p.name}؟`)) {
+                const roomData = await readRoom(roomCode);
+                if (!roomData) return;
+                roomData.teams[team] = roomData.teams[team].filter(pl => pl.name !== p.name);
+                await writeRoom(roomCode, roomData);
+                renderLobbyFromRoom(roomData);
+                updatePlayerCount(roomData);
+            }
+        });
+        el.appendChild(kickBtn);
+    }
+    
     return el;
-  }
+}
 
-  function updatePlayerCount(room) {
+function updatePlayerCount(room) {
     const count = getPlayerCount(room);
     document.getElementById('playerCount').textContent = count + ' لاعب متصل';
-  }
+}
 
-  // ==========================================
-  // ONLINE - START GAME - MODIFIED: Minimum 2 players per team
-  // ==========================================
-  document.getElementById('oStart').addEventListener('click', async () => {
+// ==========================================
+// ONLINE - START GAME
+// ==========================================
+document.getElementById('oStart').addEventListener('click', async () => {
     const err = document.getElementById('oErr');
     err.textContent = '';
     const room = await readRoom(roomCode);
-    if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.';
-      return; }
+    if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.'; return; }
     
-    // Check minimum 2 players per team
-    if (!room.teams.red || room.teams.red.length < 2 || !room.teams.blue || room.teams.blue.length < 2) {
-      err.textContent = '⚠️ كل فريق يحتاج 2 لاعبين على الأقل (4 لاعبين إجمالاً).';
-      return;
+    // Only leader can start
+    if (room.leader !== me.name) {
+        err.textContent = '⚠️ فقط قائد الغرفة يمكنه بدء المهمة.';
+        return;
     }
     
-    if (!me.name) { err.textContent = '⚠️ انضم لأحد الفريقين أولاً.';
-      return; }
+    if (!room.teams.red || room.teams.red.length < 2 || !room.teams.blue || room.teams.blue.length < 2) {
+        err.textContent = '⚠️ كل فريق يحتاج 2 لاعبين على الأقل (4 لاعبين إجمالاً).';
+        return;
+    }
     
-    // Auto-assign spymaster for each team if not set
+    if (!me.name) { err.textContent = '⚠️ انضم لأحد الفريقين أولاً.'; return; }
+    
     if (!room.teams.red.some(p => p.spymaster)) room.teams.red[0].spymaster = true;
     if (!room.teams.blue.some(p => p.spymaster)) room.teams.blue[0].spymaster = true;
     
     const assassinCount = room.settings?.assassinCount || 1;
     const difficulty = room.settings?.difficulty || 'normal';
-    const built = buildBoard(assassinCount, difficulty);
+    const timer = room.settings?.timer || 60;
+    const category = room.settings?.category || 'all';
+    const built = buildBoard(assassinCount, difficulty, category);
     
     room.phase = 'playing';
     room.cards = built.cards;
@@ -3066,27 +2949,33 @@ function setConnDot(ok) {
     room.reason = '';
     room.assassinCount = built.assassinCount;
     room.assassinRevealed = 0;
+    room.timer = timer;
+    room.category = category;
     await writeRoom(roomCode, room);
     enterOnlineGame(room);
-  });
+});
 
-  // ==========================================
-  // ONLINE - ENTER GAME
-  // ==========================================
-  function enterOnlineGame(room) {
+// ==========================================
+// ONLINE - ENTER GAME
+// ==========================================
+function enterOnlineGame(room) {
     teams = room.teams || { red: [], blue: [] };
     state = {
-      cards: room.cards || [],
-      turn: room.turn || 'red',
-      clue: room.clue || null,
-      gameOver: room.gameOver || false,
-      winner: room.winner || null,
-      reason: room.reason || '',
-      assassinCount: room.assassinCount || 1,
-      assassinRevealed: room.assassinRevealed || 0
+        cards: room.cards || [],
+        turn: room.turn || 'red',
+        clue: room.clue || null,
+        gameOver: room.gameOver || false,
+        winner: room.winner || null,
+        reason: room.reason || '',
+        assassinCount: room.assassinCount || 1,
+        assassinRevealed: room.assassinRevealed || 0,
+        timer: room.timer || 60,
+        category: room.category || 'all'
     };
     gameSettings.assassinCount = state.assassinCount;
     gameSettings.difficulty = room.settings?.difficulty || 'normal';
+    gameSettings.timer = state.timer;
+    gameSettings.category = state.category;
     
     spymasterMode = false;
     document.getElementById('spyToggle').classList.remove('on');
@@ -3095,144 +2984,154 @@ function setConnDot(ok) {
     document.getElementById('gameRoomCode').textContent = roomCode;
     document.getElementById('onlineSyncNote').innerHTML = '🌐 وضع أونلاين — رمز الغرفة: <b>' + roomCode + '</b>';
     document.getElementById('assassinCountDisplay').textContent = `☠ القاتلين: ${state.assassinCount}`;
+    document.getElementById('categoryDisplay').textContent = `📂 ${getCategoryName(state.category)}`;
     show('gameScreen');
     renderRoster();
     render();
     if (state.gameOver) showEndOverlay();
-  }
+    if (state.timer > 0 && !state.gameOver) startTimer(state.timer);
+}
 
-  // ==========================================
-  // ONLINE - LISTENING
-  // ==========================================
-  function startListening() {
-    if (roomListener) { roomListener();
-      roomListener = null; }
+// ==========================================
+// ONLINE - LISTENING
+// ==========================================
+function startListening() {
+    if (roomListener) { roomListener(); roomListener = null; }
     roomListener = listenToRoom(roomCode, (room) => {
-      if (!room) return;
-      const currentScreen = document.getElementById('lobbyScreen');
-      if (!currentScreen.classList.contains('hidden')) {
-        renderLobbyFromRoom(room);
-        if (room.phase === 'playing') {
-          enterOnlineGame(room);
+        if (!room) return;
+        const currentScreen = document.getElementById('lobbyScreen');
+        if (!currentScreen.classList.contains('hidden')) {
+            renderLobbyFromRoom(room);
+            if (room.phase === 'playing') {
+                enterOnlineGame(room);
+            }
+        } else {
+            const gameScreen = document.getElementById('gameScreen');
+            if (!gameScreen.classList.contains('hidden')) {
+                teams = room.teams || { red: [], blue: [] };
+                state = {
+                    cards: room.cards || [],
+                    turn: room.turn || 'red',
+                    clue: room.clue || null,
+                    gameOver: room.gameOver || false,
+                    winner: room.winner || null,
+                    reason: room.reason || '',
+                    assassinCount: room.assassinCount || 1,
+                    assassinRevealed: room.assassinRevealed || 0,
+                    timer: room.timer || 60,
+                    category: room.category || 'all'
+                };
+                renderRoster();
+                render();
+                if (state.gameOver) {
+                    showEndOverlay();
+                } else {
+                    document.getElementById('overlay').classList.remove('show');
+                }
+                document.getElementById('spyToggleWrap').classList.toggle('hidden', !amISpymaster());
+            }
         }
-      } else {
-        const gameScreen = document.getElementById('gameScreen');
-        if (!gameScreen.classList.contains('hidden')) {
-          teams = room.teams || { red: [], blue: [] };
-          state = {
-            cards: room.cards || [],
-            turn: room.turn || 'red',
-            clue: room.clue || null,
-            gameOver: room.gameOver || false,
-            winner: room.winner || null,
-            reason: room.reason || '',
-            assassinCount: room.assassinCount || 1,
-            assassinRevealed: room.assassinRevealed || 0
-          };
-          renderRoster();
-          render();
-          if (state.gameOver) {
-            showEndOverlay();
-          } else {
-            document.getElementById('overlay').classList.remove('show');
-          }
-          document.getElementById('spyToggleWrap').classList.toggle('hidden', !amISpymaster());
-        }
-      }
     });
-  }
+}
 
-  // ==========================================
-  // GAME BUTTONS
-  // ==========================================
-  document.getElementById('reshuffleBtn').addEventListener('click', async () => {
+// ==========================================
+// GAME BUTTONS
+// ==========================================
+document.getElementById('reshuffleBtn').addEventListener('click', async () => {
     if (mode === 'local') {
-      newGame();
+        newGame();
     } else {
-      const assassinCount = gameSettings.assassinCount || 1;
-      const difficulty = gameSettings.difficulty || 'normal';
-      const built = buildBoard(assassinCount, difficulty);
-      state = {
-        cards: built.cards,
-        turn: built.turn,
-        clue: null,
-        gameOver: false,
-        winner: null,
-        reason: '',
-        assassinCount: built.assassinCount,
-        assassinRevealed: 0
-      };
-      render();
-      await syncGameState();
+        const assassinCount = gameSettings.assassinCount || 1;
+        const difficulty = gameSettings.difficulty || 'normal';
+        const timer = gameSettings.timer || 60;
+        const category = gameSettings.category || 'all';
+        const built = buildBoard(assassinCount, difficulty, category);
+        state = {
+            cards: built.cards,
+            turn: built.turn,
+            clue: null,
+            gameOver: false,
+            winner: null,
+            reason: '',
+            assassinCount: built.assassinCount,
+            assassinRevealed: 0,
+            timer: timer,
+            category: category
+        };
+        render();
+        await syncGameState();
+        if (timer > 0) startTimer(timer);
     }
-  });
+});
 
-  document.getElementById('editTeamsBtn').addEventListener('click', () => {
+document.getElementById('editTeamsBtn').addEventListener('click', () => {
     if (mode === 'local') {
-      show('localSetupScreen');
+        show('localSetupScreen');
     } else {
-      if (roomListener) { roomListener();
-        roomListener = null; }
-      show('lobbyScreen');
+        if (roomListener) { roomListener(); roomListener = null; }
+        show('lobbyScreen');
     }
-  });
+});
 
-  document.getElementById('spyToggleWrap').addEventListener('click', () => {
+document.getElementById('spyToggleWrap').addEventListener('click', () => {
     if (mode !== 'local' || state.gameOver) return;
     if (!spymasterMode) {
-      const name = spymasterName(state.turn);
-      showOverlay('👁 تسليم الجهاز', `هذا العرض مخصص لرئيس الجواسيس: <b>${name}</b><br>تأكد أن بقية اللاعبين لا ينظرون إلى الشاشة.`, [{
-        label: `أنا ${name}`,
-        onClick: () => {
-          spymasterMode = true;
-          document.getElementById('spyToggle').classList.add('on');
-          document.getElementById('overlay').classList.remove('show');
-          render();
-        }
-      }, {
-        label: 'إلغاء',
-        ghost: true,
-        onClick: () => { document.getElementById('overlay').classList.remove('show'); }
-      }]);
+        const name = spymasterName(state.turn);
+        showOverlay('👁 تسليم الجهاز', `هذا العرض مخصص لرئيس الجواسيس: <b>${name}</b><br>تأكد أن بقية اللاعبين لا ينظرون إلى الشاشة.`, [{
+            label: `أنا ${name}`,
+            onClick: () => {
+                spymasterMode = true;
+                document.getElementById('spyToggle').classList.add('on');
+                document.getElementById('overlay').classList.remove('show');
+                render();
+            }
+        }, {
+            label: 'إلغاء',
+            ghost: true,
+            onClick: () => { document.getElementById('overlay').classList.remove('show'); }
+        }]);
     } else {
-      spymasterMode = false;
-      document.getElementById('spyToggle').classList.remove('on');
-      render();
+        spymasterMode = false;
+        document.getElementById('spyToggle').classList.remove('on');
+        render();
     }
-  });
+});
 
-  // ==========================================
-  // MODE SELECTION BUTTONS
-  // ==========================================
-  document.getElementById('pickLocal').addEventListener('click', () => {
+// ==========================================
+// MODE SELECTION BUTTONS
+// ==========================================
+document.getElementById('pickLocal').addEventListener('click', () => {
     mode = 'local';
     teams = { red: [], blue: [] };
     show('localSetupScreen');
-  });
+});
 
-  document.getElementById('pickOnline').addEventListener('click', () => {
+document.getElementById('pickOnline').addEventListener('click', () => {
     mode = 'online';
     teams = { red: [], blue: [] };
     show('onlineEntryScreen');
-  });
+});
 
-  document.getElementById('lBack').addEventListener('click', () => show('modeScreen'));
-  document.getElementById('onlineBack').addEventListener('click', () => show('modeScreen'));
+document.getElementById('lBack').addEventListener('click', () => show('modeScreen'));
+document.getElementById('onlineBack').addEventListener('click', () => show('modeScreen'));
 
-  // ==========================================
-  // INIT
-  // ==========================================
-  renderLocalTeams();
-  show('modeScreen');
+// ==========================================
+// INIT
+// ==========================================
+renderLocalTeams();
+show('modeScreen');
 
-  console.log('🕵️ كود نيمز - النسخة النهائية المثالية');
-  console.log('✅ المميزات:');
-  console.log('  ☠ بطاقة القاتل سوداء مع تأثيرات خاصة');
-  console.log('  💀 عند كشف القاتل يفوز الفريق الآخر فوراً');
-  console.log('  📊 3 مستويات صعوبة (سهل/متوسط/صعب)');
-  console.log('  🌐 دعم كامل للعب أونلاين');
-  console.log('  👁 رئيس الجواسيس يرى الكلمات فوراً');
-  console.log('  🎨 تصميم احترافي مع تأثيرات حركية');
+console.log('🕵️ كود نيمز - النسخة النهائية مع جميع الميزات');
+console.log('✅ المميزات:');
+console.log('  👑 نظام قائد الغرفة');
+console.log('  ⏱ مؤقت لكل دور');
+console.log('  📂 فئات الكلمات (أنمي، أفلام، ألعاب، رياضة، طعام، حيوانات)');
+console.log('  🚫 طرد اللاعبين من قبل القائد');
+console.log('  🔄 سبع سيرفرات PeerJS للاتصال الموثوق');
+console.log('  👁 رئيس الجواسيس يرى الألوان فقط');
+console.log('  🎯 أعضاء الفريق يضغطون على البطاقات');
+console.log('  🎨 تصميم احترافي مع تأثيرات حركية');
+console.log('  📱 متوافق مع جميع الأجهزة');
 </script>
 </body>
 </html>

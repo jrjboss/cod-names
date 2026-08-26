@@ -1798,6 +1798,29 @@
 
 .draw-tools button{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:#fff;border-radius:10px;padding:9px 12px;cursor:pointer;font-weight:800}.draw-tools button:hover{border-color:rgba(232,200,74,.45);background:rgba(232,200,74,.10)}.draw-mode-note{margin:8px 0 0;color:var(--text-muted);font-size:12px;text-align:center}.draw-submit-image{max-width:100%;border-radius:14px;background:#fff;display:block;margin:10px auto}.draw-reveal-area img{max-width:100%;max-height:430px;border-radius:14px;background:#fff;display:block;margin:10px auto}.draw-score-pill{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.06);margin:2px;font-size:11px}.draw-mode-new-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:900px){.draw-mode-new-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Draw & Guess lobby redesign */
+.rewrite-lobby{width:min(1180px,100%);margin:0 auto;padding:28px 18px 48px;direction:rtl}
+.rewrite-lobby-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px;padding:18px 20px;border:1px solid rgba(232,200,74,.16);border-radius:20px;background:linear-gradient(145deg,rgba(28,43,32,.98),rgba(10,16,12,.98));box-shadow:0 18px 55px rgba(0,0,0,.25)}
+.rewrite-lobby-card{padding:24px;border:1px solid rgba(232,200,74,.14);border-radius:22px;background:linear-gradient(145deg,rgba(24,37,28,.98),rgba(9,15,11,.98));box-shadow:0 24px 70px rgba(0,0,0,.28)}
+.rewrite-rules{padding:14px 16px;margin-bottom:22px;border-radius:15px;background:rgba(232,200,74,.07);border:1px solid rgba(232,200,74,.12);color:var(--text-secondary);line-height:1.9;text-align:center}
+.rewrite-lobby-card h3{margin:18px 0 10px;color:var(--gold);font-size:18px}
+.rewrite-join{display:grid;grid-template-columns:1fr auto;gap:10px}
+.rewrite-join input{min-width:0;border:1px solid rgba(255,255,255,.12);border-radius:13px;background:#07100b;color:#fff;padding:13px 15px;font:inherit;font-size:16px}
+.rewrite-join input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,200,74,.10)}
+.rewrite-lobby-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.rewrite-lobby-mode{min-height:145px!important;padding:16px!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:18px!important;background:linear-gradient(145deg,#111d16,#0a120d)!important;color:#fff!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:7px!important;font:inherit!important;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease!important}
+.rewrite-lobby-mode span{font-size:36px;line-height:1}.rewrite-lobby-mode strong{font-size:18px;color:#fff}.rewrite-lobby-mode small{font-size:11px;line-height:1.5;color:var(--text-muted)}
+.rewrite-lobby-mode:hover:not(:disabled){transform:translateY(-3px);border-color:rgba(232,200,74,.65)!important;box-shadow:0 14px 35px rgba(232,200,74,.08)!important}
+.rewrite-lobby-mode.active{border-color:var(--gold)!important;background:linear-gradient(145deg,rgba(232,200,74,.24),rgba(232,200,74,.07))!important;box-shadow:0 0 0 2px rgba(232,200,74,.18),0 14px 35px rgba(232,200,74,.08)!important}
+.rewrite-lobby-selected{margin-top:12px;padding:12px 14px;border-radius:13px;background:rgba(255,255,255,.04);color:var(--text-secondary);text-align:center}
+.rewrite-lobby-people{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;min-height:54px}.draw-lobby-player{display:flex;justify-content:space-between;gap:8px;padding:11px 13px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);color:var(--text-secondary)}.draw-lobby-player.leader{border-color:rgba(232,200,74,.35);color:#fff}
+.rewrite-lobby-count{text-align:center;color:var(--text-secondary);padding:12px;font-size:13px}.rewrite-lobby-start{text-align:center;margin-top:20px}.rewrite-lobby-start .stamp-btn{min-width:300px;font-size:17px}.rewrite-lobby-hint{margin-top:8px;color:var(--text-muted);font-size:12px}
+@media(max-width:760px){.rewrite-lobby-modes{grid-template-columns:1fr 1fr}.rewrite-lobby-head{flex-direction:column;align-items:stretch}.rewrite-lobby-start .stamp-btn{min-width:0;width:100%}}@media(max-width:480px){.rewrite-lobby-modes{grid-template-columns:1fr}.rewrite-join{grid-template-columns:1fr}}
+/* Draw & Guess interaction repair */
+.rewrite-lobby-modes button,.rewrite-lobby-mode,#rewriteDrawModes button{pointer-events:auto!important;cursor:pointer!important;opacity:1!important}
+.rewrite-lobby-modes button:disabled,.rewrite-lobby-mode:disabled,#rewriteDrawModes button:disabled{cursor:not-allowed!important;opacity:.48!important}
+.rewrite-lobby-mode.active{border-color:var(--gold)!important;box-shadow:0 0 0 2px rgba(232,200,74,.22),0 12px 30px rgba(232,200,74,.08)!important;background:rgba(232,200,74,.12)!important}
 </style>
 
 <style id="draw-final-fix-css">
@@ -5617,7 +5640,7 @@ function setConnDot(ok) {
         const all=[]; ['red','blue'].forEach(t => (room?.teams?.[t]||[]).forEach(p=>{if(p&&p.bot)all.push({...p,team:t})})); return all;
     }
     function ensureDraw(room){
-        if(!room.draw || typeof room.draw!=='object') room.draw={phase:'idle',round:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0,rounds:1,mode:'prompt',timeLimit:0,strokeUsed:false};
+        if(!room.draw || typeof room.draw!=='object') room.draw={phase:'lobby',round:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0,rounds:1,mode:'prompt',timeLimit:0,strokeUsed:false};
         if(!Array.isArray(room.draw.artists)) room.draw.artists=[];
         if(!Array.isArray(room.draw.submissions)) room.draw.submissions=[];
         if(!Array.isArray(room.draw.guesses)) room.draw.guesses=[];
@@ -5644,7 +5667,7 @@ function setConnDot(ok) {
             // Mode can be selected by any human who has joined the Draw lobby.
             // The leader-only restriction applies to START, not to choosing
             // the mode, so players are never left with dead-looking buttons.
-            if(room.gameMode!=='draw' || room.phase!=='lobby' || room.leader!==actor || !drawHumans(room).some(p=>p.name===actor))return;
+            if(room.gameMode!=='draw' || (d.phase!=='lobby' && d.phase!=='idle') || room.leader!==actor || !drawHumans(room).some(p=>p.name===actor))return;
             const allowed=['prompt','free','speed','oneStroke','shapes','blitz'];
             const selected=allowed.includes(e.mode)?e.mode:'prompt';
             d.mode=selected; d.timeLimit=selected==='speed'?30:(selected==='blitz'?15:0); d.strokeUsed=false;
@@ -6144,6 +6167,7 @@ function setConnDot(ok) {
   function leader(r){
     if(!r)return false;
     if(!r.leader && window.isHost && meName()) { r.leader=meName(); window.localRoomCache=r; try{window.writeRoom(window.roomCode,r)}catch(e){} }
+    if(window.isHost && !r.leader) return true;
     return !!meName() && r.leader===meName();
   }
   function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -6261,25 +6285,56 @@ function setConnDot(ok) {
     $('rwLobbyStart').onclick=startRewriteDraw;
     grid.querySelectorAll('button').forEach(b=>b.onclick=()=>chooseRewriteMode(b.dataset.drawMode));
   }
-  function joinRewriteLobby(){const r=room();if(!isDrawRoom(r)){setMsg('❌ الغرفة غير جاهزة.');return;}const i=$('rwLobbyName');const n=(i?.value||'').trim().slice(0,18);if(!n){$('rwLobbyMsg').textContent='✏️ اكتب اسمك أولاً.';return;}const hs=humans(r);if(hs.some(p=>p.name===n)){$('rwLobbyMsg').textContent='⚠️ هذا الاسم مستخدم.';return;}const team=((r.teams?.red||[]).length<=(r.teams?.blue||[]).length)?'red':'blue';window.me={name:n,team};if(window.isHost){r.teams=r.teams||{red:[],blue:[]};r.teams[team]=r.teams[team]||[];r.teams[team].push({name:n,team,bot:false,spymaster:false});if(!r.leader)r.leader=n;r.bots=[];window.localRoomCache=r;try{window.writeRoom(window.roomCode,r);window.broadcastState?.();}catch(e){}renderRewriteLobby(r);$('rwLobbyMsg').textContent='✅ تم الانضمام.';}else if(window.guestConn&&window.guestConn.open){try{window.guestConn.send({type:'join',name:n,team});$('rwLobbyMsg').textContent='⏳ جاري الانضمام...';}catch(e){$('rwLobbyMsg').textContent='❌ تعذر الانضمام.';}}else $('rwLobbyMsg').textContent='❌ الاتصال غير جاهز.';}
-  function chooseRewriteMode(m){const r=room();if(!r){selectPendingMode(m);return;}if(!leader(r)){$('rwLobbyMsg').textContent='👑 قائد الغرفة فقط يستطيع اختيار الوضع.';return;}r.draw=r.draw||{};r.draw.mode=m;r.draw.timeLimit=MODES[m].time;window.localRoomCache=r;try{window.writeRoom(window.roomCode,r);}catch(e){}send({type:'setDrawMode',actor:meName(),mode:m});renderRewriteLobby(r);}
+  function joinRewriteLobby(){const r=room();if(!isDrawRoom(r)){setMsg('❌ الغرفة غير جاهزة.');return;}const i=$('rwLobbyName');const n=(i?.value||'').trim().slice(0,18);if(!n){$('rwLobbyMsg').textContent='✏️ اكتب اسمك أولاً.';return;}const hs=humans(r);if(hs.some(p=>p.name===n)){$('rwLobbyMsg').textContent='⚠️ هذا الاسم مستخدم.';return;}if(!r.draw)r.draw={phase:'lobby',mode:selected,round:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0};if(!['lobby','idle','waiting','setup'].includes(r.draw.phase)){$('rwLobbyMsg').textContent='⚠️ هذه الجولة بدأت بالفعل.';return;}const team=((r.teams?.red||[]).length<=(r.teams?.blue||[]).length)?'red':'blue';window.me={name:n,team};if(window.isHost){r.teams=r.teams||{red:[],blue:[]};r.teams[team]=r.teams[team]||[];r.teams[team].push({name:n,team,bot:false,spymaster:false});if(!r.leader)r.leader=n;r.bots=[];r.draw=r.draw||{phase:'lobby',mode:selected,round:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0};r.draw.phase='lobby';window.localRoomCache=r;try{window.writeRoom(window.roomCode,r);window.broadcastState?.();}catch(e){}renderRewriteLobby(r);$('rwLobbyMsg').textContent='✅ تم الانضمام.';}else if(window.guestConn&&window.guestConn.open){try{window.guestConn.send({type:'join',name:n,team});$('rwLobbyMsg').textContent='⏳ جاري الانضمام...';}catch(e){$('rwLobbyMsg').textContent='❌ تعذر الانضمام.';}}else $('rwLobbyMsg').textContent='❌ الاتصال غير جاهز.';}
+  function chooseRewriteMode(m){
+    const r=room();
+    if(!r){selectPendingMode(m);return;}
+    if(!isDrawRoom(r)){setMsg('❌ هذه ليست غرفة Draw & Guess.');return;}
+    if(!leader(r)){ $('rwLobbyMsg').textContent='👑 قائد الغرفة فقط يستطيع اختيار الوضع.'; return; }
+    if(!r.draw)r.draw={phase:'lobby',mode:'prompt',round:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0};
+    if(!['lobby','idle','waiting','setup'].includes(r.draw.phase)){ $('rwLobbyMsg').textContent='⚠️ لا يمكن تغيير الوضع بعد بدء الجولة.'; return; }
+    if(window.isHost && !meName()){
+      const typed=($('rwLobbyName')?.value||'').trim().slice(0,18);
+      if(!typed){ $('rwLobbyMsg').textContent='✏️ اكتب اسمك أولاً ثم اختر الوضع.'; $('rwLobbyName')?.focus(); return; }
+      const team=((r.teams?.red||[]).length<=(r.teams?.blue||[]).length)?'red':'blue';
+      window.me={name:typed,team};
+      r.teams=r.teams||{red:[],blue:[]}; r.teams.red=r.teams.red||[]; r.teams.blue=r.teams.blue||[];
+      if(!humans(r).some(p=>p.name===typed)) r.teams[team].push({name:typed,team,bot:false,spymaster:false});
+      if(!r.leader)r.leader=typed;
+      r.bots=[];
+    }
+    r.draw.mode=m; r.draw.timeLimit=MODES[m].time; r.draw.strokeUsed=false;
+    window.drawSelectedMode=m; selected=m; window.localRoomCache=r;
+    try{window.writeRoom(window.roomCode,r);window.broadcastState?.();}catch(e){}
+    send({type:'setDrawMode',actor:meName(),mode:m});
+    renderRewriteLobby(r);
+  }
 
   function renderRewriteLobby(r){
     if(!isDrawRoom(r))return;
     if(!r.draw)r.draw={phase:'lobby',mode:window.drawSelectedMode||selected||'prompt',round:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0};
+    if(!r.draw.phase || ['idle','waiting','setup'].includes(r.draw.phase)) r.draw.phase='lobby';
     if(!r.leader&&window.isHost&&meName()){r.leader=meName();window.localRoomCache=r;try{window.writeRoom(window.roomCode,r)}catch(e){}}
     const mine=leader(r),list=humans(r),mode=r.draw.mode||'prompt';selected=mode;
+    const open=r.draw.phase==='lobby';
     if(!$('rwLobbyModes'))rebuildDrawLobby();
     if($('rwLobbyRoom'))$('rwLobbyRoom').textContent=r.code||'';
-    const grid=$('rwLobbyModes');if(grid)grid.querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.drawMode===mode);b.disabled=!mine||r.phase!=='lobby';});
+    const grid=$('rwLobbyModes');
+    if(grid)grid.querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.drawMode===mode);b.disabled=!mine||!open;});
     if($('rwLobbySelected'))$('rwLobbySelected').textContent='الوضع الحالي: '+MODES[mode].icon+' '+MODES[mode].name+' — '+MODES[mode].desc;
     if($('rwLobbyPeople'))$('rwLobbyPeople').innerHTML=list.length?list.map(p=>`<div class="draw-lobby-player ${p.name===r.leader?'leader':''}"><span>👤 ${safe(p.name)}</span><span>${p.name===r.leader?'👑 قائد':'✓ جاهز'}</span></div>`).join(''):'<div class="empty-hint">لا يوجد لاعبون بعد.</div>';
     if($('rwLobbyCount'))$('rwLobbyCount').textContent=`${list.length} لاعب بشري — لا يوجد حد أدنى أو أقصى — يوصى بـ 4+ لتجربة أفضل`;
-    const start=$('rwLobbyStart');if(start){start.disabled=!mine||r.phase!=='lobby'||list.length<1;start.textContent=list.length<1?`🎨 يحتاج لاعباً واحداً على الأقل`:`🎨 ابدأ ${MODES[mode].icon} ${MODES[mode].name}`;}
-    const hint=$('rwLobbyHint');if(hint)hint.textContent=!mine?'👑 قائد الغرفة فقط يستطيع اختيار الوضع وبدء اللعبة.':list.length<1?`⏳ أضف لاعباً بشرياً واحداً على الأقل.`:(list.length<4?`💡 جاهز! يوصى بـ 4+ لاعبين لتجربة أفضل.`:'✅ ممتاز! عدد اللاعبين مثالي تقريباً.');
-    const name=$('rwLobbyName'),join=$('rwLobbyJoin');const already=list.some(p=>p.name===meName());if(name&&meName()){name.value=meName();name.disabled=true;}if(join)join.disabled=already||r.phase!=='lobby';
+    const start=$('rwLobbyStart');
+    if(start){start.disabled=!mine||!open||list.length<1;start.textContent=list.length<1?'🎨 اكتب اسمك وانضم أولاً':`🎨 ابدأ ${MODES[mode].icon} ${MODES[mode].name}`;}
+    const hint=$('rwLobbyHint');
+    if(hint)hint.textContent=!mine?'👑 قائد الغرفة فقط يستطيع اختيار الوضع وبدء اللعبة.':list.length<1?'👤 اكتب اسمك واضغط «انضم» — لاعب واحد يكفي.':list.length<4?'💡 جاهز! يوصى بـ 4+ لاعبين لتجربة أفضل.':'✅ ممتاز! عدد اللاعبين مناسب جداً.';
+    const name=$('rwLobbyName'),join=$('rwLobbyJoin');
+    const already=list.some(p=>p.name===meName());
+    if(name&&meName()===r.leader){name.value=meName();name.disabled=true;}
+    if(join)join.disabled=already||!open;
   }
-  function startRewriteDraw(){const r=room();if(!isDrawRoom(r)){window.drawModeRequested=true;window.drawSelectedMode=selected;const c=$('createRoomBtn');if(c){c.click();return;}setMsg('❌ أنشئ غرفة Draw & Guess أولاً.');return;}if(!leader(r)){setMsg('👑 فقط قائد الغرفة يستطيع بدء Draw & Guess.');return;}if(humans(r).length<1){setMsg('⚠️ تحتاج لاعباً بشرياً واحداً على الأقل.');return;}send({type:'startDraw',actor:meName()});}
+
+  function startRewriteDraw(){const r=room();if(!isDrawRoom(r)){window.drawModeRequested=true;window.drawSelectedMode=selected;const c=$('createRoomBtn');if(c){c.click();return;}setMsg('❌ أنشئ غرفة Draw & Guess أولاً.');return;}if(!leader(r)){setMsg('👑 فقط قائد الغرفة يستطيع بدء Draw & Guess.');return;}if((r.draw?.phase||'lobby')!=='lobby'){setMsg('⚠️ الجولة بدأت بالفعل.');return;}if(humans(r).length<1){setMsg('⚠️ تحتاج لاعباً بشرياً واحداً على الأقل.');return;}send({type:'startDraw',actor:meName()});}
 
   function renderRewriteGame(r){
     if(!isDrawRoom(r))return;const d=r.draw||{};const h=humans(r);const artist=d.artists?.[d.artistIndex]||'';const mine=artist===meName();const drawing=d.phase==='drawing';
@@ -6297,7 +6352,7 @@ function setConnDot(ok) {
   function renderRWGuess(r,d){const e=$('rwGuess');if(!e)return;if(d.phase!=='guessing'){e.classList.add('hidden');return;}e.classList.remove('hidden');const a=d.artists?.[d.artistIndex],already=(d.guesses||[]).some(g=>g.name===meName());if(a===meName()){e.innerHTML='<b>🎨 أنت الرسام</b><div class="draw-mode-note">انتظر تخمينات اللاعبين الآخرين.</div>';return;}if(already){e.innerHTML='<b>✅ تم تسجيل تخمينك</b><div class="draw-mode-note">انتظر بقية اللاعبين.</div>';return;}e.innerHTML='<b>🤔 من رسم الصورة؟</b><div class="rewrite-guess-grid">'+(d.artists||[]).filter(n=>n!==meName()).map(n=>`<button type="button" data-guess="${safe(n)}">👤 ${safe(n)}</button>`).join('')+'</div>';e.querySelectorAll('[data-guess]').forEach(b=>b.onclick=()=>send({type:'guessArtist',actor:meName(),guess:b.dataset.guess}));}
   function renderRWReveal(r,d){const e=$('rwReveal');if(!e)return;if(!['reveal','finished'].includes(d.phase)){e.classList.add('hidden');return;}e.classList.remove('hidden');const sub=d.submissions?.[d.submissions.length-1];const scores=d.guesses||[];e.innerHTML=`<div style="font-size:17px;font-weight:900">🎨 الرسام: ${safe(sub?.artist||'—')}</div>${sub?.image?`<img class="rewrite-reveal-img" src="${sub.image}" alt="drawing">`:''}<div>${sub?.skipped?'⏭️ تم تخطي الرسم.':''}${scores.map(g=>`<div>${safe(g.name)} → ${g.correct?'✅ صحيح':'❌ خطأ'}</div>`).join('')}</div>${d.phase==='reveal'&&leader(r)?'<button type="button" class="stamp-btn" id="rwNext">➡️ الرسم التالي</button>':''}`;if($('rwNext'))$('rwNext').onclick=()=>send({type:'nextDrawing',actor:meName()});}
 
-  function route(r){if(!isDrawRoom(r))return;if(r.phase==='lobby'||r.phase==='idle'){if(typeof window.show==='function')window.show('drawLobbyScreen');renderRewriteLobby(r);}else{if(typeof window.show==='function')window.show('drawScreen');renderRewriteGame(r);}}
+  function route(r){if(!isDrawRoom(r))return;const p=r.draw?.phase||'lobby';if(['lobby','idle','waiting','setup'].includes(p)){if(typeof window.show==='function')window.show('drawLobbyScreen');renderRewriteLobby(r);}else{if(typeof window.show==='function')window.show('drawScreen');renderRewriteGame(r);}}
 
   // Capture clicks before all legacy drawing handlers. This removes the old dead buttons.
   function installCapture(){
@@ -6305,7 +6360,7 @@ function setConnDot(ok) {
       const b=e.target.closest?.('#rewriteDrawModes button,.rewrite-draw-mode,#rewriteDrawStart,#drawModePanel .draw-lobby-mode,#oDrawStart');
       if(!b)return;e.preventDefault();e.stopImmediatePropagation();
       if(b.id==='rewriteDrawStart'||b.id==='oDrawStart'){startRewriteDraw();return;}
-      const m=b.dataset.drawMode;if(m){const r=room();if(isDrawRoom(r)){if(!leader(r)){setMsg('👑 قائد الغرفة فقط يستطيع اختيار الوضع.');return;}r.draw=r.draw||{};r.draw.mode=m;r.draw.timeLimit=MODES[m].time;r.draw.strokeUsed=false;window.localRoomCache=r;try{window.writeRoom(window.roomCode,r)}catch(x){}send({type:'setDrawMode',actor:meName(),mode:m});renderRewriteLobby(r);}else{selectPendingMode(m);}}
+      const m=b.dataset.drawMode;if(m){chooseRewriteMode(m);}
     },true);
   }
 
@@ -6323,7 +6378,7 @@ function setConnDot(ok) {
 
   // Repair legacy renderLobbyFromRoom effects on the Draw room.
   function forceRoute(){const r=room();if(!isDrawRoom(r))return;if(!meName()&&window.isHost&&r.leader){}route(r);}
-  setInterval(()=>{try{const r=room();if(isDrawRoom(r)){if(r.phase==='lobby'||r.phase==='idle')renderRewriteLobby(r);else renderRewriteGame(r);}}catch(e){}},500);
+  setInterval(()=>{try{const r=room();if(isDrawRoom(r)){const p=r.draw?.phase||'lobby';if(['lobby','idle','waiting','setup'].includes(p))renderRewriteLobby(r);else renderRewriteGame(r);}}catch(e){}},500);
   setInterval(()=>{try{const r=room();if(isDrawRoom(r)&&r.draw?.phase==='drawing'&&r.draw.deadline&&Date.now()>=r.draw.deadline&&window.isHost){send({type:'skipDrawing',actor:r.draw.artists?.[r.draw.artistIndex]||''});}}catch(e){}},500);
 
   window.renderDrawLobby=renderRewriteLobby;
@@ -6334,5 +6389,235 @@ function setConnDot(ok) {
 })();
 
 </script>
+
+<style id="draw-ultimate-fix-css">
+#drawLobbyScreen{position:relative;z-index:5;width:min(1100px,100%);margin:0 auto;padding:24px 12px 40px}
+#drawLobbyScreen .du-card{background:linear-gradient(145deg,rgba(18,31,23,.98),rgba(7,13,10,.99));border:1px solid rgba(232,200,74,.22);border-radius:24px;padding:26px;box-shadow:0 22px 70px rgba(0,0,0,.35)}
+.du-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}.du-title{font-size:32px;font-weight:1000;color:var(--gold)}.du-sub{color:var(--text-secondary);font-size:13px;margin-top:4px}.du-room{padding:9px 13px;border-radius:12px;background:rgba(255,255,255,.05);color:#fff;font-weight:900;letter-spacing:2px}
+.du-rule{padding:14px 16px;border-radius:16px;background:rgba(232,200,74,.06);color:var(--text-secondary);line-height:1.9;text-align:center;margin-bottom:20px}.du-section{margin-top:22px}.du-section h3{text-align:center;color:var(--gold);font-size:19px;margin-bottom:12px}
+.du-join{display:grid;grid-template-columns:1fr auto;gap:10px;max-width:720px;margin:auto}.du-join input{width:100%;height:56px;border:1px solid rgba(255,255,255,.14);border-radius:15px;background:#050b07;color:#fff;padding:0 18px;font:inherit;font-size:17px;outline:none}.du-join input:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(232,200,74,.08)}.du-join button{min-width:145px}.du-msg{text-align:center;min-height:24px;margin-top:8px;color:#ffcf6b;font-size:13px}
+.du-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.du-mode{appearance:none;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:20px 12px;min-height:150px;background:#09130d;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;transition:.18s;pointer-events:auto!important;opacity:1!important}.du-mode:hover{transform:translateY(-3px);border-color:rgba(232,200,74,.55)}.du-mode.active{border-color:var(--gold);background:linear-gradient(145deg,rgba(232,200,74,.28),rgba(232,200,74,.07));box-shadow:0 0 0 2px rgba(232,200,74,.10) inset,0 14px 35px rgba(0,0,0,.2)}.du-mode .ico{font-size:36px}.du-mode strong{font-size:17px}.du-mode small{font-size:12px;color:var(--text-secondary);line-height:1.5;text-align:center}
+.du-selected{text-align:center;margin:12px 0;color:var(--text-secondary);padding:10px;border-radius:12px;background:rgba(255,255,255,.035)}
+.du-players{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:9px}.du-player{padding:13px 14px;border-radius:13px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;gap:8px}.du-player.leader{border-color:rgba(232,200,74,.45);color:#fff}.du-count{text-align:center;color:var(--text-secondary);margin-top:10px;font-size:13px}.du-start{text-align:center;margin-top:22px}.du-start button{min-width:320px;font-size:18px}.du-start button:disabled{opacity:.45;cursor:not-allowed}.du-hint{text-align:center;color:var(--text-muted);font-size:12px;margin-top:8px}.du-discord{margin-top:24px}
+#drawScreen{position:relative;z-index:5;width:min(1200px,100%);margin:0 auto;padding:20px 12px 40px}.du-game-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.du-game-title{font-size:30px;font-weight:1000;color:var(--gold)}.du-game-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.du-timer{padding:9px 13px;border-radius:11px;background:rgba(232,200,74,.10);border:1px solid rgba(232,200,74,.25);color:var(--gold);font-weight:1000}.du-game-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px}.du-board{background:linear-gradient(145deg,rgba(18,31,23,.98),rgba(7,13,10,.99));border:1px solid rgba(232,200,74,.18);border-radius:20px;padding:16px}.du-phase{text-align:center;color:var(--gold);font-weight:1000;font-size:17px}.du-prompt{text-align:center;font-size:24px;font-weight:1000;margin:10px 0 4px}.du-info{text-align:center;color:var(--text-secondary);font-size:12px;margin-bottom:10px}.du-board canvas{display:block;width:100%;aspect-ratio:5/3;background:#fff;border-radius:16px;touch-action:none;cursor:crosshair;border:2px solid rgba(232,200,74,.12)}.du-toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:10px}.du-toolbar button{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:#fff;border-radius:10px;padding:9px 11px;cursor:pointer;font-weight:800}.du-toolbar button:hover{border-color:var(--gold)}.du-toolbar input{width:120px}.du-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}.du-panel{margin-top:12px;padding:13px;border-radius:14px;background:rgba(255,255,255,.04)}.du-guess-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.du-guess-grid button{border:1px solid rgba(255,255,255,.1);background:#0b1510;color:#fff;border-radius:10px;padding:11px;cursor:pointer;font-weight:900}.du-guess-grid button:hover{border-color:var(--gold)}.du-side{display:flex;flex-direction:column;gap:14px}.du-side-card{background:linear-gradient(145deg,rgba(18,31,23,.98),rgba(7,13,10,.99));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px}.du-side-card h3{color:var(--gold);margin-bottom:10px}.du-player-row{display:flex;justify-content:space-between;padding:9px;border-radius:10px;background:rgba(255,255,255,.035);margin-bottom:6px}.du-player-row.artist{outline:1px solid rgba(232,200,74,.4)}.du-chat{min-height:330px;display:flex;flex-direction:column}.du-chat-list{flex:1;max-height:260px;overflow:auto}.du-chat-msg{padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.04);font-size:12px;margin-bottom:5px}.du-chat-msg b{color:var(--gold)}.du-chat-row{display:flex;gap:6px;margin-top:8px}.du-chat-row input{flex:1;min-width:0}.du-gallery{margin-top:14px;background:linear-gradient(145deg,rgba(18,31,23,.98),rgba(7,13,10,.99));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px}.du-gallery h3{color:var(--gold);margin-bottom:10px}.du-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}.du-gallery-card{background:rgba(255,255,255,.035);border-radius:12px;padding:8px}.du-gallery-card img{width:100%;display:block;border-radius:9px;background:#fff}.du-gallery-meta{font-size:11px;color:var(--text-secondary);margin-top:6px}.du-reveal-img{display:block;max-width:100%;max-height:480px;background:#fff;border-radius:13px;margin:10px auto}
+@media(max-width:850px){.du-modes{grid-template-columns:1fr 1fr}.du-game-grid{grid-template-columns:1fr}}@media(max-width:600px){.du-head,.du-game-head{flex-direction:column;align-items:stretch}.du-modes{grid-template-columns:1fr}.du-join{grid-template-columns:1fr}.du-start button{width:100%;min-width:0}.du-guess-grid{grid-template-columns:1fr}}
+</style>
+<script id="draw-ultimate-fix-script">
+(function(){
+'use strict';
+const MODES={
+ prompt:{name:'تحدي الكلمات',icon:'📝',desc:'ارسم كلمة سرية — الكلمة لا تظهر للآخرين',time:0},
+ free:{name:'رسم حر',icon:'🎨',desc:'ارسم أي شيء تريده',time:0},
+ speed:{name:'سباق الوقت',icon:'⚡',desc:'30 ثانية فقط لكل رسمة',time:30},
+ oneStroke:{name:'خط واحد',icon:'🖊️',desc:'ارسم بخط واحد فقط',time:0},
+ shapes:{name:'تحدي الأشكال',icon:'🔺',desc:'أدخل دائرة ومربعاً ومثلثاً',time:0},
+ blitz:{name:'Blitz',icon:'🔥',desc:'15 ثانية — ارسم بسرعة',time:15}
+};
+const $=id=>document.getElementById(id);
+let selected=window.drawSelectedMode||'prompt';
+let gameCanvas=null,gameCtx=null,down=false,last=null,undo=[] ,toolColor='#111',eraser=false,oneStrokeUsed=false;
+const room=()=>window.localRoomCache||null;
+const meName=()=>String((window.me&&window.me.name)||'').trim();
+const isDraw=r=>!!r&&r.gameMode==='draw';
+function humans(r){const a=[],seen=new Set();['red','blue'].forEach(t=>(r?.teams?.[t]||[]).forEach(p=>{if(p&&!p.bot&&p.name&&!seen.has(p.name)){seen.add(p.name);a.push({...p,team:t});}}));(r?.players||[]).forEach(p=>{if(p&&!p.bot&&p.name&&!seen.has(p.name)){seen.add(p.name);a.push({...p});}});return a;}
+function leader(r){if(!r)return false;if(window.isHost&&(!r.leader||!meName()))return false;return !!meName()&&r.leader===meName();}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function msg(t){const e=$('duMsg');if(e)e.textContent=t||'';}
+function send(e){if(typeof window.sendDrawEvent==='function')window.sendDrawEvent(e);}
+function ensure(r){if(!r)return null;r.teams=r.teams||{red:[],blue:[]};r.teams.red=r.teams.red||[];r.teams.blue=r.teams.blue||[];r.bots=[];if(!r.draw||typeof r.draw!=='object')r.draw={phase:'lobby',round:1,rounds:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0,mode:'prompt',timeLimit:0,strokeUsed:false};if(['idle','waiting','setup'].includes(r.draw.phase))r.draw.phase='lobby';return r;}
+function persist(r){window.localRoomCache=r;try{window.writeRoom?.(window.roomCode,r)}catch(e){}try{window.broadcastState?.()}catch(e){}}
+function renderLobby(r){r=ensure(r);if(!isDraw(r))return;const hs=humans(r),mine=leader(r),mode=r.draw.mode||selected;selected=mode;const code=$('duRoom');if(code)code.textContent=r.code||window.roomCode||'-----';document.querySelectorAll('.du-mode').forEach(b=>{b.classList.toggle('active',b.dataset.mode===mode);b.disabled=!mine||r.draw.phase!=='lobby';});const sel=$('duSelected');if(sel)sel.textContent='الوضع المختار: '+MODES[mode].icon+' '+MODES[mode].name+' — '+MODES[mode].desc;const list=$('duPlayers');if(list)list.innerHTML=hs.length?hs.map(p=>`<div class="du-player ${p.name===r.leader?'leader':''}"><span>👤 ${esc(p.name)}</span><span>${p.name===r.leader?'👑 قائد':'✓ جاهز'}</span></div>`).join(''):'<div class="empty-hint">لا يوجد لاعبون بعد.</div>';const c=$('duCount');if(c)c.textContent=`${hs.length} لاعب بشري — لا يوجد حد أدنى أو أقصى — يوصى بـ 4+ لتجربة أفضل`;const input=$('duName'),join=$('duJoin');const already=!!meName()&&hs.some(p=>p.name===meName());if(input){if(already){input.value=meName();input.disabled=true}else input.disabled=false;}if(join)join.disabled=already||r.draw.phase!=='lobby';const start=$('duStart');if(start){start.disabled=!mine||r.draw.phase!=='lobby'||hs.length<1;start.textContent=hs.length<1?'🎨 اكتب اسمك وانضم أولاً':`🎨 ابدأ ${MODES[mode].icon} ${MODES[mode].name}`;}const hint=$('duHint');if(hint)hint.textContent=!meName()?'👤 اكتب اسمك واضغط انضم.':!already?'⏳ اضغط انضم لإضافة نفسك للغرفة.':!mine?'👑 قائد الغرفة فقط يستطيع اختيار الوضع وبدء اللعبة.':hs.length<4?'💡 جاهز — 4+ لاعبين موصى بهم فقط.':'✅ ممتاز — جاهز للعب!';}
+function buildLobby(){const s=$('drawLobbyScreen');if(!s)return;s.innerHTML=`<div class="du-card"><div class="du-head"><div><div class="du-title">🎨 Draw & Guess</div><div class="du-sub">وضع مستقل بالكامل — لا فرق، لا قاتل، ولا Codenames.</div></div><div><span class="du-room">🔑 <b id="duRoom">-----</b></span> <button type="button" class="stamp-btn ghost" id="duLeave">↩ مغادرة</button></div></div><div class="du-rule">👥 لاعب واحد يكفي لبدء الغرفة. <b>4+ لاعبين موصى بهم فقط</b> لتجربة أفضل.<br>🤖 لا توجد بوتات في Draw & Guess.<br>👑 قائد الغرفة فقط يختار الوضع ويبدأ اللعبة.</div><div class="du-section"><h3>1️⃣ ادخل باسمك</h3><div class="du-join"><input id="duName" type="text" maxlength="18" autocomplete="off" placeholder="✏️ اكتب اسم اللاعب"><button type="button" class="stamp-btn" id="duJoin">➕ انضم</button></div><div id="duMsg" class="du-msg"></div></div><div class="du-section"><h3>2️⃣ اختر وضع الرسم</h3><div id="duModes" class="du-modes"></div><div id="duSelected" class="du-selected"></div></div><div class="du-section"><h3>3️⃣ اللاعبون</h3><div id="duPlayers" class="du-players"></div><div id="duCount" class="du-count"></div></div><div class="du-start"><button type="button" class="stamp-btn" id="duStart">🎨 ابدأ Draw & Guess</button><div id="duHint" class="du-hint"></div></div><div class="discord-footer du-discord"><div class="discord-footer-title">💬 اقتراح أو مشكلة؟ تواصل معنا على Discord</div><a class="discord-footer-link" href="https://discord.gg/4JFMPzM8Y" target="_blank" rel="noopener noreferrer">💜 انضم إلى Discord</a></div></div>`;const grid=$('duModes');Object.entries(MODES).forEach(([k,m])=>{const b=document.createElement('button');b.type='button';b.className='du-mode';b.dataset.mode=k;b.innerHTML=`<span class="ico">${m.icon}</span><strong>${m.name}</strong><small>${m.desc}</small>`;grid.appendChild(b);});$('duJoin').onclick=join; $('duName').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();join()}}; $('duStart').onclick=start; $('duLeave').onclick=()=>{try{window.leaveRoom?.()}catch(e){window.show?.('modeScreen')}};grid.querySelectorAll('button').forEach(b=>b.onclick=()=>choose(b.dataset.mode));}
+function join(){const r=ensure(room());if(!isDraw(r)){msg('❌ هذه ليست غرفة Draw & Guess.');return;}if(r.draw.phase!=='lobby'){msg('⚠️ بدأت اللعبة بالفعل.');return;}const input=$('duName');const n=String(input?.value||'').trim().replace(/\s+/g,' ').slice(0,18);if(!n){msg('✏️ اكتب اسمك أولاً.');input?.focus();return;}const hs=humans(r);if(hs.some(p=>p.name.toLowerCase()===n.toLowerCase())){if(meName().toLowerCase()===n.toLowerCase()){renderLobby(r);return}msg('⚠️ هذا الاسم مستخدم بالفعل.');return;}const team=(r.teams.red.length<=r.teams.blue.length)?'red':'blue';window.me={name:n,team};if(window.isHost){r.teams[team].push({name:n,team,bot:false,spymaster:false});if(!r.leader)r.leader=n;r.bots=[];persist(r);renderLobby(r);msg('✅ تم الانضمام بنجاح.')}else if(window.guestConn?.open){try{window.guestConn.send({type:'join',name:n,team});msg('⏳ جاري الانضمام...');}catch(e){msg('❌ تعذر إرسال طلب الانضمام.')}}else msg('❌ الاتصال بالغرفة غير جاهز.');}
+function choose(m){const r=ensure(room());if(!r||!isDraw(r))return;if(!meName()){msg('✏️ اكتب اسمك وانضم أولاً.');$('duName')?.focus();return;}if(!humans(r).some(p=>p.name===meName())){msg('⏳ انضم للغرفة أولاً.');return;}if(!leader(r)){msg('👑 قائد الغرفة فقط يستطيع اختيار الوضع.');return;}if(r.draw.phase!=='lobby'){msg('⚠️ لا يمكن تغيير الوضع بعد بدء الجولة.');return;}if(!MODES[m])return;r.draw.mode=m;r.draw.timeLimit=MODES[m].time;r.draw.strokeUsed=false;selected=m;persist(r);renderLobby(r);}
+function start(){const r=ensure(room());if(!r||!isDraw(r)){msg('❌ غرفة Draw غير جاهزة.');return;}if(!meName()){msg('✏️ اكتب اسمك وانضم أولاً.');$('duName')?.focus();return;}if(!humans(r).some(p=>p.name===meName())){msg('⏳ انضم للغرفة أولاً.');return;}if(!leader(r)){msg('👑 فقط قائد الغرفة يستطيع البدء.');return;}if(r.draw.phase!=='lobby'){msg('⚠️ الجولة بدأت بالفعل.');return;}send({type:'startDraw',actor:meName()});}
+function buildGame(){const s=$('drawScreen');if(!s)return;s.innerHTML=`<div class="du-game-head"><div><div class="du-game-title">🎨 Draw & Guess</div><div id="dgRound" class="du-sub">الجولة</div></div><div class="du-game-actions"><span id="dgTimer" class="du-timer">⏱ —</span><span class="du-room">🔑 <b id="dgRoom">-----</b></span><button type="button" class="stamp-btn ghost" id="dgLeave">↩ مغادرة</button></div></div><div class="du-game-grid"><main class="du-board"><div id="dgPhase" class="du-phase">انتظر...</div><div id="dgPrompt" class="du-prompt">🎨</div><div id="dgInfo" class="du-info"></div><canvas id="dgCanvas" width="1000" height="620"></canvas><div class="du-toolbar"><label>حجم <input id="dgSize" type="range" min="2" max="35" value="8"></label><button type="button" data-tool="black">⚫</button><button type="button" data-tool="red">🔴</button><button type="button" data-tool="blue">🔵</button><button type="button" data-tool="eraser">🧽</button><button type="button" id="dgUndo">↩ تراجع</button><button type="button" id="dgClear">🧹 مسح</button></div><div class="du-actions"><button type="button" class="stamp-btn ghost" id="dgSkip">⏭ تخطي</button><button type="button" class="stamp-btn" id="dgSubmit">✅ إرسال الرسم</button></div><div id="dgGuess" class="du-panel hidden"></div><div id="dgReveal" class="du-panel hidden"></div></main><aside class="du-side"><section class="du-side-card"><h3>👥 اللاعبون</h3><div id="dgPlayers"></div></section><section class="du-side-card du-chat"><h3>💬 الدردشة</h3><div id="dgChat" class="du-chat-list"></div><div class="du-chat-row"><input id="dgChatInput" maxlength="180" placeholder="اكتب رسالة..."><button type="button" class="stamp-btn" id="dgChatSend">إرسال</button></div></section></aside></div><section class="du-gallery"><h3>🖼️ معرض الرسومات</h3><div id="dgGallery" class="du-gallery-grid"></div></section><div class="discord-footer du-discord"><div class="discord-footer-title">💬 اقتراح أو مشكلة؟ تواصل معنا على Discord</div><a class="discord-footer-link" href="https://discord.gg/4JFMPzM8Y" target="_blank" rel="noopener noreferrer">💜 انضم إلى Discord</a></div>`;initCanvas();$('dgLeave').onclick=()=>{try{window.leaveRoom?.()}catch(e){window.show?.('modeScreen')}};$('dgChatSend').onclick=chat;$('dgChatInput').onkeydown=e=>{if(e.key==='Enter')chat()};document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{const t=b.dataset.tool;if(t==='eraser'){eraser=true}else{eraser=false;toolColor=t==='red'?'#e53935':t==='blue'?'#1976d2':'#111'}});$('dgUndo').onclick=undoCanvas;$('dgClear').onclick=clearCanvas;$('dgSkip').onclick=()=>send({type:'skipDrawing',actor:meName()});$('dgSubmit').onclick=()=>{const r=room(),d=r?.draw;if(!r||d?.phase!=='drawing'||d.artists?.[d.artistIndex]!==meName())return;let image='';try{image=gameCanvas.toDataURL('image/jpeg',.78)}catch(e){}if(image)send({type:'submitDrawing',actor:meName(),image})};}
+function initCanvas(){gameCanvas=$('dgCanvas');if(!gameCanvas)return;gameCtx=gameCanvas.getContext('2d');clearCanvas();const point=e=>{const r=gameCanvas.getBoundingClientRect();return{x:(e.clientX-r.left)*gameCanvas.width/r.width,y:(e.clientY-r.top)*gameCanvas.height/r.height}};gameCanvas.onpointerdown=e=>{const r=room(),d=r?.draw;if(!r||d?.phase!=='drawing'||d.artists?.[d.artistIndex]!==meName())return;if(d.mode==='oneStroke'&&oneStrokeUsed)return;down=true;oneStrokeUsed=true;gameCanvas.setPointerCapture?.(e.pointerId);last=point(e);gameCtx.lineWidth=+$('dgSize').value;gameCtx.lineCap='round';gameCtx.lineJoin='round';gameCtx.strokeStyle=eraser?'#fff':toolColor;gameCtx.beginPath();gameCtx.moveTo(last.x,last.y);gameCtx.lineTo(last.x+.1,last.y+.1);gameCtx.stroke()};gameCanvas.onpointermove=e=>{if(!down)return;const p=point(e);gameCtx.lineWidth=+$('dgSize').value;gameCtx.lineCap='round';gameCtx.lineJoin='round';gameCtx.strokeStyle=eraser?'#fff':toolColor;gameCtx.beginPath();gameCtx.moveTo(last.x,last.y);gameCtx.lineTo(p.x,p.y);gameCtx.stroke();last=p};const up=()=>{if(!down)return;down=false;try{undo.push(gameCtx.getImageData(0,0,gameCanvas.width,gameCanvas.height));if(undo.length>25)undo.shift()}catch(e){}};gameCanvas.onpointerup=up;gameCanvas.onpointercancel=up;}
+function clearCanvas(){if(!gameCtx)return;gameCtx.save();gameCtx.globalCompositeOperation='source-over';gameCtx.fillStyle='#fff';gameCtx.fillRect(0,0,gameCanvas.width,gameCanvas.height);gameCtx.restore();undo=[];oneStrokeUsed=false}
+function undoCanvas(){if(!gameCtx||!undo.length)return;const snap=undo.pop();gameCtx.putImageData(snap,0,0)}
+function chat(){const i=$('dgChatInput'),t=String(i?.value||'').trim();if(!t)return;send({type:'chat',actor:meName(),text:t});i.value=''}
+function renderGame(r){r=ensure(r);if(!isDraw(r))return;const d=r.draw,hs=humans(r),artist=d.artists?.[d.artistIndex]||'',mine=artist===meName();$('dgRoom').textContent=r.code||window.roomCode||'';$('dgRound').textContent=d.phase==='finished'?'🏆 انتهت اللعبة':`الجولة ${d.round||1} / ${d.rounds||hs.length||1}`;$('dgPhase').textContent=d.phase==='drawing'?(mine?'🎨 دورك بالرسم':'👀 شخص آخر يرسم'):d.phase==='guessing'?'🤔 خمن الرسام':d.phase==='reveal'?'🎉 كشف الرسم':'🏆 انتهت اللعبة';$('dgPrompt').textContent=d.phase==='drawing'?(mine?(d.prompt||'ارسم!'):'🎨 شخص آخر يرسم الآن'):d.phase==='guessing'?'🤔 من رسم هذا؟':'شاهد الرسم والنتيجة';const mode=MODES[d.mode||'prompt']||MODES.prompt;$('dgInfo').textContent=d.phase==='drawing'?(mine?mode.desc:'الرسام الحالي: '+artist):d.phase==='guessing'?(mine?'أنت الرسام — انتظر التخمينات.':'اختر اسم اللاعب الذي رسم الصورة.'):'يمكن للجميع مشاهدة الرسم.';const remain=d.deadline?Math.max(0,Math.ceil((d.deadline-Date.now())/1000)):0;$('dgTimer').textContent=d.timeLimit?`⏱ ${remain} ث`:'⏱ بدون حد';const canDraw=d.phase==='drawing'&&mine;$('dgCanvas').style.pointerEvents=canDraw?'auto':'none';$('dgSubmit').disabled=!canDraw;$('dgSkip').disabled=!canDraw;$('dgClear').disabled=!canDraw;$('dgUndo').disabled=!canDraw;renderPlayers(r,d);renderChat(r.chat||[]);renderGuess(r,d);renderReveal(r,d);renderGallery(d)}
+function renderPlayers(r,d){const e=$('dgPlayers');if(!e)return;e.innerHTML=humans(r).map(p=>`<div class="du-player-row ${d.artists?.[d.artistIndex]===p.name&&d.phase==='drawing'?'artist':''}"><span>👤 ${esc(p.name)}</span><span>${d.artists?.[d.artistIndex]===p.name&&d.phase==='drawing'?'🎨 يرسم':'✓'}</span></div>`).join('')}
+function renderChat(ms){const e=$('dgChat');if(!e)return;e.innerHTML=ms.slice(-60).map(m=>`<div class="du-chat-msg"><b>${esc(m.name||'لاعب')}</b> ${esc(m.text||'')}</div>`).join('');e.scrollTop=e.scrollHeight}
+function renderGuess(r,d){const e=$('dgGuess');if(!e)return;if(d.phase!=='guessing'){e.classList.add('hidden');return}e.classList.remove('hidden');const artist=d.artists?.[d.artistIndex]||'',already=(d.guesses||[]).some(g=>g.name===meName());if(artist===meName()){e.innerHTML='<b>🎨 أنت الرسام</b><div>انتظر تخمينات اللاعبين.</div>';return}if(already){e.innerHTML='<b>✅ تم تسجيل تخمينك</b><div>انتظر بقية اللاعبين.</div>';return}e.innerHTML='<b>🤔 من رسم الصورة؟</b><div class="du-guess-grid">'+(d.artists||[]).filter(n=>n!==meName()).map(n=>`<button type="button" data-guess="${esc(n)}">👤 ${esc(n)}</button>`).join('')+'</div>';e.querySelectorAll('[data-guess]').forEach(b=>b.onclick=()=>send({type:'guessArtist',actor:meName(),guess:b.dataset.guess}))}
+function renderReveal(r,d){const e=$('dgReveal');if(!e)return;if(!['reveal','finished'].includes(d.phase)){e.classList.add('hidden');return}e.classList.remove('hidden');const sub=d.submissions?.[d.submissions.length-1],scores=d.guesses||[];e.innerHTML=`<div style="font-size:18px;font-weight:900">🎨 الرسام: ${esc(sub?.artist||'—')}</div>${sub?.image?`<img class="du-reveal-img" src="${sub.image}" alt="drawing">`:''}<div>${sub?.skipped?'⏭️ تم تخطي الرسم.':''}${scores.map(g=>`<div>${esc(g.name)} → ${g.correct?'✅ صحيح':'❌ خطأ'}</div>`).join('')}</div>${d.phase==='reveal'&&leader(r)?'<div style="text-align:center;margin-top:10px"><button type="button" class="stamp-btn" id="dgNext">➡️ الرسم التالي</button></div>':''}`;if($('dgNext'))$('dgNext').onclick=()=>send({type:'nextDrawing',actor:meName()})}
+function renderGallery(d){const e=$('dgGallery');if(!e)return;if(!d.gallery?.length){e.innerHTML='<div class="empty-hint">ستظهر الرسومات هنا بعد كشفها.</div>';return}e.innerHTML=d.gallery.map(g=>`<div class="du-gallery-card">${g.image?`<img src="${g.image}" alt="drawing">`:''}<div class="du-gallery-meta">🎨 <strong>${esc(g.artist)}</strong>${g.prompt?'<br>📝 '+esc(g.prompt):''}</div></div>`).join('')}
+function route(){const r=ensure(room());if(!isDraw(r))return;const lobby=['lobby','idle','waiting','setup'].includes(r.draw.phase)||r.phase==='lobby';if(lobby){window.show?.('drawLobbyScreen');renderLobby(r)}else{window.show?.('drawScreen');renderGame(r)}}
+function install(){buildLobby();buildGame();route();const old=window.roomListenerCallback;window.roomListenerCallback=function(r){try{if(isDraw(r)){window.localRoomCache=ensure(r);route();return}}catch(e){}if(typeof old==='function')try{old(r)}catch(e){}};if(typeof window.renderDrawLobby!=='function')window.renderDrawLobby=renderLobby;window.renderDrawLobby=renderLobby;window.renderDraw=renderGame;window.startDrawMode=start;}
+window.addEventListener('load',()=>setTimeout(install,80));if(document.readyState!=='loading')setTimeout(install,80);
+setInterval(()=>{try{const r=room();if(isDraw(r))route()}catch(e){}},700);
+})();
+</script>
+
+
+<!-- ===== FINAL INTERACTION / DRAWING FIX ===== -->
+<style id="final-interaction-fix">
+  /* Kill accidental click blockers left by older Draw & Guess versions. */
+  #drawLobbyScreen:not(.hidden),
+  #drawScreen:not(.hidden) {
+    position: relative !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+  }
+  #drawLobbyScreen:not(.hidden) *,
+  #drawScreen:not(.hidden) * {
+    pointer-events: auto;
+  }
+  #drawLobbyScreen:not(.hidden) input,
+  #drawLobbyScreen:not(.hidden) button,
+  #drawScreen:not(.hidden) button,
+  #drawScreen:not(.hidden) input,
+  #drawScreen:not(.hidden) canvas {
+    pointer-events: auto !important;
+  }
+  #drawLobbyScreen.hidden,
+  #drawScreen.hidden {
+    pointer-events: none !important;
+  }
+  #drawLobbyScreen:not(.hidden) .rewrite-lobby,
+  #drawScreen:not(.hidden) .rewrite-draw-app {
+    position: relative;
+    z-index: 10000 !important;
+  }
+  #rwLobbyName {
+    position: relative !important;
+    z-index: 10002 !important;
+    pointer-events: auto !important;
+    user-select: text !important;
+  }
+  #rwLobbyJoin,
+  #rwLobbyStart,
+  #rwLobbyLeave,
+  #rwChatSend,
+  #rwUndo,
+  #rwClear,
+  #rwSkip,
+  #rwSubmit {
+    position: relative !important;
+    z-index: 10002 !important;
+    pointer-events: auto !important;
+  }
+  #rwCanvas {
+    position: relative !important;
+    z-index: 10001 !important;
+    pointer-events: auto !important;
+    touch-action: none !important;
+  }
+  #drawCanvas {
+    position: relative !important;
+    z-index: 10001 !important;
+    touch-action: none !important;
+  }
+  /* Old screens must never sit on top of the active Draw screen. */
+  #modeScreen.hidden,
+  #localSetupScreen.hidden,
+  #onlineEntryScreen.hidden,
+  #lobbyScreen.hidden,
+  #gameScreen.hidden {
+    pointer-events: none !important;
+  }
+</style>
+<script id="final-interaction-fix-js">
+(function () {
+  'use strict';
+
+  function visible(id) {
+    var e = document.getElementById(id);
+    return !!e && !e.classList.contains('hidden');
+  }
+
+  function forceDrawInteractivity() {
+    ['drawLobbyScreen', 'drawScreen'].forEach(function (id) {
+      var e = document.getElementById(id);
+      if (!e) return;
+      if (!e.classList.contains('hidden')) {
+        e.style.setProperty('pointer-events', 'auto', 'important');
+        e.style.setProperty('z-index', '9999', 'important');
+      } else {
+        e.style.setProperty('pointer-events', 'none', 'important');
+      }
+    });
+
+    if (visible('drawLobbyScreen')) {
+      var name = document.getElementById('rwLobbyName');
+      if (name) {
+        name.disabled = false;
+        name.readOnly = false;
+        name.style.setProperty('pointer-events', 'auto', 'important');
+      }
+      ['rwLobbyJoin','rwLobbyStart','rwLobbyLeave'].forEach(function(id) {
+        var b = document.getElementById(id);
+        if (b) {
+          b.disabled = false;
+          b.style.setProperty('pointer-events', 'auto', 'important');
+        }
+      });
+    }
+
+    if (visible('drawScreen')) {
+      ['rwCanvas','drawCanvas'].forEach(function(id) {
+        var c = document.getElementById(id);
+        if (c) c.style.setProperty('pointer-events', 'auto', 'important');
+      });
+    }
+  }
+
+  function safeJoinRewriteLobby() {
+    try {
+      if (typeof window.joinRewriteLobby === 'function') {
+        window.joinRewriteLobby();
+        return;
+      }
+    } catch (e) {}
+    var btn = document.getElementById('rwLobbyJoin');
+    if (btn && typeof btn.onclick === 'function') {
+      try { btn.onclick(); } catch (e) {}
+    }
+  }
+
+  function bind() {
+    forceDrawInteractivity();
+
+    /* Use event delegation so a later render cannot destroy the controls. */
+    document.addEventListener('click', function (ev) {
+      var t = ev.target && ev.target.closest ? ev.target.closest(
+        '#rwLobbyJoin,#rwLobbyStart,#rwLobbyLeave,#rwUndo,#rwClear,#rwSkip,#rwSubmit,' +
+        '#rwChatSend,#drawCanvas,#rwCanvas,.rewrite-lobby-mode,.rewrite-draw-mode'
+      ) : null;
+      if (!t) return;
+
+      if (t.id === 'rwLobbyJoin') {
+        ev.preventDefault();
+        ev.stopPropagation();
+        safeJoinRewriteLobby();
+        return;
+      }
+
+      /* Canvas clicks are handled by pointer events, not normal click actions. */
+      if (t.id === 'rwCanvas' || t.id === 'drawCanvas') return;
+    }, false);
+
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Enter') return;
+      var name = ev.target && ev.target.id === 'rwLobbyName';
+      if (name) {
+        ev.preventDefault();
+        safeJoinRewriteLobby();
+      }
+    }, false);
+
+    /* Repair canvas pointer-events after every legacy render/update. */
+    setInterval(forceDrawInteractivity, 250);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bind, {once:true});
+  } else {
+    bind();
+  }
+  window.addEventListener('load', forceDrawInteractivity);
+})();
+</script>
+
 </body>
 </html>

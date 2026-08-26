@@ -3892,6 +3892,18 @@ function setConnDot(ok) {
             return !!(p && p.spymaster);
         }
 
+        // Always resolve the current team's spymaster safely.
+        // The previous build called this function from renderClueBar() but
+        // did not define it, which crashed newGame() and made local Codenames
+        // look completely broken.
+        function spymasterName(team) {
+            var list = (teams && teams[team]) || [];
+            var spy = list.find(function(pl) { return pl && pl.spymaster; });
+            if (spy && spy.name) return spy.name;
+            var first = list.find(function(pl) { return pl && pl.name; });
+            return first ? first.name : 'غير محدد';
+        }
+
         function currentSpymasterCanAct() {
             if (mode === 'local') return spymasterMode;
             return amISpymaster() && me.team === state.turn;
@@ -5611,7 +5623,10 @@ function setConnDot(ok) {
             localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); return;
         }
         if(e.type==='setDrawMode'){
-            if(room.gameMode!=='draw' || room.leader!==actor || room.phase!=='lobby')return;
+            // Mode can be selected by any human who has joined the Draw lobby.
+            // The leader-only restriction applies to START, not to choosing
+            // the mode, so players are never left with dead-looking buttons.
+            if(room.gameMode!=='draw' || room.phase!=='lobby' || !drawHumans(room).some(p=>p.name===actor))return;
             const allowed=['prompt','free','speed'];
             const selected=allowed.includes(e.mode)?e.mode:'prompt';
             d.mode=selected; d.timeLimit=selected==='speed'?30:0;
@@ -5844,7 +5859,10 @@ function setConnDot(ok) {
         document.querySelectorAll('.draw-lobby-mode-new').forEach(btn=>{
             const active=btn.dataset.drawMode===mode;
             btn.classList.toggle('active',active);
-            btn.disabled=!leader || room.phase!=='lobby';
+            // Everyone can select the preferred mode in the lobby.
+            // Only the room leader is allowed to START the actual game.
+            btn.disabled=room.phase!=='lobby';
+            btn.title=leader ? 'اختر وضع الرسم' : 'يمكنك اختيار الوضع؛ قائد الغرفة هو من يبدأ اللعبة';
         });
 
         const list=document.getElementById('drawLobbyPlayers');
@@ -5956,7 +5974,7 @@ function setConnDot(ok) {
     function chooseDrawMode(mode){
         const room=drawRoom();
         if(!room || room.phase!=='lobby')return;
-        if(!isLeader(room)){setDrawLobbyError('👑 فقط قائد الغرفة يستطيع تغيير الوضع.');return;}
+        if(!myName()){setDrawLobbyError('✏️ انضم للغرفة باسمك أولاً.');return;}
         if(!['prompt','free','speed'].includes(mode))return;
         if(typeof window.sendDrawEvent==='function'){
             window.sendDrawEvent({type:'setDrawMode',actor:myName(),mode:mode});

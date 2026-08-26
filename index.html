@@ -1922,6 +1922,14 @@
 .draw-mode-select{display:none!important}
 @media(max-width:760px){.draw-lobby-head{flex-direction:column;align-items:stretch}.draw-lobby-modes{grid-template-columns:1fr}.draw-join-row{flex-direction:column}.draw-start-big{width:100%;min-width:0}}
 </style>
+
+<style id="painting-connect-fix">
+#paintingConnectScreen{position:relative;z-index:1100;min-height:70vh}
+#paintingConnectScreen .painting-card{max-width:900px;margin:24px auto}
+#paintingConnectScreen button,#paintingConnectScreen input{pointer-events:auto!important}
+#drawLobbyScreen .painting-wrap{position:relative;z-index:1101}
+#drawLobbyScreen .painting-head .draw-room-badge{font-size:18px;padding:10px 14px}
+</style>
 </head>
 <body>
 
@@ -2271,6 +2279,32 @@
             </div>
         </div>
 
+
+        <!-- PAINTING CONNECT — completely independent room entry -->
+        <div id="paintingConnectScreen" class="hidden">
+          <div class="painting-wrap">
+            <div class="painting-card">
+              <div class="painting-head">
+                <div>
+                  <div class="painting-title">🎨 Painting Mode</div>
+                  <div class="painting-sub">غرفة رسم مستقلة — بدون Codenames وبدون فرق</div>
+                </div>
+                <button type="button" class="painting-btn secondary" id="paintingConnectBack">↩ رجوع</button>
+              </div>
+              <div class="painting-panel" style="max-width:760px;margin:0 auto">
+                <h3 style="color:var(--gold);margin-bottom:10px">1️⃣ اسمك</h3>
+                <input id="paintingConnectName" class="painting-input" maxlength="18" autocomplete="off" placeholder="✏️ اكتب اسمك">
+                <h3 style="color:var(--gold);margin:22px 0 10px">2️⃣ أنشئ غرفة أو ادخل برمز</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <button type="button" class="painting-btn" id="paintingCreateRoom">🚀 إنشاء غرفة</button>
+                  <button type="button" class="painting-btn secondary" id="paintingJoinRoom">🔗 دخول بالغرفة</button>
+                </div>
+                <input id="paintingRoomCode" class="painting-input" maxlength="6" autocomplete="off" spellcheck="false" style="margin-top:10px;text-align:center;letter-spacing:5px;text-transform:uppercase" placeholder="🔑 رمز الغرفة — مثال ABC123">
+                <div id="paintingConnectMsg" class="painting-note">أنشئ غرفة ليظهر لك رمز تشاركه مع أصدقائك، أو اكتب رمز غرفة موجودة.</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- DRAW & GUESS LOBBY — completely separate from Codenames -->
         <div id="drawLobbyScreen" class="hidden">
@@ -3854,7 +3888,7 @@ function setConnDot(ok) {
         // UTILITY FUNCTIONS
         // ==========================================
         function show(id) {
-            ['modeScreen', 'localSetupScreen', 'onlineEntryScreen', 'lobbyScreen', 'drawLobbyScreen', 'gameScreen', 'drawScreen'].forEach(function(s) {
+            ['modeScreen', 'localSetupScreen', 'onlineEntryScreen', 'lobbyScreen', 'paintingConnectScreen', 'drawLobbyScreen', 'gameScreen', 'drawScreen'].forEach(function(s) {
                 var el = document.getElementById(s);
                 if (el) el.classList.toggle('hidden', s !== id);
             });
@@ -5668,13 +5702,8 @@ function setConnDot(ok) {
             mode = 'online';
             teams = { red: [], blue: [] };
             window.drawModeRequested = true;
-            show('onlineEntryScreen');
-            setTimeout(function() {
-                const box = document.querySelector('#onlineEntryScreen .card-box');
-                if (box) box.classList.add('draw-mode-selected');
-                const drawPanel = document.querySelector('#oDrawStart')?.closest('div[style*="border"]');
-                if (drawPanel) drawPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 80);
+            show('paintingConnectScreen');
+            setTimeout(function(){ document.getElementById('paintingConnectName')?.focus(); }, 40);
         });
 
         document.getElementById('lBack').addEventListener('click', function() { show('modeScreen'); });
@@ -5983,7 +6012,7 @@ function setConnDot(ok) {
 </style>
 
 <style id="painting-only-clean-css">
-#drawLobbyScreen,#drawScreen{position:relative!important;z-index:1000!important}
+#paintingConnectScreen,#drawLobbyScreen,#drawScreen{position:relative!important;z-index:1000!important}
 .painting-wrap{max-width:1180px;margin:0 auto;padding:24px 16px 48px;color:#f7f2df;font-family:inherit}
 .painting-card{background:linear-gradient(145deg,#101b16,#08100c);border:1px solid rgba(232,200,74,.28);border-radius:24px;padding:24px;box-shadow:0 20px 70px rgba(0,0,0,.35)}
 .painting-head{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
@@ -6109,7 +6138,7 @@ function buildLobby(){
     </div>
   </div></div>`;
   document.getElementById('paintJoin').onclick=join;
-  document.getElementById('paintStart').onclick=start;
+  document.getElementById('paintStart').onclick=startPaintingGame;
   document.getElementById('paintBack').onclick=()=>{try{leaveRoom()}catch(e){try{show('modeScreen')}catch(_){}}};
   document.getElementById('paintName').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();join()}};
   uiBuilt=true;
@@ -6171,7 +6200,7 @@ function chooseStartPrompt(r){
   privatePromptTo(artist,p);
   return p;
 }
-function start(){
+function startPaintingGame(){
   const r=ensure(room());if(!isDraw(r))return;
   if(!name()){document.getElementById('paintMsg').textContent='✏️ اكتب اسمك وانضم أولاً.';return}
   if(!humans(r).some(p=>p.name===name())){document.getElementById('paintMsg').textContent='⏳ انضم أولاً.';return}
@@ -6232,18 +6261,79 @@ window.renderDrawLobby=renderLobby;window.renderDraw=renderGame;
 window.handleDrawEventOnHost=handlePaintingEvent;
 window.sendDrawEvent=send;
 
+function paintingRoomTemplate(code){
+  return ensure({
+    code:code,
+    phase:'lobby',
+    teams:{red:[],blue:[]},
+    cards:[],turn:'red',clue:null,gameOver:false,winner:null,reason:'',
+    assassinCount:1,assassinRevealed:0,
+    settings:{assassinCount:1,difficulty:'normal',timer:0,category:'all',customWords:[]},
+    customWords:[],bots:[],matchmaking:false,leader:null,gameMode:'draw',maxPlayers:null,
+    draw:{phase:'lobby',round:1,rounds:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0,mode:'painting',timeLimit:90000,strokeUsed:false},chat:[]
+  });
+}
+function paintingConnectMessage(t){
+  const el=document.getElementById('paintingConnectMsg'); if(el) el.textContent=t;
+}
+async function paintingCreateRoomDirect(){
+  const n=String(document.getElementById('paintingConnectName')?.value||'').trim().replace(/\s+/g,' ').slice(0,18);
+  if(!n){paintingConnectMessage('✏️ اكتب اسمك أولاً.');document.getElementById('paintingConnectName')?.focus();return;}
+  const code=makeCode().toUpperCase();
+  roomCode=code; me={name:n,team:'red'};
+  const r=paintingRoomTemplate(code); localRoomCache=r;
+  paintingConnectMessage('⏳ جاري إنشاء الغرفة...');
+  try{
+    await createHostPeer(code);
+    r.leader=n;
+    r.teams.red.push({name:n,team:'red',bot:false,spymaster:false});
+    localRoomCache=ensure(r);
+    writeRoom(code,localRoomCache);
+    startListening();
+    setConnDot(true);
+    show('drawLobbyScreen');
+    uiBuilt=false; renderLobby(localRoomCache);
+  }catch(e){console.error(e);paintingConnectMessage('❌ تعذر إنشاء الغرفة: '+(e?.message||'خطأ اتصال'));}
+}
+async function paintingJoinRoomDirect(){
+  const n=String(document.getElementById('paintingConnectName')?.value||'').trim().replace(/\s+/g,' ').slice(0,18);
+  const code=String(document.getElementById('paintingRoomCode')?.value||'').trim().toUpperCase();
+  if(!n){paintingConnectMessage('✏️ اكتب اسمك أولاً.');document.getElementById('paintingConnectName')?.focus();return;}
+  if(!code){paintingConnectMessage('🔑 اكتب رمز الغرفة.');document.getElementById('paintingRoomCode')?.focus();return;}
+  paintingConnectMessage('⏳ جاري الدخول إلى '+code+'...');
+  try{
+    const r=await connectAsGuest(code);
+    if(!r||r.gameMode!=='draw')throw new Error('هذه ليست غرفة Painting Mode');
+    roomCode=code; me={name:n,team:'red'}; localRoomCache=ensure(r);
+    startListening(); setConnDot(true);
+    show(localRoomCache.phase==='lobby'?'drawLobbyScreen':'drawScreen');
+    uiBuilt=false;
+    if(localRoomCache.phase==='lobby') renderLobby(localRoomCache); else renderGame(localRoomCache);
+  }catch(e){console.error(e);paintingConnectMessage('❌ تعذر الدخول: '+(e?.message||'تأكد من الرمز'));}
+}
+
 function rebuild(){uiBuilt=false;buildLobby();buildGame();uiBuilt=true}
 function tick(){
   const r=room();if(!isDraw(r))return;
   route(r);
   // Only update the timer text in-place; never rebuild the DOM.
 }
-function start(){
+function startPaintingPolling(){
   if(pollTimer)return;
-  pollTimer=setInterval(tick,1000);tick();
+  pollTimer=setInterval(tick,1000);
+  tick();
 }
-window.addEventListener('load',start);
-if(document.readyState!=='loading')start();
+window.addEventListener('load',startPaintingPolling);
+if(document.readyState!=='loading')startPaintingPolling();
+
+function bindPaintingConnect(){
+  document.getElementById('paintingCreateRoom')?.addEventListener('click',paintingCreateRoomDirect);
+  document.getElementById('paintingJoinRoom')?.addEventListener('click',paintingJoinRoomDirect);
+  document.getElementById('paintingConnectBack')?.addEventListener('click',()=>show('modeScreen'));
+  document.getElementById('paintingRoomCode')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();paintingJoinRoomDirect();}});
+  document.getElementById('paintingConnectName')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();paintingCreateRoomDirect();}});
+}
+bindPaintingConnect();
 })();
 </script>
 </body>

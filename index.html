@@ -1747,6 +1747,19 @@
                 min-width: 28px;
             }
         }
+
+        .quick-match-panel { margin-top: 14px; padding: 16px; border: 1px solid rgba(232,200,74,.18); border-radius: 14px; background: linear-gradient(145deg, rgba(232,200,74,.07), rgba(52,152,219,.05)); }
+        .quick-match-panel h3 { color: var(--gold); margin-bottom: 6px; }
+        .quick-match-panel p { color: var(--text-secondary); font-size: 13px; margin-bottom: 10px; }
+        .match-status { min-height: 24px; margin-top: 10px; color: var(--text-secondary); font-size: 13px; text-align: center; }
+        .custom-words-panel { margin-top: 12px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.06); }
+        .custom-words-panel textarea { width: 100%; min-height: 72px; resize: vertical; background: var(--bg-primary); color: var(--text-primary); border: 1px solid rgba(232,200,74,.16); border-radius: 10px; padding: 10px; font-family: inherit; }
+        .custom-word-count { color: var(--text-muted); font-size: 12px; margin-top: 6px; }
+        .bot-chip { border-color: rgba(232,200,74,.35) !important; }
+        .bot-badge { color: var(--gold); font-size: 11px; margin-right: 5px; }
+        .matchmaking-card { text-align:center; }
+        .matchmaking-spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(232,200,74,.25); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:-3px; margin-left:6px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -1845,7 +1858,7 @@
                     <div class="mode-btn" id="pickOnline">
                         <span class="ic">🌐</span>
                         <div class="t">أونلاين</div>
-                        <div class="d">كل لاعب من جهازه عبر رمز غرفة</div>
+                        <div class="d">غرفة خاصة أو لعب سريع مع لاعبين عشوائيين</div>
                     </div>
                 </div>
             </div>
@@ -1905,6 +1918,12 @@
                         </select>
                     </label>
                 </div>
+                <div class="custom-words-panel">
+                    <b>🧩 كلماتك الخاصة</b>
+                    <textarea id="localCustomWords" placeholder="اكتب كلمات، كل كلمة في سطر أو افصلها بفواصل"></textarea>
+                    <div class="custom-word-count" id="localCustomWordCount">0 كلمة محفوظة</div>
+                    <button type="button" class="add-btn" id="saveLocalCustomWords" style="margin-top:8px;">💾 حفظ الكلمات</button>
+                </div>
 
                 <div class="add-row">
                     <input type="text" id="lPlayerName" placeholder="✏️ اسم اللاعب" maxlength="18">
@@ -1930,8 +1949,17 @@
         <div id="onlineEntryScreen" class="hidden">
             <div class="card-box">
                 <p class="intro">🌍 أنشئ غرفة جديدة وشارك رمزها مع أصدقائك، أو انضم لغرفة موجودة برمزها.</p>
-                <div class="setup-actions" style="margin-bottom:14px;">
-                    <button class="stamp-btn" id="createRoomBtn">🚀 إنشاء غرفة جديدة</button>
+                <div class="quick-match-panel matchmaking-card">
+                    <h3>⚡ لعب سريع</h3>
+                    <p>يدخلك في مباراة من 4 لاعبين. إذا لم نجد لاعبين كفاية خلال 15 ثانية، نملأ الأماكن الفارغة بالذكاء الاصطناعي.</p>
+                    <div class="add-row">
+                        <input type="text" id="quickMatchName" placeholder="✏️ اسمك" maxlength="18">
+                        <button type="button" class="stamp-btn" id="quickMatchBtn">⚡ ابحث عن مباراة</button>
+                    </div>
+                    <div class="match-status" id="matchStatus"></div>
+                </div>
+                <div class="setup-actions" style="margin-top:14px;margin-bottom:14px;">
+                    <button class="stamp-btn" id="createRoomBtn">🚀 إنشاء غرفة خاصة</button>
                 </div>
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;color:var(--text-secondary);font-size:13px;">
                     <span style="flex:1;height:1px;background:rgba(232,200,74,0.08);"></span>
@@ -2007,6 +2035,12 @@
                             <option value="school">دراسة</option>
                         </select>
                     </label>
+                </div>
+                <div class="custom-words-panel">
+                    <b>🧩 كلمات اللاعبين</b>
+                    <textarea id="onlineCustomWords" placeholder="كل لاعب يستطيع إضافة كلماته. اكتب كلمات، كل كلمة في سطر أو افصلها بفواصل"></textarea>
+                    <div class="custom-word-count" id="onlineCustomWordCount">0 كلمة في المباراة</div>
+                    <button type="button" class="add-btn" id="addOnlineCustomWords" style="margin-top:8px;">➕ إضافة الكلمات</button>
                 </div>
 
                 <div class="add-row">
@@ -2157,6 +2191,16 @@ const BASE_ICE_SERVERS = FREE_ICE_SERVERS;
 const TURN_CREDENTIALS_URL =
     'https://dry-limit-2931codenames-turn-credentials.junaidalbalushi123456789.workers.dev/turn-credentials';
 
+const MATCHMAKING_URL =
+    'https://codenames-matchmaking.junaidalbalushi123456789.workers.dev';
+let matchmakingPollTimer = null;
+let matchmakingPlayerId = null;
+let matchmakingActive = false;
+let matchmakingHost = false;
+let matchmakingTeam = 'red';
+let aiActionTimer = null;
+let aiBusy = false;
+
 async function getIceServers() {
     try {
         const controller = new AbortController();
@@ -2231,9 +2275,14 @@ function normalizeRoom(room, code) {
             assassinCount: 1,
             difficulty: 'normal',
             timer: 60,
-            category: 'all'
+            category: 'all',
+            customWords: []
         };
     }
+    if (!Array.isArray(room.settings.customWords)) room.settings.customWords = [];
+    if (!Array.isArray(room.customWords)) room.customWords = room.settings.customWords.slice();
+    if (!Array.isArray(room.bots)) room.bots = [];
+    if (room.matchmaking === undefined) room.matchmaking = false;
 
     if (room.settings.assassinCount == null) {
         room.settings.assassinCount = 1;
@@ -2250,6 +2299,7 @@ function normalizeRoom(room, code) {
     if (!room.settings.category) {
         room.settings.category = 'all';
     }
+    if (!Array.isArray(room.settings.customWords)) room.settings.customWords = room.customWords.slice();
 
     if (code && !room.code) {
         room.code = String(code).trim().toUpperCase();
@@ -3206,48 +3256,29 @@ function setConnDot(ok) {
         // CATEGORIES
         // ==========================================
         var CATEGORIES = {
-            all: WORD_POOL,
-            anime: ["ناروتو", "سون غوكو", "لوفي", "سايتاما", "إيتاشي", "ساسكي", "إيتشيجو", "إرين", "ليفاي", "كونان", "كاكاشي",
-                "جوتارو", "ديو", "نوراغامي", "تسونا", "ريبورن", "غين", "ميكا", "آلين", "إدوارد"
-            ],
-            films: ["تيتانيك", "آفاتار", "إنسبشن", "ذا ماتريكس", "غلاديايتر", "بريف هارت", "فورست غامب", "فايت كلوب", "بول فكشن",
-                "بيسي فيولنت", "نو كونتري", "سلاوم دوج", "ميمينتو", "ذا برستيج", "إيترنال صنشاين"
-            ],
-            movies: ["العراب", "الخيميائي", "المنتقمون", "الرجل العنكبوت", "باتمان", "سوبرمان", "آيرون مان", "ثور", "كابتن أمريكا",
-                "بلاك بانثر", "دكتور سترينج", "المرعبون", "توي ستوري", "مادا غاسكار", "انترستيلار", "البداية"
-            ],
-            games: ["ماين كرافت", "فورتنايت", "كول أوف ديوتي", "جتا", "ريد ديد", "أساسنز كريد", "غود أوف وور", "ذا لاست أوف أس",
-                "أنشارتد", "فال أوت", "سكايرم", "ويتشر", "سايبر بانك", "إيلدن رينغ", "سوبر ماريو", "زيلدا", "بوكيمون",
-                "فاينل فانتازي", "ميتال غير", "سبايرو"
-            ],
-            sports: ["كرة القدم", "كرة السلة", "التنس", "السباحة", "الملاكمة", "الجودو", "الكاراتيه", "التايكواندو", "الجمباز",
-                "ألعاب القوى", "كرة الطائرة", "كرة اليد", "الرماية", "الفروسية", "التزلج", "ركوب الأمواج", "الجولف",
-                "البيسبول", "الكريكت", "الرغبي"
-            ],
-            food: ["البيتزا", "الباستا", "السوشي", "البرغر", "التاكو", "الكباب", "المندي", "البرياني", "الفلافل", "الحمص", "المحشي",
-                "الكشري", "الكنافة", "البقلاوة", "القطايف", "المعكرونة", "السمبوسة", "المنسف", "المقلوبة", "الدولمة"
-            ],
-            animals: ["الأسد", "النمر", "الفيل", "الزرافة", "التمساح", "الدلفين", "الحوت", "النسر", "الصقر", "البومة", "الغراب",
-                "العقرب", "الثعبان", "السلحفاة", "القندس", "الدب", "الذئب", "الثعلب", "الأرنب", "الحصان"
-            ],
-            series: ["صراع العروش", "ذا بويز", "سترينجر ثينغز", "بريكنغ باد", "لاكاسا دي بابيل", "ذا أوفيس", "فريندز", "دارك",
-                "ذا ويتشر", "وان بيس", "ديمون سلاير", "جوجوتسو كايسن", "بلاك ميرور", "شيرلوك", "لوكي", "فالكون"
-            ],
-            superheroes: ["سبايدرمان", "باتمان", "سوبرمان", "آيرون مان", "ثور", "هالك", "فلاش", "وندر وومان", "أكوامان", "بلاك بانثر",
-                "دكتور سترينج", "كابتن مارفل", "ديرديفل", "ثانوس", "لوكي", "ديدبول"
-            ],
-            technology: ["ذكاء اصطناعي", "روبوت", "حاسوب", "هاتف", "إنترنت", "خادم", "شبكة", "برمجة", "تطبيق", "لابتوب", "كاميرا",
-                "بطارية", "معالج", "ذاكرة", "شاشة", "لوحة مفاتيح"
-            ],
-            countries: ["عمان", "اليابان", "الصين", "الهند", "أمريكا", "بريطانيا", "فرنسا", "إيطاليا", "إسبانيا", "ألمانيا", "مصر",
-                "السعودية", "الإمارات", "تركيا", "البرازيل", "كندا"
-            ],
-            music: ["بيانو", "جيتار", "كمان", "طبلة", "مغني", "فرقة", "أغنية", "حفلة", "ميكروفون", "إيقاع", "لحن", "ألبوم", "موسيقى",
-                "DJ", "كونسرت", "سماعة"
-            ],
-            school: ["جامعة", "كلية", "طالب", "أستاذ", "امتحان", "واجب", "كتاب", "مختبر", "محاضرة", "مشروع", "برمجة", "رياضيات",
-                "حاسوب", "مكتبة", "شهادة", "تخرج"
-            ]
+            all: [],
+            anime: ["ناروتو","غوكو","لوفي","سايتاما","إيتاتشي","ساسكي","إيتشيغو","إيرين","ليفاي","كونان","كاكاشي","جوتارو","ديو","غوجو","سوكونا","تانجيرو","نيزوكو","زينيتسو","إينوسكي","زورو","سانجي","شانكس","إيس","لاو","مادارا","أوبيتو","ميدوريا","باكوغو","تودوروكي","غون","كيلوا","هيسوكا","كورابيكا","يوهان","إدوارد","ألفونس","ريم","سوبارو","أستـا","يونو"],
+            films: ["تايتانيك","أفاتار","إنسبشن","ذا ماتريكس","غلادياتور","بريف هارت","فورست غامب","فايت كلوب","بالب فيكشن","ممنتو","ذا برستيج","إنترستيلار","جوراسيك بارك","العراب","روكي","رومـا","جوكر","أوبنهايمر","باربي","المناظرون","كوكو","فوق","وال-إي","راتاتوي","مولان","شريك","مدمـن","المهمة المستحيلة","جون ويك","سيد الخواتم","الهوبيت","المنتقمون","النمر الأسود","الرجل الحديدي","ثور","كابتن أمريكا","سبايدرمان","باتمان","سوبرمان"],
+            movies: ["العراب","المنتقمون","الرجل العنكبوت","باتمان","سوبرمان","آيرون مان","ثور","كابتن أمريكا","بلاك بانثر","دكتور سترينج","توي ستوري","مادا غاسكار","إنترستيلار","جوكر","باربي","أوبنهايمر","فروزن","الأسد الملك","موانا","علاء الدين","مولان","هيركوليز","ترميناتور","روبوكوب","ماتريكس","أفاتار","تايتانيك","جومانجي","سونيك","بوكيمون"],
+            games: ["ماينكرافت","فورتنايت","كول أوف ديوتي","جتا","ريد ديد","أساسنز كريد","غود أوف وور","ذا لاست أوف أس","أنشارتد","فال أوت","سكايرم","ويتشر","سايبر بانك","إيلدن رينغ","سوبر ماريو","زيلدا","بوكيمون","فاينل فانتازي","ميتال غير","سبايرو","روبلوكس","فالورانت","ببجي","فري فاير","أمونغ أس","تيراريا","هالو","دوم","تيكن","مورتال كومبات","فيفا","روكيت ليغ","أبيكس ليجندز","أوفرواتش","ديسكو إليسيوم","ستارديو فالي","سيكيرو","دارك سولز","هورايزن","غوست أوف تسوشيما"],
+            sports: ["كرة القدم","كرة السلة","التنس","السباحة","الملاكمة","الجودو","الكاراتيه","التايكواندو","الجمباز","ألعاب القوى","كرة الطائرة","كرة اليد","الرماية","الفروسية","التزلج","ركوب الأمواج","الجولف","البيسبول","الكريكت","الرغبي","فورمولا 1","الماراثون","ركوب الدراجات","رفع الأثقال","المصارعة","هوكي","بلياردو","اسكواش","بادل","كرة الطاولة","بطولة العالم","كأس العالم","الحكم","المدرب","الملعب","الكأس"],
+            food: ["البيتزا","الباستا","السوشي","البرغر","التاكو","الكباب","المندي","البرياني","الفلافل","الحمص","المحشي","الكشري","الكنافة","البقلاوة","القطايف","المعكرونة","السمبوسة","المنسف","المقلوبة","الدولمة","شاورما","هوت دوغ","بان كيك","وافل","آيس كريم","شوكولاتة","فشار","نودلز","رامن","ستيك","سلطة","شوربة","كعكة","دونات","كرواسون","عسل","تمر","قهوة","شاي","ليمونادة"],
+            animals: ["الأسد","النمر","الفيل","الزرافة","التمساح","الدلفين","الحوت","النسر","الصقر","البومة","الغراب","العقرب","الثعبان","السلحفاة","القندس","الدب","الذئب","الثعلب","الأرنب","الحصان","الفهد","الغوريلا","الباندا","الكنغر","البطريق","النعامة","الطاووس","الببغاء","الخفاش","القرش","الأخطبوط","السرطان","النحلة","الفراشة","العنكبوت","النملة","الضفدع","البومة","الحمار الوحشي","وحيد القرن"],
+            series: ["صراع العروش","ذا بويز","سترينجر ثينغز","بريكنغ باد","لاكاسا دي بابيل","ذا أوفيس","فريندز","دارك","ذا ويتشر","وان بيس","ديمون سلاير","جوجوتسو كايسن","بلاك ميرور","شيرلوك","لوكي","فالكون","ذا ماندالوريان","سكويد غيم","ذا لاست أوف أس","سكسشن","ذا بير","أركين","بيكي بلايندرز","أشياء غريبة","هاوس","دكتور هاوس","لوست","فرينج","مستر روبوت","فايكنغز","ناركوس","ذا 100","بريزون بريك","أوتلاندر","ذا واير","سوبرناتشورال"],
+            superheroes: ["سبايدرمان","باتمان","سوبرمان","آيرون مان","ثور","هالك","فلاش","وندر وومان","أكوامان","بلاك بانثر","دكتور سترينج","كابتن مارفل","ديرديفل","ثانوس","لوكي","ديدبول","وولفرين","غروت","ستار لورد","غامورا","نيبيولا","سكارليت ويتش","فيجن","فالكون","وينتر سولجر","آنت مان","هوك","شوري","سيلفر سيرفر","غوست رايدر","بليد","فينوم","غرين غوبلن","ميستيريو","ريد سكول"],
+            technology: ["ذكاء اصطناعي","روبوت","حاسوب","هاتف","إنترنت","خادم","شبكة","برمجة","تطبيق","لابتوب","كاميرا","بطارية","معالج","ذاكرة","شاشة","لوحة مفاتيح","فأرة","طابعة","متصفح","سحابة","قاعدة بيانات","جافاسكربت","بايثون","لينكس","ويندوز","أندرويد","آيفون","واي فاي","بلوتوث","أقمار صناعية","درون","نظارات واقع افتراضي","واقع معزز","أمن سيبراني","كود","خوارزمية","واجهة برمجة","سيرفر","بكسل","شريحة"],
+            countries: ["عمان","اليابان","الصين","الهند","أمريكا","بريطانيا","فرنسا","إيطاليا","إسبانيا","ألمانيا","مصر","السعودية","الإمارات","تركيا","البرازيل","كندا","أستراليا","كوريا","إندونيسيا","تايلاند","ماليزيا","سنغافورة","المغرب","الأردن","قطر","الكويت","البحرين","اليمن","الجزائر","تونس","مدريد","لندن","باريس","طوكيو","دبي","مسقط","نيويورك","روما","برلين","القاهرة"],
+            music: ["بيانو","جيتار","كمان","طبلة","مغني","فرقة","أغنية","حفلة","ميكروفون","إيقاع","لحن","ألبوم","موسيقى","DJ","كونسرت","سماعة","درامز","باس","ساكسفون","فلوت","عود","ناي","أوركسترا","روك","جاز","راب","بوب","هيب هوب","كلاسيك","مهرجان","مسرح","رقص","موسيقى تصويرية","مغني راب","عازف","استوديو"],
+            school: ["جامعة","كلية","طالب","أستاذ","امتحان","واجب","كتاب","مختبر","محاضرة","مشروع","برمجة","رياضيات","حاسوب","مكتبة","شهادة","تخرج","فيزياء","كيمياء","أحياء","تاريخ","جغرافيا","لغة","مقال","بحث","قلم","دفتر","سبورة","حقيبة","مدرسة","مدير","فصل","درس","درجات","منحة","جامعة","مكتبة","حاسبة"],
+            nature: ["جبل","وادي","صحراء","غابة","شاطئ","بحر","نهر","محيط","بحيرة","شلال","بركان","جزيرة","كهف","صخرة","رمل","ثلج","مطر","سحاب","برق","رعد","ريح","شمس","قمر","نجم","كوكب","زهرة","شجرة","نخلة","وردة","عشب","مزرعة","بستان","حديقة","غروب","شروق","قوس قزح"],
+            jobs: ["طبيب","مهندس","معلم","محامي","شرطي","طيار","بحار","ممرض","مصور","مخرج","ممثل","صحفي","مترجم","مبرمج","مصمم","طباخ","خباز","مزارع","نجار","كهربائي","سباك","ميكانيكي","سائق","بائع","مدير","محاسب","عالم","باحث","رجل إطفاء","جندي","موسيقي","رياضي","حكم","حارس","صيدلي","طبيب أسنان"],
+            places: ["مطار","محطة قطار","مستشفى","مدرسة","جامعة","مطعم","فندق","سينما","متحف","ملعب","سوق","مول","مكتبة","مسجد","كنيسة","حديقة","شاطئ","مزرعة","مكتب","مصنع","سجن","مركز شرطة","محطة بنزين","ميناء","جسر","برج","قلعة","قصر","قرية","مدينة","عاصمة","صحراء","جزيرة","غابة","مسرح","استاد"],
+            internet: ["يوتيوب","تيك توك","إنستغرام","فيسبوك","واتساب","ديسكورد","ريديت","تويتش","ستيم","جوجل","غوغل درايف","جيميل","كروم","فايرفوكس","إكس","ميم","ترند","بث مباشر","بودكاست","تعليق","إعجاب","متابع","هاشتاغ","قناة","فيديو","صورة","رابط","رسالة","إشعار","بروفايل","خادم","سيرفر","مجتمع","منتدى","تحميل","بث"],
+            brands: ["أبل","سامسونج","جوجل","مايكروسوفت","سوني","نينتندو","بلايستيشن","إكس بوكس","نايكي","أديداس","كوكاكولا","بيبسي","ماكدونالدز","ستاربكس","تويوتا","بي إم دبليو","مرسيدس","تسلا","فورد","أودي","آيكيا","أمازون","نتفلكس","سبوتيفاي","ديزني","ليغو","غوتشي","رولكس","بوش","ديل"],
+            mythology: ["زيوس","بوسيدون","هاديس","أثينا","أبولو","آريس","أفروديت","هيرميس","هيرا","هرقل","ميدوسا","مينوتور","بروميثيوس","ثور","أودين","لوكي","فالهالا","أنوبيس","رع","إيزيس","أوزوريس","كليوباترا","عنقاء","تنين","جني","غول","وحش البحر","سيف","درع","أسطورة","آلهة","معبد","تاج","عرش","بوابة"],
+            objects: ["مفتاح","قفل","ساعة","مقص","إبرة","خيط","قلم","كتاب","نظارة","حقيبة","مظلة","مصباح","كرسي","طاولة","سرير","مرآة","زجاجة","كوب","طبق","ملعقة","شوكة","سكين","هاتف","حاسوب","كاميرا","تلفاز","راديو","بطارية","شاحن","حبل","صندوق","كرة","مكعب","خاتم","سوار","تاج","قلم رصاص","ممحاة","مسطرة","بوصلة"],
+            custom: [],
+            mixed: []
         };
 
         // ==========================================
@@ -3262,7 +3293,7 @@ function setConnDot(ok) {
         var roomCode = null;
         var me = { name: '', team: 'red' };
         var roomListener = null;
-        var gameSettings = { assassinCount: 1, difficulty: 'normal', timer: 60, category: 'all' };
+        var gameSettings = { assassinCount: 1, difficulty: 'normal', timer: 60, category: 'all', customWords: [] };
         var timerInterval = null;
         var isTimerRunning = false;
 
@@ -3296,6 +3327,27 @@ function setConnDot(ok) {
             "نافورة", "جسر", "سد", "قناة", "أنبوب", "صنبور", "مرآة", "زجاجة"
         ];
 
+        CATEGORIES.all = WORD_POOL;
+
+        function loadCustomWords() {
+            try {
+                var raw = localStorage.getItem('codenames_custom_words');
+                if (!raw) return [];
+                var parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed.filter(Boolean).slice(0, 500) : [];
+            } catch (e) { return []; }
+        }
+
+        function saveCustomWords(words) {
+            var clean = Array.from(new Set((words || []).map(function(w) { return String(w).trim(); }).filter(function(w) { return w.length >= 1 && w.length <= 32; }))).slice(0, 500);
+            try { localStorage.setItem('codenames_custom_words', JSON.stringify(clean)); } catch (e) {}
+            CATEGORIES.custom = clean;
+            CATEGORIES.mixed = WORD_POOL.concat(clean);
+            return clean;
+        }
+
+        saveCustomWords(loadCustomWords());
+
         // ==========================================
         // UTILITY FUNCTIONS
         // ==========================================
@@ -3328,10 +3380,11 @@ function setConnDot(ok) {
             return t.length > 0 && !/\s/.test(t);
         }
 
-        function getWordPool(category) {
-            if (category && CATEGORIES[category]) {
-                return CATEGORIES[category];
-            }
+        function getWordPool(category, customWords) {
+            var custom = Array.isArray(customWords) ? customWords : CATEGORIES.custom;
+            if (category === 'custom') return custom.length ? custom : WORD_POOL;
+            if (category === 'mixed') return WORD_POOL.concat(custom);
+            if (category && CATEGORIES[category]) return CATEGORIES[category];
             return WORD_POOL;
         }
 
@@ -3350,7 +3403,16 @@ function setConnDot(ok) {
                 technology: 'تقنية',
                 countries: 'دول ومدن',
                 music: 'موسيقى',
-                school: 'دراسة'
+                school: 'دراسة',
+                nature: 'طبيعة',
+                jobs: 'وظائف',
+                places: 'أماكن',
+                internet: 'إنترنت',
+                brands: 'علامات تجارية',
+                mythology: 'أساطير',
+                objects: 'أشياء',
+                custom: 'كلمات اللاعبين',
+                mixed: 'عشوائي + كلمات اللاعبين'
             };
             return names[cat] || 'جميع الكلمات';
         }
@@ -3359,14 +3421,41 @@ function setConnDot(ok) {
             return room && room.leader === me.name;
         }
 
+        function parseCustomWords(text) {
+            return Array.from(new Set(String(text || '').split(/[\n,،]+/).map(function(w) { return w.trim(); }).filter(function(w) { return w.length >= 1 && w.length <= 32; }))).slice(0, 500);
+        }
+
+        function renderCustomWordCounts() {
+            var local = document.getElementById('localCustomWordCount');
+            var online = document.getElementById('onlineCustomWordCount');
+            var count = CATEGORIES.custom.length;
+            if (local) local.textContent = count + ' كلمة محفوظة';
+            if (online) online.textContent = ((localRoomCache && localRoomCache.customWords) || CATEGORIES.custom).length + ' كلمة في المباراة';
+        }
+
+        function addCustomWords(words, online) {
+            var clean = parseCustomWords(words);
+            if (!clean.length) return;
+            if (!online) {
+                saveCustomWords(CATEGORIES.custom.concat(clean));
+            } else if (localRoomCache) {
+                var room = normalizeRoom(localRoomCache, roomCode);
+                room.customWords = Array.from(new Set((room.customWords || []).concat(clean))).slice(0, 500);
+                room.settings.customWords = room.customWords.slice();
+                writeRoom(roomCode, room);
+                renderLobbyFromRoom(room);
+            }
+            renderCustomWordCounts();
+        }
+
         // ==========================================
         // GAME FUNCTIONS
         // ==========================================
-        function buildBoard(assassinCount, difficulty, category) {
+        function buildBoard(assassinCount, difficulty, category, customWords) {
             assassinCount = assassinCount || 1;
             difficulty = difficulty || 'normal';
             category = category || 'all';
-            var wordPool = getWordPool(category);
+            var wordPool = getWordPool(category, customWords);
             var words = shuffle(wordPool).slice(0, 25);
             var startingTeam = Math.random() < 0.5 ? 'red' : 'blue';
             var otherTeam = startingTeam === 'red' ? 'blue' : 'red';
@@ -3446,13 +3535,15 @@ function setConnDot(ok) {
             var difficulty = document.getElementById('localDifficulty').value || 'normal';
             var timer = parseInt(document.getElementById('localTimer').value || '60');
             var category = document.getElementById('localCategory').value || 'all';
+            var customWords = CATEGORIES.custom.slice();
 
             gameSettings.assassinCount = assassinCount;
             gameSettings.difficulty = difficulty;
             gameSettings.timer = timer;
             gameSettings.category = category;
+            gameSettings.customWords = customWords;
 
-            var built = buildBoard(assassinCount, difficulty, category);
+            var built = buildBoard(assassinCount, difficulty, category, customWords);
             state = {
                 cards: built.cards,
                 turn: built.turn,
@@ -3464,6 +3555,7 @@ function setConnDot(ok) {
                 assassinRevealed: 0,
                 timer: timer,
                 category: category,
+                customWords: customWords,
                 turnDeadline: timer > 0 ? Date.now() + timer * 1000 : null
             };
 
@@ -3809,8 +3901,98 @@ function setConnDot(ok) {
             room.assassinRevealed = state.assassinRevealed;
             room.timer = state.timer;
             room.category = state.category;
+            room.customWords = (room.customWords || (room.settings && room.settings.customWords) || []).slice();
             room.turnDeadline = state.turnDeadline || null;
             writeRoom(roomCode, room);
+        }
+
+        // ==========================================
+        // AI PLAYERS — HOST CONTROLLED
+        // ==========================================
+        function getBotForTurn(room) {
+            if (!room || !Array.isArray(room.bots)) return null;
+            var bots = room.bots.filter(function(b) { return b && b.team === state.turn; });
+            return bots.length ? bots[0] : null;
+        }
+
+        function aiScoreWord(word, clue) {
+            var a = String(word || '').toLowerCase().replace(/[^\u0600-\u06ffa-z0-9]/g, '');
+            var b = String(clue || '').toLowerCase().replace(/[^\u0600-\u06ffa-z0-9]/g, '');
+            if (!a || !b) return 0;
+            var score = 0;
+            if (a === b) score += 100;
+            for (var i = 0; i < b.length; i++) if (a.indexOf(b[i]) !== -1) score += 2;
+            if (a.indexOf(b) !== -1 || b.indexOf(a) !== -1) score += 15;
+            return score + Math.random();
+        }
+
+        function aiGiveClue() {
+            var room = localRoomCache;
+            if (!room || !room.matchmaking || room.leader !== me.name || state.gameOver || state.clue) return false;
+            var bot = getBotForTurn(room);
+            if (!bot || !bot.spymaster) return false;
+            var targets = state.cards.filter(function(c) { return !c.revealed && c.team === state.turn; });
+            if (!targets.length) return false;
+            targets.sort(function(a,b) { return String(b.word).length - String(a.word).length; });
+            var target = targets[0];
+            var clue = String(target.word).split(/[^\u0600-\u06ffa-zA-Z0-9]+/)[0] || 'هدف';
+            if (state.cards.some(function(c) { return !c.revealed && c.word === clue; })) clue = 'فكرة';
+            var number = Math.min(2, targets.length);
+            state.clue = { word: clue, number: number, guessesLeft: number + 1 };
+            state.turnDeadline = state.timer > 0 ? Date.now() + state.timer * 1000 : null;
+            render();
+            syncGameState();
+            return true;
+        }
+
+        function aiRevealCard(idx) {
+            var room = localRoomCache;
+            if (!room || !room.matchmaking || room.leader !== me.name || state.gameOver || !state.clue) return false;
+            var card = state.cards[idx];
+            if (!card || card.revealed) return false;
+            card.revealed = true;
+            if (card.team === 'assassin') {
+                stopTimer();
+                state.gameOver = true; state.winner = state.turn === 'red' ? 'blue' : 'red';
+                state.reason = '💀 الذكاء الاصطناعي كشف بطاقة القاتل! ' + (state.winner === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق') + ' يفوز فوراً!';
+            } else if (card.team === state.turn) {
+                state.clue.guessesLeft -= 1;
+                if (remaining('red') === 0 || remaining('blue') === 0) {
+                    stopTimer(); state.gameOver = true; state.winner = remaining('red') === 0 ? 'red' : 'blue';
+                    state.reason = '🏆 تم كشف جميع بطاقات الفريق!';
+                } else if (state.clue.guessesLeft <= 0) {
+                    passTurn();
+                    return true;
+                }
+            } else {
+                passTurn();
+                return true;
+            }
+            render(); syncGameState();
+            if (state.gameOver) showEndOverlay();
+            else setTimeout(runAIMoveIfNeeded, 250);
+            return true;
+        }
+
+        function runAIMoveIfNeeded() {
+            if (aiBusy || mode !== 'online' || !localRoomCache || !localRoomCache.matchmaking || localRoomCache.leader !== me.name || state.gameOver) return;
+            var bot = getBotForTurn(localRoomCache);
+            if (!bot) return;
+            aiBusy = true;
+            if (!state.clue && bot.spymaster) {
+                setTimeout(function() { aiBusy = false; aiGiveClue(); }, 900);
+                return;
+            }
+            if (state.clue) {
+                setTimeout(function() {
+                    var choices = state.cards.map(function(c,i) { return { c:c, i:i, score: aiScoreWord(c.word, state.clue.word) }; }).filter(function(x) { return !x.c.revealed; });
+                    choices.sort(function(a,b) { return b.score - a.score; });
+                    aiBusy = false;
+                    if (choices.length) aiRevealCard(choices[0].i);
+                }, 1100);
+            } else {
+                aiBusy = false;
+            }
         }
 
         // ==========================================
@@ -3971,6 +4153,180 @@ function setConnDot(ok) {
         });
 
         // ==========================================
+        // QUICK MATCHMAKING
+        // ==========================================
+        function setMatchStatus(text, spinning) {
+            var el = document.getElementById('matchStatus');
+            if (!el) return;
+            el.innerHTML = (spinning ? '<span class="matchmaking-spinner"></span>' : '') + text;
+        }
+
+        function stopMatchmaking(resetStatus) {
+            matchmakingActive = false;
+            if (matchmakingPollTimer) { clearTimeout(matchmakingPollTimer); matchmakingPollTimer = null; }
+            if (matchmakingPlayerId && MATCHMAKING_URL.indexOf('REPLACE-WITH') === -1) {
+                fetch(MATCHMAKING_URL + '/matchmaking/leave', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ playerId: matchmakingPlayerId })
+                }).catch(function() {});
+            }
+            matchmakingPlayerId = null;
+            if (resetStatus) setMatchStatus('', false);
+        }
+
+        function createMatchRoom(match) {
+            roomCode = String(match.roomCode || makeCode()).toUpperCase();
+            matchmakingHost = !!match.host;
+            matchmakingTeam = match.team || 'red';
+            var playerName = (document.getElementById('quickMatchName') || {}).value || '';
+            me = { name: playerName.trim(), team: matchmakingTeam };
+            if (!me.name) return Promise.reject(new Error('name missing'));
+
+            var players = Array.isArray(match.players) ? match.players : [];
+            var red = players.filter(function(p) { return p.team === 'red'; }).map(function(p) { return { name: p.name, spymaster: false, bot: !!p.bot }; });
+            var blue = players.filter(function(p) { return p.team === 'blue'; }).map(function(p) { return { name: p.name, spymaster: false, bot: !!p.bot }; });
+            red.forEach(function(p, i) { if (i === 0) p.spymaster = true; });
+            blue.forEach(function(p, i) { if (i === 0) p.spymaster = true; });
+
+            var room = {
+                code: roomCode, phase: 'lobby', teams: { red: red, blue: blue }, cards: [], turn: 'red', clue: null,
+                gameOver: false, winner: null, reason: '', assassinCount: 1, assassinRevealed: 0,
+                settings: { assassinCount: 1, difficulty: 'normal', timer: 60, category: 'all', customWords: CATEGORIES.custom.slice() },
+                customWords: CATEGORIES.custom.slice(),
+                bots: players.filter(function(p) { return !!p.bot; }),
+                matchmaking: true, leader: players[0] ? players[0].name : me.name
+            };
+            localRoomCache = room;
+
+            if (matchmakingHost) {
+                return createHostPeer(roomCode).then(function() {
+                    setConnDot(true);
+                    document.getElementById('lobbyCode').textContent = roomCode;
+                    document.getElementById('onlineErr').textContent = '';
+                    show('lobbyScreen');
+                    startListening();
+                    writeRoom(roomCode, room);
+                    renderLobbyFromRoom(room);
+                    setMatchStatus('');
+                    setTimeout(function() {
+                        var latest = localRoomCache;
+                        if (matchmakingActive && latest && latest.phase === 'lobby' && latest.leader === me.name) {
+                            startMatchmakingGame(latest);
+                        }
+                    }, 3000);
+                });
+            }
+
+            return new Promise(function(resolve, reject) {
+                setMatchStatus('تم العثور على المباراة — الاتصال بالمضيف...', true);
+                setTimeout(function() {
+                    connectAsGuest(roomCode).then(function(foundRoom) {
+                        localRoomCache = foundRoom;
+                        document.getElementById('lobbyCode').textContent = roomCode;
+                        setConnDot(true);
+                        show('lobbyScreen');
+                        startListening();
+                        renderLobbyFromRoom(foundRoom);
+                        resolve();
+                    }).catch(reject);
+                }, 1200);
+            });
+        }
+
+        function startMatchmakingGame(room) {
+            if (!room || !matchmakingActive || room.phase !== 'lobby' || room.leader !== me.name) return;
+            var assassinCount = room.settings && room.settings.assassinCount || 1;
+            var difficulty = room.settings && room.settings.difficulty || 'normal';
+            var timer = room.settings && room.settings.timer || 60;
+            var category = room.settings && room.settings.category || 'all';
+            var customWords = (room.customWords || []).slice();
+            var built = buildBoard(assassinCount, difficulty, category, customWords);
+            room.phase = 'playing'; room.cards = built.cards; room.turn = built.turn; room.clue = null;
+            room.gameOver = false; room.winner = null; room.reason = ''; room.assassinCount = built.assassinCount;
+            room.assassinRevealed = 0; room.timer = timer; room.category = category; room.turnDeadline = timer > 0 ? Date.now() + timer * 1000 : null;
+            writeRoom(roomCode, room);
+            matchmakingActive = false;
+            enterOnlineGame(room);
+        }
+
+        async function pollMatchmaking() {
+            if (!matchmakingActive || !matchmakingPlayerId) return;
+            if (MATCHMAKING_URL.indexOf('REPLACE-WITH') !== -1) {
+                stopMatchmaking(false);
+                setMatchStatus('⚠️ أنشئ Worker المطابقة أولاً ثم ضع رابطه في الكود.', false);
+                return;
+            }
+            try {
+                var res = await fetch(MATCHMAKING_URL + '/matchmaking/status?playerId=' + encodeURIComponent(matchmakingPlayerId), { cache: 'no-store' });
+                var data = await res.json();
+                if (!matchmakingActive) return;
+                if (data.status === 'matched') {
+                    setMatchStatus('🎮 تم العثور على 4 لاعبين — تجهيز المباراة...', true);
+                    try {
+                        await createMatchRoom(data);
+                        if (!data.host) matchmakingActive = false;
+                    } catch (e) {
+                        console.error(e);
+                        setMatchStatus('❌ تعذر الاتصال بالمباراة، نحاول مرة أخرى...', true);
+                        matchmakingPollTimer = setTimeout(pollMatchmaking, 1500);
+                    }
+                    return;
+                }
+                var seconds = Math.max(0, Math.ceil((15000 - (data.waitedMs || 0)) / 1000));
+                var queueText = (data.queueCount || 1) + ' في الطابور';
+                setMatchStatus('🔎 نبحث عن لاعبين... ' + queueText + ' • ' + seconds + 'ث', true);
+                matchmakingPollTimer = setTimeout(pollMatchmaking, 1000);
+            } catch (e) {
+                console.error('Matchmaking error:', e);
+                setMatchStatus('⚠️ مشكلة اتصال — نعيد المحاولة...', true);
+                matchmakingPollTimer = setTimeout(pollMatchmaking, 2000);
+            }
+        }
+
+        async function startQuickMatch() {
+            if (matchmakingActive) return;
+            var input = document.getElementById('quickMatchName');
+            var name = input ? input.value.trim() : '';
+            var status = document.getElementById('matchStatus');
+            if (!name) { setMatchStatus('✏️ اكتب اسمك أولاً.', false); return; }
+            if (MATCHMAKING_URL.indexOf('REPLACE-WITH') !== -1) {
+                setMatchStatus('⚠️ باقي خطوة واحدة: انشر Worker المطابقة وضع رابطه في MATCHMAKING_URL.', false);
+                return;
+            }
+            matchmakingActive = true;
+            matchmakingPlayerId = (crypto.randomUUID ? crypto.randomUUID() : 'p-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+            mode = 'online';
+            setMatchStatus('🔎 نبحث عن لاعبين من كل مكان...', true);
+            try {
+                var response = await fetch(MATCHMAKING_URL + '/matchmaking/join', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ playerId: matchmakingPlayerId, name: name })
+                });
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                pollMatchmaking();
+            } catch (e) {
+                console.error(e);
+                stopMatchmaking(false);
+                setMatchStatus('❌ تعذر الاتصال بخادم المطابقة.', false);
+            }
+        }
+
+        document.getElementById('quickMatchBtn').addEventListener('click', startQuickMatch);
+        document.getElementById('quickMatchName').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); startQuickMatch(); } });
+
+        document.getElementById('saveLocalCustomWords').addEventListener('click', function() {
+            var el = document.getElementById('localCustomWords');
+            addCustomWords(el ? el.value : '', false);
+            if (el) el.value = '';
+            renderCustomWordCounts();
+        });
+        document.getElementById('addOnlineCustomWords').addEventListener('click', function() {
+            var el = document.getElementById('onlineCustomWords');
+            addCustomWords(el ? el.value : '', true);
+            if (el) el.value = '';
+        });
+
+        // ==========================================
         // ONLINE - CREATE ROOM
         // ==========================================
         document.getElementById('createRoomBtn').addEventListener('click', function() {
@@ -3980,10 +4336,12 @@ function setConnDot(ok) {
             var difficulty = document.getElementById('onlineDifficulty').value;
             var timer = parseInt(document.getElementById('onlineTimer').value);
             var category = document.getElementById('onlineCategory').value;
+            var customWords = CATEGORIES.custom.slice();
             gameSettings.assassinCount = assassinCount;
             gameSettings.difficulty = difficulty;
             gameSettings.timer = timer;
             gameSettings.category = category;
+            gameSettings.customWords = customWords;
 
             var room = {
                 code: roomCode,
@@ -3998,7 +4356,10 @@ function setConnDot(ok) {
                 assassinCount: assassinCount,
                 assassinRevealed: 0,
                 settings: { assassinCount: assassinCount, difficulty: difficulty, timer: timer,
-                category: category },
+                category: category, customWords: customWords },
+                customWords: customWords,
+                bots: [],
+                matchmaking: false,
                 leader: null
             };
 
@@ -4114,6 +4475,7 @@ function setConnDot(ok) {
         document.getElementById('oBack').addEventListener('click', leaveRoom);
 
         function leaveRoom() {
+            stopMatchmaking(false);
             if (roomListener) { roomListener();
                 roomListener = null; }
             if (peer) { peer.destroy();
@@ -4145,6 +4507,7 @@ function setConnDot(ok) {
                 document.getElementById('onlineCategory').value = room.settings.category || 'all';
             }
 
+            renderCustomWordCounts();
             document.getElementById('leaderName').textContent = room.leader || 'غير معين';
             var leaderNow = room.leader === me.name;
             ['onlineAssassinCount', 'onlineDifficulty', 'onlineTimer', 'onlineCategory'].forEach(function(id) {
@@ -4157,7 +4520,8 @@ function setConnDot(ok) {
                     assassinCount: parseInt(document.getElementById('onlineAssassinCount').value || '1'),
                     difficulty: document.getElementById('onlineDifficulty').value,
                     timer: parseInt(document.getElementById('onlineTimer').value || '0'),
-                    category: document.getElementById('onlineCategory').value
+                    category: document.getElementById('onlineCategory').value,
+                    customWords: (room.customWords || []).slice()
                 };
                 if (JSON.stringify(nextSettings) !== JSON.stringify(room.settings || {})) {
                     room.settings = nextSettings;
@@ -4287,7 +4651,8 @@ function setConnDot(ok) {
             var difficulty = room.settings && room.settings.difficulty || 'normal';
             var timer = room.settings && room.settings.timer || 0;
             var category = room.settings && room.settings.category || 'all';
-            var built = buildBoard(assassinCount, difficulty, category);
+            var customWords = (room.customWords || (room.settings && room.settings.customWords) || []).slice();
+            var built = buildBoard(assassinCount, difficulty, category, customWords);
 
             room.phase = 'playing';
             room.cards = built.cards;
@@ -4300,6 +4665,8 @@ function setConnDot(ok) {
             room.assassinRevealed = 0;
             room.timer = timer;
             room.category = category;
+            room.customWords = customWords;
+            room.settings.customWords = customWords.slice();
             room.turnDeadline = timer > 0 ? Date.now() + timer * 1000 : null;
 
             writeRoom(roomCode, room);
@@ -4328,6 +4695,7 @@ function setConnDot(ok) {
             gameSettings.difficulty = room.settings && room.settings.difficulty || 'normal';
             gameSettings.timer = state.timer;
             gameSettings.category = state.category;
+            gameSettings.customWords = (room.customWords || (room.settings && room.settings.customWords) || []).slice();
 
             spymasterMode = false;
             document.getElementById('spyToggle').classList.remove('on');
@@ -4342,6 +4710,7 @@ function setConnDot(ok) {
             render();
             if (state.gameOver) showEndOverlay();
             if (state.timer > 0 && !state.gameOver) startTimer(state.timer);
+            runAIMoveIfNeeded();
         }
 
         // ==========================================
@@ -4385,6 +4754,7 @@ function setConnDot(ok) {
                             document.getElementById('overlay').classList.remove('show');
                         }
                         document.getElementById('spyToggleWrap').classList.toggle('hidden', !amISpymaster());
+                        runAIMoveIfNeeded();
                     }
                 }
             });
@@ -4473,12 +4843,13 @@ function setConnDot(ok) {
         });
 
         document.getElementById('lBack').addEventListener('click', function() { show('modeScreen'); });
-        document.getElementById('onlineBack').addEventListener('click', function() { show('modeScreen'); });
+        document.getElementById('onlineBack').addEventListener('click', function() { stopMatchmaking(true); show('modeScreen'); });
 
         // ==========================================
         // INIT
         // ==========================================
         renderLocalTeams();
+        renderCustomWordCounts();
         show('modeScreen');
 
         console.log('🕵️ كود نيمز - النسخة النهائية مع PeerJS');
@@ -4489,5 +4860,15 @@ function setConnDot(ok) {
         console.log('✅ نظام قائد الغرفة');
         console.log('✅ طرد اللاعبين من قبل القائد');
     </script>
+
+    <!-- COMMUNITY / FEEDBACK -->
+    <div id="communityContact" style="position:fixed;right:18px;bottom:18px;z-index:9999;max-width:340px;padding:14px 16px;border:1px solid rgba(255,255,255,.16);border-radius:18px;background:rgba(12,16,28,.92);backdrop-filter:blur(14px);box-shadow:0 14px 40px rgba(0,0,0,.28);font-family:inherit;color:#fff;display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#5865F2,#7289da);font-size:20px;flex:0 0 auto;">💬</div>
+        <div style="min-width:0;flex:1;">
+            <div style="font-weight:800;font-size:14px;margin-bottom:3px;">Have a suggestion?</div>
+            <div style="font-size:12px;opacity:.72;line-height:1.35;">Contact us, report a problem, or suggest new words and categories.</div>
+        </div>
+        <a href="https://discord.com/invite/4JFMPzM8Y" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border-radius:11px;background:#5865F2;color:#fff;text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap;transition:transform .15s ease,filter .15s ease;" onmouseover="this.style.filter='brightness(1.12)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">Discord ↗</a>
+    </div>
 </body>
 </html>

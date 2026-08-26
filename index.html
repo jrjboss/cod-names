@@ -2122,9 +2122,9 @@
                     <button type="button" class="stamp-btn ghost" id="removeBotsBtn">🗑️ إزالة البوتات</button>
                 </div>
                 <div class="setup-err" id="oErr"></div>
-                <div style="margin:14px 0;padding:14px 16px;border:1px solid rgba(232,200,74,.18);border-radius:14px;background:linear-gradient(145deg,rgba(232,200,74,.08),rgba(255,255,255,.025));text-align:center;">
+                <div id="drawModePanel" style="margin:14px 0;padding:14px 16px;border:1px solid rgba(232,200,74,.18);border-radius:14px;background:linear-gradient(145deg,rgba(232,200,74,.08),rgba(255,255,255,.025));text-align:center;">
                     <div style="font-size:18px;font-weight:1000;color:var(--gold);">🎨 Draw & Guess</div>
-                    <div style="font-size:12px;color:var(--text-secondary);margin:5px 0 10px;">كل لاعب بشري يرسم مرة، والباقي يخمنون من رسمها. البوتات لا ترسم.</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin:5px 0 10px;">2–3 لاعبين فقط. كل لاعب بشري يرسم مرة، والباقي يخمنون من رسمها. البوتات لا ترسم.</div>
                     <button type="button" class="stamp-btn" id="oDrawStart">🎨 ابدأ وضع الرسم</button>
                     <div id="drawLeaderHint" style="margin-top:7px;font-size:11px;color:var(--text-muted);">👑 قائد الغرفة فقط يستطيع بدء الوضع</div>
                 </div>
@@ -2415,6 +2415,13 @@ function normalizeRoom(room, code) {
     if (!Array.isArray(room.customWords)) room.customWords = room.settings.customWords.slice();
     if (!Array.isArray(room.bots)) room.bots = [];
     if (room.matchmaking === undefined) room.matchmaking = false;
+
+    // Every online room has an explicit game mode.
+    // Draw & Guess is a separate mode and is limited to 3 total players.
+    if (room.gameMode !== 'draw' && room.gameMode !== 'codenames') {
+        room.gameMode = room.draw ? 'draw' : 'codenames';
+    }
+    room.maxPlayers = room.gameMode === 'draw' ? 3 : 4;
 
     if (room.settings.assassinCount == null) {
         room.settings.assassinCount = 1;
@@ -3074,6 +3081,19 @@ function setupConnectionHandlers(conn) {
                             type: 'joinResult',
                             ok: false,
                             reason: 'name-used',
+                            room: localRoomCache
+                        });
+                    }
+                    return;
+                }
+
+                const roomMaxPlayers = localRoomCache.gameMode === 'draw' ? 3 : 4;
+                if (allPlayers.length >= roomMaxPlayers) {
+                    if (conn.open) {
+                        conn.send({
+                            type: 'joinResult',
+                            ok: false,
+                            reason: 'room-full',
                             room: localRoomCache
                         });
                     }
@@ -3761,6 +3781,29 @@ function setConnDot(ok) {
             renderBoardLock(shouldLockBoard);
         }
 
+        // Safe roster renderer used by the online Codenames screen.
+        // The previous build called renderRoster() without defining it,
+        // which caused "Cannot set properties of null / renderRoster is not defined".
+        function renderRoster() {
+            var red = document.getElementById('redRoster');
+            var blue = document.getElementById('blueRoster');
+            if (!red || !blue) return;
+
+            function names(list) {
+                return (list || []).map(function(p) {
+                    var role = p.spymaster ? ' 👁' : '';
+                    var bot = p.bot ? ' 🤖' : '';
+                    return '<b>' + String(p.name || 'لاعب')
+                        .replace(/[&<>'"]/g, function(c) {
+                            return ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]);
+                        }) + '</b>' + bot + role;
+                }).join(' · ');
+            }
+
+            red.innerHTML = '🔴 <b>الفريق الأحمر</b><br>' + (names(teams.red) || 'لا يوجد لاعبون');
+            blue.innerHTML = '🔵 <b>الفريق الأزرق</b><br>' + (names(teams.blue) || 'لا يوجد لاعبون');
+        }
+
         function renderBoardLock(shouldLockBoard) {
             var lock = document.getElementById('boardLock');
             if (shouldLockBoard && !state.gameOver) {
@@ -4441,7 +4484,11 @@ function setConnDot(ok) {
                     var rp = roster.find(function(x) { return x.name === p.name; });
                     return { id: p.id, name: p.name, team: p.team, bot: true, spymaster: !!(rp && rp.spymaster), difficulty: p.difficulty || 'normal' };
                 }),
-                matchmaking: true, leader: players[0] ? players[0].name : me.name
+                matchmaking: true, leader: players[0] ? players[0].name : me.name,
+                gameMode: 'codenames',
+                maxPlayers: 4,
+                draw: null,
+                chat: []
             };
             localRoomCache = room;
 
@@ -4478,6 +4525,7 @@ function setConnDot(ok) {
 
         function startMatchmakingGame(room) {
             if (!room || !matchmakingActive || room.phase !== 'lobby' || room.leader !== me.name) return;
+            if (room.gameMode === 'draw') return;
             var assassinCount = room.settings && room.settings.assassinCount || 1;
             var difficulty = room.settings && room.settings.difficulty || 'normal';
             var timer = room.settings && room.settings.timer || 60;
@@ -4527,6 +4575,10 @@ function setConnDot(ok) {
         }
 
         async function startQuickMatch() {
+            if (window.drawModeRequested) {
+                setMatchStatus('🎨 Draw & Guess يستخدم غرفة خاصة بحد أقصى 3 لاعبين. ارجع واختر أونلاين ثم أنشئ غرفة.', false);
+                return;
+            }
             if (matchmakingActive) return;
             var input = document.getElementById('quickMatchName');
             var name = input ? input.value.trim() : '';
@@ -4573,6 +4625,9 @@ function setConnDot(ok) {
         // ONLINE - CREATE ROOM
         // ==========================================
         document.getElementById('createRoomBtn').addEventListener('click', function() {
+            const selectedGameMode = window.drawModeRequested ? 'draw' : 'codenames';
+            window.drawModeRequested = false;
+
             roomCode = makeCode();
             me = { name: '', team: 'red' };
             var assassinCount = parseInt(document.getElementById('onlineAssassinCount').value);
@@ -4603,7 +4658,13 @@ function setConnDot(ok) {
                 customWords: customWords,
                 bots: [],
                 matchmaking: false,
-                leader: null
+                leader: null,
+                gameMode: selectedGameMode,
+                maxPlayers: selectedGameMode === 'draw' ? 3 : 4,
+                draw: selectedGameMode === 'draw'
+                    ? { phase: 'idle', round: 1, rounds: 1, artists: [], artistIndex: 0, prompt: '', submissions: [], guesses: [], gallery: [], startedAt: 0 }
+                    : null,
+                chat: []
             };
 
             // Store the room data
@@ -4644,7 +4705,13 @@ function setConnDot(ok) {
                 document.getElementById('lobbyCode').textContent = roomCode;
                 setConnDot(true);
                 renderLobbyFromRoom(room);
-                if (room.phase === 'playing') {
+                if (room.gameMode === 'draw') {
+                    show(room.phase === 'drawing' || room.phase === 'drawing-finished' ? 'drawScreen' : 'lobbyScreen');
+                    if (room.phase === 'drawing' || room.phase === 'drawing-finished') {
+                        if (typeof renderDraw === 'function') renderDraw(room);
+                    }
+                    startListening();
+                } else if (room.phase === 'playing') {
                     enterOnlineGame(room);
                 } else {
                     show('lobbyScreen');
@@ -4679,6 +4746,15 @@ function setConnDot(ok) {
             if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.'; return; }
             var allNames = (room.teams.red || []).concat(room.teams.blue || []).map(function(p) { return p.name; });
             if (allNames.includes(name)) { err.textContent = '⚠️ هذا الاسم مستخدم في الغرفة بالفعل.'; return; }
+
+            var roomMaxPlayers = room.gameMode === 'draw' ? 3 : 4;
+            if (allNames.length >= roomMaxPlayers) {
+                err.textContent = room.gameMode === 'draw'
+                    ? '⚠️ غرفة الرسم ممتلئة — الحد الأقصى 3 لاعبين.'
+                    : '⚠️ الغرفة ممتلئة.';
+                return;
+            }
+
             // Let the host add the player and broadcast the authoritative room.
             // This avoids two players joining at the same time and overwriting
             // each other's room state. The UI stays exactly the same.
@@ -4722,7 +4798,8 @@ function setConnDot(ok) {
             if (!room || room.phase !== 'lobby' || room.leader !== me.name) return;
             room = normalizeRoom(room, roomCode);
             var total = (room.teams.red || []).length + (room.teams.blue || []).length;
-            if (total >= 4) return;
+            var maxPlayers = room.gameMode === 'draw' ? 3 : 4;
+            if (total >= maxPlayers) return;
             var n = (room.teams.red || []).concat(room.teams.blue || []).filter(function(p) { return p.bot; }).length + 1;
             var bot = { name: 'Bot ' + n, team: team, bot: true, spymaster: !(room.teams[team] || []).some(function(p) { return p.spymaster; }), difficulty: room.settings.difficulty || 'normal' };
             room.teams[team].push(bot);
@@ -4810,10 +4887,34 @@ function setConnDot(ok) {
             }
 
             var startBtn = document.getElementById('oStart');
+            var drawPanel = document.getElementById('drawModePanel');
             var redCount = (room.teams.red || []).length;
             var blueCount = (room.teams.blue || []).length;
             var total = redCount + blueCount;
             var isLeader = room.leader === me.name;
+            var drawRoom = room.gameMode === 'draw';
+            var maxPlayers = drawRoom ? 3 : 4;
+
+            if (drawPanel) drawPanel.style.display = drawRoom ? '' : 'none';
+            if (startBtn) startBtn.style.display = drawRoom ? 'none' : '';
+
+            if (drawRoom) {
+                if (drawHint) {
+                    drawHint.textContent = isLeader
+                        ? '👑 أنت قائد الغرفة — ابدأ عندما يصبح عدد اللاعبين 2 أو 3'
+                        : '👑 قائد الغرفة فقط يستطيع بدء Draw & Guess';
+                }
+                var drawStartBtn = document.getElementById('oDrawStart');
+                if (drawStartBtn) {
+                    drawStartBtn.disabled = !isLeader || room.phase !== 'lobby' || total < 2 || total > 3;
+                    drawStartBtn.textContent = total < 2
+                        ? '🎨 ابدأ وضع الرسم (يحتاج لاعبين)'
+                        : '🎨 ابدأ Draw & Guess (' + total + '/3)';
+                }
+                var drawLimit = document.getElementById('playerCount');
+                if (drawLimit) drawLimit.textContent = total + ' / 3 لاعبين';
+                return;
+            }
 
             if (total >= 4 && redCount >= 2 && blueCount >= 2 && isLeader) {
                 startBtn.disabled = false;
@@ -4911,6 +5012,11 @@ function setConnDot(ok) {
             err.textContent = '';
             var room = localRoomCache;
             if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.'; return; }
+
+            if (room.gameMode === 'draw') {
+                err.textContent = '🎨 هذه غرفة Draw & Guess. استخدم زر بدء الرسم.';
+                return;
+            }
 
             if (room.leader !== me.name) {
                 err.textContent = '⚠️ فقط قائد الغرفة يمكنه بدء المهمة.';
@@ -5031,7 +5137,14 @@ function setConnDot(ok) {
                 var currentScreen = document.getElementById('lobbyScreen');
                 if (!currentScreen.classList.contains('hidden')) {
                     renderLobbyFromRoom(room);
-                    if (room.phase === 'playing') {
+                    if (room.gameMode === 'draw') {
+                        if (room.phase === 'drawing' || room.phase === 'drawing-finished') {
+                            show('drawScreen');
+                            if (typeof renderDraw === 'function') renderDraw(room);
+                        } else {
+                            show('lobbyScreen');
+                        }
+                    } else if (room.phase === 'playing') {
                         enterOnlineGame(room);
                     }
                 } else {
@@ -5236,7 +5349,8 @@ function setConnDot(ok) {
             localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); return;
         }
         if(e.type==='startDraw'){
-            if(room.leader!==actor)return;
+            const total=(room.teams?.red||[]).length+(room.teams?.blue||[]).length;
+            if(room.gameMode!=='draw' || room.leader!==actor || total<2 || total>3)return;
             const humans=drawHumans(room); if(humans.length<2)return;
             d.phase='drawing'; d.round=1; d.rounds=humans.length; d.artists=humans.map(x=>x.name); d.artistIndex=0; d.prompt=pickPrompt(); d.submissions=[]; d.guesses=[]; d.gallery=[]; d.startedAt=Date.now();
             room.phase='drawing'; room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); return;
@@ -5314,8 +5428,14 @@ function setConnDot(ok) {
     function setDrawButton(id,disabled){const e=document.getElementById(id);if(e)e.disabled=disabled;}
 
     window.startDrawMode=function(){
-        const room=normalizeRoom(localRoomCache||{},roomCode); if(!isDrawLeader(room)){alert('فقط قائد الغرفة يستطيع بدء وضع الرسم.');return;}
-        const humans=drawHumans(room); if(humans.length<2){alert('يحتاج وضع الرسم إلى لاعبين بشريين على الأقل.');return;}
+        const room=normalizeRoom(localRoomCache||{},roomCode);
+        const total=(room.teams?.red||[]).length+(room.teams?.blue||[]).length;
+        if(room.gameMode!=='draw'){alert('هذه ليست غرفة Draw & Guess.');return;}
+        if(!isDrawLeader(room)){alert('فقط قائد الغرفة يستطيع بدء وضع الرسم.');return;}
+        if(total<2){alert('يحتاج Draw & Guess إلى لاعبين بشريين على الأقل.');return;}
+        if(total>3){alert('Draw & Guess محدود بـ 3 لاعبين فقط.');return;}
+        const humans=drawHumans(room);
+        if(humans.length<2){alert('يحتاج وضع الرسم إلى لاعبين بشريين على الأقل.');return;}
         sendDrawEvent({type:'startDraw',actor:safeMeName()});
     };
 

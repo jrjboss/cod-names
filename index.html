@@ -3585,6 +3585,50 @@ function setConnDot(ok) {
         var isTimerRunning = false;
 
         // ==========================================
+        // CODENAMES TURN TIMER
+        // ==========================================
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            isTimerRunning = false;
+        }
+
+        function startTimer(seconds) {
+            stopTimer();
+            seconds = Math.max(0, parseInt(seconds || 0, 10));
+            if (!seconds || state.gameOver) {
+                var noTimer = document.getElementById('timerDisplay');
+                if (noTimer) noTimer.textContent = '⏱ بدون مؤقت';
+                return;
+            }
+
+            state.timer = seconds;
+            state.turnDeadline = Date.now() + seconds * 1000;
+            isTimerRunning = true;
+
+            function tick() {
+                if (state.gameOver) { stopTimer(); return; }
+                var remainingSeconds = Math.max(0, Math.ceil(((state.turnDeadline || (Date.now() + seconds * 1000)) - Date.now()) / 1000));
+                var display = document.getElementById('timerDisplay');
+                if (display) {
+                    display.textContent = '⏱ ' + remainingSeconds;
+                    display.classList.toggle('warning', remainingSeconds <= 10);
+                }
+                if (remainingSeconds <= 0) {
+                    stopTimer();
+                    if (!state.gameOver) {
+                        passTurn();
+                    }
+                }
+            }
+
+            tick();
+            timerInterval = setInterval(tick, 250);
+        }
+
+        // ==========================================
         // WORD POOL
         // ==========================================
         var WORD_POOL = [
@@ -3639,8 +3683,9 @@ function setConnDot(ok) {
         // UTILITY FUNCTIONS
         // ==========================================
         function show(id) {
-            ['modeScreen', 'localSetupScreen', 'onlineEntryScreen', 'lobbyScreen', 'gameScreen', 'drawScreen'].forEach(function(s) {
-                document.getElementById(s).classList.toggle('hidden', s !== id);
+            ['modeScreen', 'localSetupScreen', 'onlineEntryScreen', 'lobbyScreen', 'drawLobbyScreen', 'gameScreen', 'drawScreen'].forEach(function(s) {
+                var el = document.getElementById(s);
+                if (el) el.classList.toggle('hidden', s !== id);
             });
         }
 
@@ -3685,7 +3730,10 @@ function setConnDot(ok) {
                 return Array.from(new Set(onlyCustom.concat(WORD_POOL)));
             }
             if (category === 'mixed') return Array.from(new Set(WORD_POOL.concat(custom)));
-            if (category && CATEGORIES[category]) return CATEGORIES[category].slice();
+            if (category && Object.prototype.hasOwnProperty.call(CATEGORIES, category)) {
+                var selected = Array.isArray(CATEGORIES[category]) ? CATEGORIES[category].slice() : [];
+                if (selected.length) return selected;
+            }
             return WORD_POOL.slice();
         }
 
@@ -3758,6 +3806,7 @@ function setConnDot(ok) {
             difficulty = difficulty || 'normal';
             category = category || 'all';
             var wordPool = getWordPool(category, customWords);
+            console.log('🎯 Building board category:', category, 'pool:', wordPool.length);
             var words = [];
             var shuffled = shuffle(wordPool);
             for (var wi = 0; wi < shuffled.length && words.length < 25; wi++) {
@@ -4786,12 +4835,17 @@ function setConnDot(ok) {
                 document.getElementById('lobbyCode').textContent = roomCode;
                 document.getElementById('onlineErr').textContent = '';
                 setConnDot(true);
-                show('lobbyScreen');
                 startListening();
                 room.leader = me.name;
                 writeRoom(roomCode, room);
-                renderLobbyFromRoom(room);
-                updatePlayerCount(room);
+                if (room.gameMode === 'draw') {
+                    show('drawLobbyScreen');
+                    if (typeof window.renderDrawLobby === 'function') window.renderDrawLobby(room);
+                } else {
+                    show('lobbyScreen');
+                    renderLobbyFromRoom(room);
+                    updatePlayerCount(room);
+                }
             }).catch(function(e) {
                 document.getElementById('onlineErr').textContent = '❌ تعذّر إنشاء الغرفة، حاول مجدداً.';
                 console.error(e);
@@ -4818,11 +4872,14 @@ function setConnDot(ok) {
                 setConnDot(true);
                 renderLobbyFromRoom(room);
                 if (room.gameMode === 'draw') {
-                    show(room.phase === 'drawing' || room.phase === 'drawing-finished' ? 'drawScreen' : 'lobbyScreen');
-                    if (room.gameMode === 'draw' && (room.phase === 'drawing' || room.phase === 'drawing-finished')) {
-                        if (typeof window.renderDraw === 'function') window.renderDraw(room);
-                    }
                     startListening();
+                    if (room.phase === 'drawing' || room.phase === 'drawing-finished') {
+                        show('drawScreen');
+                        if (typeof window.renderDraw === 'function') window.renderDraw(room);
+                    } else {
+                        show('drawLobbyScreen');
+                        if (typeof window.renderDrawLobby === 'function') window.renderDrawLobby(room);
+                    }
                 } else if (room.phase === 'playing') {
                     enterOnlineGame(room);
                 } else {
@@ -5254,11 +5311,17 @@ function setConnDot(ok) {
                 if (!room) return;
                 localRoomCache = normalizeRoom(room, roomCode);
 
-                // DRAW & GUESS has its own screen and must win over the normal
-                // lobby/game screen whenever the room is in a drawing phase.
-                if (room.phase === 'drawing' || room.phase === 'drawing-finished') {
-                    show('drawScreen');
-                    if (typeof window.renderDraw === 'function') window.renderDraw(room);
+                // DRAW & GUESS is completely independent from the Codenames UI.
+                // Always route its lobby/game state first so the normal lobby
+                // can never steal the screen.
+                if (room.gameMode === 'draw') {
+                    if (room.phase === 'drawing' || room.phase === 'drawing-finished') {
+                        show('drawScreen');
+                        if (typeof window.renderDraw === 'function') window.renderDraw(room);
+                    } else {
+                        show('drawLobbyScreen');
+                        if (typeof window.renderDrawLobby === 'function') window.renderDrawLobby(room);
+                    }
                     return;
                 }
 
@@ -5308,6 +5371,31 @@ function setConnDot(ok) {
                 }
             });
         }
+
+        // ==========================================
+        // ONLINE SETTINGS — SAVE IMMEDIATELY
+        // ==========================================
+        ['onlineAssassinCount', 'onlineDifficulty', 'onlineTimer', 'onlineCategory'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('change', function() {
+                var room = localRoomCache;
+                if (!room || room.gameMode === 'draw' || room.phase !== 'lobby' || room.leader !== me.name) return;
+                room = normalizeRoom(room, roomCode);
+                room.settings = {
+                    assassinCount: parseInt(document.getElementById('onlineAssassinCount').value || '1', 10),
+                    difficulty: document.getElementById('onlineDifficulty').value || 'normal',
+                    timer: parseInt(document.getElementById('onlineTimer').value || '0', 10),
+                    category: document.getElementById('onlineCategory').value || 'all',
+                    customWords: (room.customWords || []).slice()
+                };
+                room.assassinCount = room.settings.assassinCount;
+                room.category = room.settings.category;
+                writeRoom(roomCode, room);
+                renderLobbyFromRoom(room);
+                console.log('⚙️ Online settings saved:', room.settings);
+            });
+        });
 
         // ==========================================
         // GAME BUTTONS
@@ -5502,7 +5590,7 @@ function setConnDot(ok) {
             const image=String(e.image||''); if(!image || image.length>900000)return;
             if(d.submissions.some(x=>x.artist===artist))return;
             d.submissions.push({artist,image,prompt:d.prompt,at:Date.now()}); d.phase='guessing'; d.guesses=[];
-            room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); scheduleBotGuesses(); return;
+            room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); return;
         }
         if(e.type==='skipDrawing'){
             if(d.phase!=='drawing')return;
@@ -5535,25 +5623,6 @@ function setConnDot(ok) {
         }
     };
 
-    function scheduleBotGuesses(){
-        if(typeof isHost==='undefined' || !isHost) return;
-        const snapshot=normalizeRoom(localRoomCache,roomCode); const d=ensureDraw(snapshot);
-        if(d.phase!=='guessing') return;
-        const artist=d.artists[d.artistIndex];
-        const humans=d.artists.slice();
-        drawBots(snapshot).forEach((bot,index)=>{
-            setTimeout(()=>{
-                const latest=normalizeRoom(localRoomCache,roomCode); const ld=ensureDraw(latest);
-                if(ld.phase!=='guessing' || ld.artists[ld.artistIndex]!==artist || ld.guesses.some(g=>g.name===bot.name)) return;
-                const options=humans.filter(n=>n!==bot.name); const guess=options[Math.floor(Math.random()*options.length)] || artist;
-                ld.guesses.push({name:bot.name,guess,correct:guess===artist,bot:true});
-                const eligible=drawHumans(latest).map(x=>x.name).filter(n=>n!==artist).concat(drawBots(latest).map(x=>x.name));
-                if(ld.guesses.length>=eligible.length) ld.phase='reveal';
-                latest.draw=ld; localRoomCache=latest; broadcastState(); if(roomListenerCallback)roomListenerCallback(latest);
-            },1200+index*900);
-        });
-    }
-
     function safeEventName(e){ return String(e?.actor||e?.name||'').trim().slice(0,18); }
     function pickPrompt(){ return DRAW_PROMPTS[Math.floor(Math.random()*DRAW_PROMPTS.length)]; }
     function isMyTurn(room){ const d=room?.draw; return d?.phase==='drawing' && d.artists?.[d.artistIndex]===safeMeName(); }
@@ -5575,7 +5644,7 @@ function setConnDot(ok) {
         if(!isDrawLeader(room)){alert('فقط قائد الغرفة يستطيع بدء وضع الرسم.');return;}
         if(total<3){alert('يحتاج Draw & Guess إلى 3 لاعبين على الأقل.');return;}
         const humans=drawHumans(room);
-        if(humans.length<3){alert('يحتاج Draw & Guess إلى 3 لاعبين بشريين على الأقل. يمكن إضافة بوتات، لكنها لا ترسم.');return;}
+        if(humans.length<3){alert('يحتاج Draw & Guess إلى 3 لاعبين بشريين على الأقل. البوتات غير مسموحة هنا.');return;}
         sendDrawEvent({type:'startDraw',actor:safeMeName()});
     };
 
@@ -5622,7 +5691,7 @@ function setConnDot(ok) {
         if(d.phase!=='drawing' || !canDraw){ /* keep canvas visible for all */ }
     }
     window.renderDraw = renderDraw;
-    function renderDrawPlayers(room,d){const el=document.getElementById('drawPlayers'); if(!el)return; el.innerHTML=''; drawHumans(room).forEach(p=>{const row=document.createElement('div');row.className='draw-player-row'+(d.artists[d.artistIndex]===p.name&&d.phase==='drawing'?' artist':'');row.innerHTML='<span>👤 '+escapeHtml(p.name)+'</span><span class="draw-player-status">'+(d.artists[d.artistIndex]===p.name&&d.phase==='drawing'?'🎨 يرسم':d.gallery.some(g=>g.artist===p.name)?'✅ رسم':'⏳')+'</span>';el.appendChild(row)});drawBots(room).forEach(p=>{const row=document.createElement('div');row.className='draw-player-row';row.innerHTML='<span>🤖 '+escapeHtml(p.name)+'</span><span class="draw-player-status">يتفرج ويخمن</span>';el.appendChild(row)});}
+    function renderDrawPlayers(room,d){const el=document.getElementById('drawPlayers'); if(!el)return; el.innerHTML=''; drawHumans(room).forEach(p=>{const row=document.createElement('div');row.className='draw-player-row'+(d.artists[d.artistIndex]===p.name&&d.phase==='drawing'?' artist':'');row.innerHTML='<span>👤 '+escapeHtml(p.name)+'</span><span class="draw-player-status">'+(d.artists[d.artistIndex]===p.name&&d.phase==='drawing'?'🎨 يرسم':d.gallery.some(g=>g.artist===p.name)?'✅ رسم':'⏳')+'</span>';el.appendChild(row)});}
     function renderGuessButtons(room,d){
         const box=document.getElementById('drawGuessButtons');
         if(!box)return;
@@ -5662,7 +5731,7 @@ function setConnDot(ok) {
             document.getElementById('drawSkipBtn')?.addEventListener('click',()=>sendDrawEvent({type:'skipDrawing',actor:safeMeName()}));
             document.getElementById('drawSubmitBtn')?.addEventListener('click',()=>{if(isMyTurn(localRoomCache)){const image=drawCanvas.toDataURL('image/png',.82);sendDrawEvent({type:'submitDrawing',actor:safeMeName(),image});}});
             document.getElementById('drawNextBtn')?.addEventListener('click',()=>sendDrawEvent({type:'nextDrawing',actor:safeMeName()}));
-            document.getElementById('drawBackBtn')?.addEventListener('click',()=>show('lobbyScreen'));
+            document.getElementById('drawBackBtn')?.addEventListener('click',()=>{const r=drawRoom(); if(r && r.phase==='lobby') show('drawLobbyScreen'); else if(r) show('drawScreen');});
             const sendChat=()=>{const input=document.getElementById('drawChatInput');const text=input?.value.trim();if(!text)return;sendDrawEvent({type:'chat',actor:safeMeName(),text});input.value='';};
             document.getElementById('drawChatSend')?.addEventListener('click',sendChat);
             document.getElementById('drawChatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
@@ -5781,6 +5850,8 @@ function setConnDot(ok) {
     function escapeDraw(v){
         return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
     }
+
+    window.renderDrawLobby = renderDrawLobby;
 
     function showDrawLobby(room){
         if(!room || room.gameMode!=='draw' || room.phase!=='lobby')return;

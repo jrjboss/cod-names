@@ -1795,6 +1795,9 @@
 .draw-mode-btn:hover{border-color:rgba(232,200,74,.55);box-shadow:0 10px 28px rgba(232,200,74,.10)}
 .draw-mode-selected{box-shadow:0 0 0 2px rgba(232,200,74,.12),0 18px 50px rgba(0,0,0,.25)}
 .discord-footer{width:100%;max-width:1000px;margin:18px auto;padding:18px 20px;text-align:center;border:1px solid rgba(232,200,74,.12);border-radius:16px;background:linear-gradient(145deg,rgba(30,42,34,.96),rgba(15,20,17,.98));box-shadow:0 12px 40px rgba(0,0,0,.25)}.discord-footer-title{color:var(--text-secondary);font-size:13px;margin-bottom:8px}.discord-footer-link{display:inline-flex;align-items:center;justify-content:center;padding:9px 20px;border-radius:10px;text-decoration:none;color:#fff;font-weight:900;font-size:14px;background:linear-gradient(135deg,#5865f2,#4752c4)}.discord-footer-sub{margin-top:7px;color:var(--text-muted);font-size:11px}@media(max-width:850px){.draw-layout{grid-template-columns:1fr}.draw-side{display:grid;grid-template-columns:1fr 1fr}.draw-chat-box{min-height:280px}}@media(max-width:600px){.draw-side{display:flex}.draw-title{font-size:22px}.draw-prompt{font-size:21px}.draw-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.draw-tools button{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:#fff;border-radius:10px;padding:9px 12px;cursor:pointer;font-weight:800}.draw-tools button:hover{border-color:rgba(232,200,74,.45);background:rgba(232,200,74,.10)}.draw-mode-note{margin:8px 0 0;color:var(--text-muted);font-size:12px;text-align:center}.draw-submit-image{max-width:100%;border-radius:14px;background:#fff;display:block;margin:10px auto}.draw-reveal-area img{max-width:100%;max-height:430px;border-radius:14px;background:#fff;display:block;margin:10px auto}.draw-score-pill{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.06);margin:2px;font-size:11px}.draw-mode-new-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:900px){.draw-mode-new-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 
 <style id="draw-final-fix-css">
@@ -2154,11 +2157,14 @@
                 <div class="setup-err" id="oErr"></div>
                 <div id="drawModePanel" style="margin:14px 0;padding:16px;border:1px solid rgba(232,200,74,.18);border-radius:14px;background:linear-gradient(145deg,rgba(232,200,74,.08),rgba(255,255,255,.025));text-align:center;">
                     <div style="font-size:20px;font-weight:1000;color:var(--gold);">🎨 Draw & Guess — وضع مستقل</div>
-                    <div style="font-size:12px;color:var(--text-secondary);margin:5px 0 12px;">3 لاعبين بشريين على الأقل. لا يوجد حد أقصى. البوتات غير متاحة في Draw & Guess.</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin:5px 0 12px;">لا يوجد حد أدنى من اللاعبين. لا يوجد حد أقصى. البوتات غير متاحة في Draw & Guess.</div>
                     <div id="drawLobbyModes" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0 14px;">
                         <button type="button" class="stamp-btn ghost draw-lobby-mode" data-draw-mode="prompt">📝 تحدي الكلمات<br><small>ارسم كلمة سرية</small></button>
                         <button type="button" class="stamp-btn ghost draw-lobby-mode" data-draw-mode="free">🎨 رسم حر<br><small>ارسم أي شيء</small></button>
                         <button type="button" class="stamp-btn ghost draw-lobby-mode" data-draw-mode="speed">⚡ سباق الوقت<br><small>30 ثانية</small></button>
+                        <button type="button" class="stamp-btn ghost draw-lobby-mode" data-draw-mode="oneStroke">🖊️ خط واحد<br><small>بدون رفع القلم</small></button>
+                        <button type="button" class="stamp-btn ghost draw-lobby-mode" data-draw-mode="shapes">🔺 تحدي الأشكال<br><small>3 أشكال</small></button>
+                        <button type="button" class="stamp-btn ghost draw-lobby-mode" data-draw-mode="blitz">🔥 Blitz<br><small>15 ثانية</small></button>
                     </div>
                     <div id="drawLobbyModeText" style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">الوضع الحالي: تحدي الكلمات</div>
                     <button type="button" class="stamp-btn" id="oDrawStart">🎨 ابدأ Draw & Guess</button>
@@ -2189,7 +2195,7 @@
 
                 <section class="draw-lobby-card">
                     <div class="draw-lobby-rule">
-                        👥 <strong>3 لاعبين بشريين على الأقل</strong> لبدء اللعبة — لا يوجد حد أقصى.
+                        👥 <strong>لا يوجد حد أدنى من اللاعبين</strong> لبدء اللعبة — لا يوجد حد أقصى.
                         <br>🤖 البوتات غير مسموحة في Draw & Guess.
                         <br>👑 <strong>قائد الغرفة فقط</strong> يستطيع اختيار الوضع وبدء اللعبة.
                     </div>
@@ -2202,7 +2208,7 @@
                     <div id="drawLobbyJoinStatus" class="setup-err"></div>
 
                     <div class="draw-lobby-section-title">2️⃣ اختر وضع الرسم</div>
-                    <div class="draw-lobby-modes">
+                    <div class="draw-lobby-modes draw-mode-new-grid">
                         <button type="button" class="draw-lobby-mode-new" data-draw-mode="prompt">
                             <span>📝</span><strong>تحدي الكلمات</strong><small>ارسم كلمة سرية لا يراها الآخرون</small>
                         </button>
@@ -2211,6 +2217,15 @@
                         </button>
                         <button type="button" class="draw-lobby-mode-new" data-draw-mode="speed">
                             <span>⚡</span><strong>سباق الوقت</strong><small>30 ثانية لكل رسام</small>
+                        </button>
+                        <button type="button" class="draw-lobby-mode-new" data-draw-mode="oneStroke">
+                            <span>🖊️</span><strong>خط واحد</strong><small>ارسم بدون رفع القلم</small>
+                        </button>
+                        <button type="button" class="draw-lobby-mode-new" data-draw-mode="shapes">
+                            <span>🔺</span><strong>تحدي الأشكال</strong><small>أدخل 3 أشكال هندسية</small>
+                        </button>
+                        <button type="button" class="draw-lobby-mode-new" data-draw-mode="blitz">
+                            <span>🔥</span><strong>Blitz</strong><small>15 ثانية فقط</small>
                         </button>
                     </div>
                     <div id="drawLobbySelectedMode" class="draw-lobby-selected">الوضع الحالي: تحدي الكلمات</div>
@@ -2262,10 +2277,16 @@
                     <canvas id="drawCanvas" width="900" height="540"></canvas>
                     <div class="draw-tools">
                         <label>حجم القلم <input id="drawSize" type="range" min="2" max="28" value="7"></label>
+                        <button type="button" class="stamp-btn ghost" id="drawBlackBtn">⚫ أسود</button>
+                        <button type="button" class="stamp-btn ghost" id="drawRedBtn">🔴 أحمر</button>
+                        <button type="button" class="stamp-btn ghost" id="drawBlueBtn">🔵 أزرق</button>
+                        <button type="button" class="stamp-btn ghost" id="drawEraserBtn">🧽 ممحاة</button>
+                        <button type="button" class="stamp-btn ghost" id="drawUndoBtn">↩️ تراجع</button>
                         <button type="button" class="stamp-btn ghost" id="drawClearBtn">🧹 مسح</button>
                         <button type="button" class="stamp-btn ghost" id="drawSkipBtn">⏭️ تخطي</button>
                         <button type="button" class="stamp-btn" id="drawSubmitBtn">✅ إرسال الرسم</button>
                     </div>
+                    <div id="drawModeNote" class="draw-mode-note"></div>
                     <img id="drawSubmittedImage" class="draw-submitted-image hidden" alt="الرسم الحالي">
                     <div id="drawGuessArea" class="draw-guess-area hidden">
                         <div class="draw-label">🕵️ من رسم هذا؟</div>
@@ -2273,7 +2294,7 @@
                     </div>
                     <div id="drawRevealArea" class="draw-reveal-area hidden">
                         <div class="draw-label">🎉 النتيجة</div>
-                        <div id="drawRevealText"></div>
+                        <div id="drawRevealText"></div><img id="drawRevealImage" class="draw-submit-image hidden" alt="الرسم المكشوف">
                         <button type="button" class="stamp-btn" id="drawNextBtn">➡️ التالي</button>
                     </div>
                 </section>
@@ -2522,14 +2543,14 @@ function normalizeRoom(room, code) {
     if (room.matchmaking === undefined) room.matchmaking = false;
 
     // Every online room has an explicit game mode.
-    // Draw & Guess is a separate mode and is limited to 3 total players.
+    // Draw & Guess is a separate mode with no minimum or maximum player count.
     if (room.gameMode !== 'draw' && room.gameMode !== 'codenames') {
         room.gameMode = room.draw ? 'draw' : 'codenames';
     }
     // Draw & Guess is completely separate from Codenames:
     // - no bots
     // - no maximum player count
-    // - minimum 3 HUMAN players is enforced only when starting
+    // - at least 1 HUMAN player is required to start; 4+ is recommended for the best experience
     if (room.gameMode === 'draw') {
         room.maxPlayers = null;
         room.bots = [];
@@ -4261,17 +4282,15 @@ function setConnDot(ok) {
         // Bots are simulated by the room leader so every human sees the same move.
         function getBotForTurn(room) {
             if (!room) return null;
-
             var roster = room.teams && Array.isArray(room.teams[state.turn]) ? room.teams[state.turn] : [];
             var bots = roster.filter(function(p) { return p && p.bot; });
-            if (!bots.length && Array.isArray(room.bots)) {
-                bots = room.bots.filter(function(b) { return b && b.bot && b.team === state.turn; });
-            }
+            if (!bots.length && Array.isArray(room.bots)) bots = room.bots.filter(function(b){return b&&b.bot&&b.team===state.turn;});
             if (!bots.length) return null;
-            var bot = bots[0];
-            var rosterSpy = roster.find(function(p) { return p && p.bot && p.spymaster; });
-            bot.spymaster = !!(rosterSpy && rosterSpy.name === bot.name);
-            return bot;
+            var spy = roster.find(function(p){return p && p.spymaster;});
+            bots.forEach(function(b){b.spymaster=!!(spy && spy.bot && spy.name===b.name);});
+            // If the authoritative roster says a bot is spymaster, ALWAYS return that bot.
+            if(spy && spy.bot){return bots.find(function(b){return b.name===spy.name;}) || bots[0];}
+            return bots[0];
         }
 
         function getBotRosterForTeam(room, team) {
@@ -4315,83 +4334,80 @@ function setConnDot(ok) {
             // Prefer cards whose team matches the current turn.
             var card = (state.cards || []).find(function(c) { return c && normalize(c.word) === a; });
             if (card && card.team === state.turn) score += 10;
-            if (card && card.team === 'assassin') score -= 30;
-            if (card && card.team && card.team !== state.turn && card.team !== 'assassin') score -= 4;
-
+            if (card && card.team === 'assassin') score -= 120;
+            if (card && card.team && card.team !== state.turn && card.team !== 'assassin') score -= 10;
+            Object.keys(CATEGORIES||{}).forEach(function(k){
+                var pool=(CATEGORIES[k]||[]).map(function(x){return normalize(String(x||''));});
+                if(pool.includes(a) && pool.includes(b)) score += 18;
+            });
             return score + Math.random();
         }
 
         function makeBotClue(targets) {
             if (!targets.length) return null;
-
-            var target = targets[0];
-            var word = String(target.word || '').trim();
-            var letters = word.replace(/[^\u0600-\u06ffa-zA-Z]/g, '').split('');
-            var first = letters[0] || '';
-
-            // A clue must not literally be one of the board words.
-            // Use a small semantic-style fallback dictionary before using a neutral clue.
-            var clues = [
-                'فكرة', 'مفهوم', 'شيء', 'موضوع', 'مكان', 'طبيعة', 'حركة', 'حياة',
-                'عمل', 'شخص', 'أداة', 'رحلة', 'عالم', 'هدف', 'اتجاه', 'مجموعة'
-            ];
-
-            // Give a little variety based on the first character without exposing the target.
-            if (first) {
-                var buckets = {
-                    'a': 'بداية', 'b': 'حركة', 'c': 'فكرة', 'd': 'مكان', 'e': 'عالم',
-                    'f': 'عمل', 'g': 'طبيعة', 'h': 'حياة', 'i': 'شيء', 'j': 'رحلة',
-                    'k': 'اتجاه', 'l': 'مكان', 'm': 'مجموعة', 'n': 'مفهوم', 'o': 'موضوع',
-                    'p': 'شخص', 'q': 'فكرة', 'r': 'حركة', 's': 'شيء', 't': 'عمل',
-                    'u': 'عالم', 'v': 'مكان', 'w': 'رحلة', 'x': 'فكرة', 'y': 'حياة', 'z': 'طبيعة'
-                };
-                var mapped = buckets[first.toLowerCase()];
-                if (mapped) clues.unshift(mapped);
-            }
-
-            for (var i = 0; i < clues.length; i++) {
-                var candidate = clues[i];
-                var used = (state.cards || []).some(function(c) {
-                    return !c.revealed && String(c.word || '').trim().toLowerCase() === candidate.toLowerCase();
+            const visible = (state.cards || []).filter(c=>c && !c.revealed);
+            const targetWords = new Set(targets.map(c=>String(c.word||'').trim()));
+            const categoryNames = {
+                anime:'أنمي', movies:'أفلام', games:'ألعاب', sports:'رياضة', food:'طعام', animals:'حيوانات',
+                series:'مسلسلات', superheroes:'أبطال خارقون', technology:'تقنية', countries:'دول ومدن', music:'موسيقى',
+                school:'دراسة', nature:'طبيعة', jobs:'وظائف', places:'أماكن', internet:'إنترنت', brands:'علامات تجارية',
+                mythology:'أساطير', objects:'أشياء'
+            };
+            const candidates=[];
+            Object.keys(CATEGORIES||{}).forEach(key=>{
+                if(key==='custom'||key==='mixed'||key==='all'||key==='pictures') return;
+                const pool=new Set((CATEGORIES[key]||[]).map(x=>String(x||'').trim()));
+                if(!pool.size)return;
+                let good=0,bad=0,ass=0;
+                targets.forEach(t=>{if(pool.has(String(t.word||'').trim()))good++;});
+                visible.forEach(c=>{
+                    if(targetWords.has(String(c.word||'').trim()))return;
+                    if(pool.has(String(c.word||'').trim())){
+                        if(c.team===state.turn)good+=0.5;
+                        else if(c.team==='assassin')ass++; else bad++;
+                    }
                 });
-                if (!used) return candidate;
-            }
+                const clue=categoryNames[key]||key;
+                if(!visible.some(c=>String(c.word||'').trim()===clue)){
+                    const score=good*12-bad*7-ass*30;
+                    if(good>0)candidates.push({clue,score,good,bad,ass});
+                }
+            });
+            // Also use a curated semantic dictionary for common board words.
+            const related={
+                'ناروتو':'أنمي','غوكو':'أنمي','لوفي':'أنمي','غوجو':'أنمي','تانجيرو':'أنمي','باتمان':'أبطال','سبايدرمان':'أبطال',
+                'بيتزا':'طعام','برغر':'طعام','سوشي':'طعام','قهوة':'مشروبات','شاي':'مشروبات','أسد':'حيوانات','نمر':'حيوانات',
+                'فيل':'حيوانات','روبوت':'تقنية','حاسوب':'تقنية','هاتف':'تقنية','كاميرا':'تصوير','كرة القدم':'رياضة',
+                'جبل':'طبيعة','شاطئ':'طبيعة','غابة':'طبيعة','طبيب':'وظائف','مهندس':'وظائف','مطار':'أماكن','مدرسة':'دراسة'
+            };
+            targets.forEach(t=>{const r=related[String(t.word||'').trim()];if(r&&!visible.some(c=>String(c.word||'').trim()===r))candidates.push({clue:r,score:8});});
+            candidates.sort((a,b)=>b.score-a.score);
+            if(candidates.length)return candidates[0].clue;
             return 'فكرة';
+        }
+
+        function chooseBotTargetsForClue(clue){
+            const unrevealed=(state.cards||[]).map((c,i)=>({c,i})).filter(x=>x.c&&!x.c.revealed);
+            const exact=unrevealed.filter(x=>aiScoreWord(x.c.word,clue)>4 && x.c.team===state.turn);
+            exact.sort((a,b)=>aiScoreWord(b.c.word,clue)-aiScoreWord(a.c.word,clue));
+            return exact.slice(0,3);
         }
 
         function aiGiveClue() {
             var room = localRoomCache;
             if (!room || !room.matchmaking || room.leader !== me.name || state.gameOver || state.clue) return false;
-
             var bot = getBotForTurn(room);
             if (!bot || !bot.spymaster) return false;
-
-            var targets = state.cards.filter(function(c) {
-                return c && !c.revealed && c.team === state.turn;
-            });
+            var targets = state.cards.filter(function(c) { return c && !c.revealed && c.team === state.turn; });
             if (!targets.length) return false;
-
-            targets.sort(function(a, b) {
-                return String(b.word || '').length - String(a.word || '').length;
-            });
-
             var clue = makeBotClue(targets);
             if (!clue) return false;
-
-            var number = Math.min(2, targets.length);
-            state.clue = {
-                word: clue,
-                number: number,
-                guessesLeft: number + 1,
-                byBot: true,
-                botName: bot.name
-            };
+            var likely = chooseBotTargetsForClue(clue);
+            var number = Math.max(1, Math.min(2, likely.length || 1));
+            state.clue = {word: clue, number: number, guessesLeft: number + 1, byBot: true, botName: bot.name};
             state.turnDeadline = state.timer > 0 ? Date.now() + state.timer * 1000 : null;
-
-            console.log('🤖 BOT SPYMASTER:', bot.name, '=>', clue, number);
-            render();
-            syncGameState();
-
+            console.log('🤖 BOT SPYMASTER:', bot.name, '=>', clue, number, 'targets:', likely.map(x=>x.c.word));
+            render(); syncGameState();
             if (state.timer > 0) startTimer(state.timer);
             return true;
         }
@@ -4478,9 +4494,13 @@ function setConnDot(ok) {
                         })
                         .filter(function(x) { return x.c && !x.c.revealed; });
 
-                    choices.sort(function(a, b) { return b.score - a.score; });
+                    choices = choices.filter(function(x){ return x.c.team !== 'assassin'; });
+                    choices.sort(function(a, b) {
+                        if(a.c.team===state.turn && b.c.team!==state.turn) return -1;
+                        if(b.c.team===state.turn && a.c.team!==state.turn) return 1;
+                        return b.score-a.score;
+                    });
                     aiBusy = false;
-
                     if (choices.length) {
                         console.log('🤖 BOT GUESS:', bot.name, '=>', choices[0].c.word);
                         aiRevealCard(choices[0].i);
@@ -4877,7 +4897,7 @@ function setConnDot(ok) {
                 gameMode: selectedGameMode,
                 maxPlayers: selectedGameMode === 'draw' ? null : 4,
                 draw: selectedGameMode === 'draw'
-                    ? { phase: 'idle', round: 1, rounds: 1, artists: [], artistIndex: 0, prompt: '', submissions: [], guesses: [], gallery: [], startedAt: 0, mode:'prompt', timeLimit:0 }
+                    ? { phase: 'idle', round: 1, rounds: 1, artists: [], artistIndex: 0, prompt: '', submissions: [], guesses: [], gallery: [], startedAt: 0, mode:'prompt', timeLimit:0, strokeUsed:false }
                     : null,
                 chat: []
             };
@@ -5132,7 +5152,7 @@ function setConnDot(ok) {
             if (drawRoom) {
                 if (drawHint) {
                     drawHint.textContent = isLeader
-                        ? '👑 قائد الغرفة: اختر وضع الرسم ثم ابدأ عند وجود 3 لاعبين بشريين على الأقل'
+                        ? '👑 قائد الغرفة: اختر وضع الرسم ثم ابدأ عند وجود لاعب بشري واحد على الأقل — يوصى بـ 4+ لاعبين لتجربة أفضل'
                         : '👑 قائد الغرفة فقط يستطيع اختيار الوضع وبدء Draw & Guess';
                 }
                 document.querySelectorAll('.draw-lobby-mode').forEach(function(btn){
@@ -5144,10 +5164,10 @@ function setConnDot(ok) {
                 if(modeText) modeText.textContent='الوضع الحالي: '+(modeNames[(room.draw&&room.draw.mode)||'prompt']||'تحدي الكلمات');
                 var drawStartBtn = document.getElementById('oDrawStart');
                 if (drawStartBtn) {
-                    drawStartBtn.disabled = !isLeader || room.phase !== 'lobby' || humanCount < 3;
-                    drawStartBtn.textContent = humanCount < 3
-                        ? '🎨 يحتاج 3 لاعبين بشريين (' + humanCount + '/3)'
-                        : '🎨 ابدأ Draw & Guess (' + humanCount + ' بشري + ' + Math.max(0,total-humanCount) + ' بوت)';
+                    drawStartBtn.disabled = !isLeader || room.phase !== 'lobby' || humanCount < 1;
+                    drawStartBtn.textContent = humanCount < 1
+                        ? '🎨 يحتاج لاعباً واحداً على الأقل'
+                        : '🎨 ابدأ Draw & Guess (' + humanCount + ' لاعبين بشريين)';
                 }
                 var drawLimit = document.getElementById('playerCount');
                 if (drawLimit) drawLimit.textContent = total + ' لاعب — ' + humanCount + ' بشري';
@@ -5349,9 +5369,7 @@ function setConnDot(ok) {
             if (state.timer > 0 && !state.gameOver) startTimer(state.timer);
 
             // Run bot logic AFTER the game UI has been rendered.
-            setTimeout(function() {
-                runAIMoveIfNeeded();
-            }, 100);
+            setTimeout(function() { runAIMoveIfNeeded(); }, 100); setTimeout(function(){ runAIMoveIfNeeded(); }, 1200);
         }
 
         
@@ -5586,7 +5604,7 @@ function setConnDot(ok) {
     const DRAW_PROMPTS = [
         'قطة على دراجة','بيت فوق جبل','صاروخ في الفضاء','بيتزا عملاقة','روبوت يطبخ','سيارة سباق','قلعة مسحورة','شاطئ في الصيف','وحش لطيف','رائد فضاء','ديناصور يأكل آيس كريم','سمكة في حوض','طائرة في العاصفة','بطل خارق','غابة سحرية','قهوة صباحية','مهرج في حفلة','كنز مدفون','كرة قدم','جزيرة صغيرة','تنين يطير','كاميرا','قارب في البحر','مدينة مستقبلية','كلب يلعب','قمر ونجوم','مزرعة','قطار سريع','مخيم','سفينة فضاء'
     ];
-    let drawCanvas, drawCtx, drawingDown=false, lastX=0, lastY=0;
+    let drawCanvas, drawCtx, drawingDown=false, lastX=0, lastY=0, drawSnapshots=[], drawColor='#111', drawEraser=false, strokeUsed=false, lastDrawRenderKey='';
 
     function safeMeName(){ return (typeof me!=='undefined' && me && me.name) ? String(me.name) : ''; }
     function drawHumans(room){
@@ -5599,7 +5617,7 @@ function setConnDot(ok) {
         const all=[]; ['red','blue'].forEach(t => (room?.teams?.[t]||[]).forEach(p=>{if(p&&p.bot)all.push({...p,team:t})})); return all;
     }
     function ensureDraw(room){
-        if(!room.draw || typeof room.draw!=='object') room.draw={phase:'idle',round:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0,rounds:1,mode:'prompt',timeLimit:0};
+        if(!room.draw || typeof room.draw!=='object') room.draw={phase:'idle',round:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0,rounds:1,mode:'prompt',timeLimit:0,strokeUsed:false};
         if(!Array.isArray(room.draw.artists)) room.draw.artists=[];
         if(!Array.isArray(room.draw.submissions)) room.draw.submissions=[];
         if(!Array.isArray(room.draw.guesses)) room.draw.guesses=[];
@@ -5626,10 +5644,10 @@ function setConnDot(ok) {
             // Mode can be selected by any human who has joined the Draw lobby.
             // The leader-only restriction applies to START, not to choosing
             // the mode, so players are never left with dead-looking buttons.
-            if(room.gameMode!=='draw' || room.phase!=='lobby' || !drawHumans(room).some(p=>p.name===actor))return;
-            const allowed=['prompt','free','speed'];
+            if(room.gameMode!=='draw' || room.phase!=='lobby' || room.leader!==actor || !drawHumans(room).some(p=>p.name===actor))return;
+            const allowed=['prompt','free','speed','oneStroke','shapes','blitz'];
             const selected=allowed.includes(e.mode)?e.mode:'prompt';
-            d.mode=selected; d.timeLimit=selected==='speed'?30:0;
+            d.mode=selected; d.timeLimit=selected==='speed'?30:(selected==='blitz'?15:0); d.strokeUsed=false;
             room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); if(typeof window.renderDraw==='function')window.renderDraw(room); return;
         }
         if(e.type==='startDraw'){
@@ -5638,23 +5656,23 @@ function setConnDot(ok) {
             room.teams.blue=(room.teams.blue||[]).filter(p=>p&&!p.bot);
             room.bots=[];
             const total=(room.teams?.red||[]).length+(room.teams?.blue||[]).length;
-            if(room.gameMode!=='draw' || room.leader!==actor || total<3)return;
-            const humans=drawHumans(room); if(humans.length<3)return;
-            d.phase='drawing'; d.round=1; d.rounds=humans.length; d.artists=humans.map(x=>x.name); d.artistIndex=0; d.prompt=d.mode==='free'?'ارسم أي شيء تريده':pickPrompt(); d.submissions=[]; d.guesses=[]; d.gallery=[]; d.startedAt=Date.now(); d.timeLimit=d.mode==='speed'?30:0; d.deadline=d.timeLimit?Date.now()+d.timeLimit*1000:0;
+            if(room.gameMode!=='draw' || room.leader!==actor || total<1)return;
+            const humans=drawHumans(room); if(humans.length<1)return;
+            d.phase='drawing'; d.strokeUsed=false; d.round=1; d.rounds=humans.length; d.artists=humans.map(x=>x.name); d.artistIndex=0; d.prompt=d.mode==='free'?'ارسم أي شيء تريده':pickPrompt(); d.submissions=[]; d.guesses=[]; d.gallery=[]; d.startedAt=Date.now(); d.timeLimit=d.mode==='speed'?30:(d.mode==='blitz'?15:0); d.deadline=d.timeLimit?Date.now()+d.timeLimit*1000:0; d.strokeUsed=false;
             room.phase='drawing'; room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); if(typeof window.renderDraw==='function') window.renderDraw(room); if(d.timeLimit){ setTimeout(()=>{ const latest=normalizeRoom(localRoomCache,roomCode); const ld=ensureDraw(latest); if(ld.phase==='drawing' && ld.deadline && Date.now()>=ld.deadline){ const a=ld.artists[ld.artistIndex]; ld.submissions.push({artist:a,image:'',prompt:ld.prompt,skipped:true,timeout:true,at:Date.now()}); ld.phase='reveal'; latest.draw=ld; localRoomCache=latest; broadcastState(); if(roomListenerCallback)roomListenerCallback(latest); } },d.timeLimit*1000+100); } return;
         }
         if(e.type==='submitDrawing'){
             if(d.phase!=='drawing')return;
             const artist=d.artists[d.artistIndex]; if(actor!==artist)return;
-            const image=String(e.image||''); if(!image || image.length>900000)return;
+            const image=String(e.image||''); if(!image || image.length>2500000)return;
             if(d.submissions.some(x=>x.artist===artist))return;
-            d.submissions.push({artist,image,prompt:d.prompt,at:Date.now()}); d.phase='guessing'; d.guesses=[];
+            d.submissions.push({artist,image,prompt:d.prompt,at:Date.now()}); d.strokeUsed=false; d.guesses=[]; d.phase=drawHumans(room).length<=1?'reveal':'guessing';
             room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); return;
         }
         if(e.type==='skipDrawing'){
             if(d.phase!=='drawing')return;
             const artist=d.artists[d.artistIndex]; if(actor!==artist)return;
-            d.submissions.push({artist,image:'',prompt:d.prompt,skipped:true,at:Date.now()}); d.phase='reveal'; d.guesses=[];
+            d.submissions.push({artist,image:'',prompt:d.prompt,skipped:true,at:Date.now()}); d.strokeUsed=false; d.phase='reveal'; d.guesses=[];
             room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); return;
         }
         if(e.type==='guessArtist'){
@@ -5676,7 +5694,7 @@ function setConnDot(ok) {
             if(d.artistIndex>=d.artists.length){
                 d.phase='finished'; room.phase='drawing-finished';
             }else{
-                d.phase='drawing'; d.prompt=d.mode==='free'?'ارسم أي شيء تريده':pickPrompt(); d.submissions=[]; d.guesses=[]; d.round++; d.timeLimit=d.mode==='speed'?30:0; d.deadline=d.timeLimit?Date.now()+d.timeLimit*1000:0;
+                d.phase='drawing'; d.prompt=d.mode==='free'?'ارسم أي شيء تريده':pickPrompt(); d.submissions=[]; d.guesses=[]; d.round++; d.timeLimit=d.mode==='speed'?30:(d.mode==='blitz'?15:0); d.deadline=d.timeLimit?Date.now()+d.timeLimit*1000:0; d.strokeUsed=false;
             }
             room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); return;
         }
@@ -5688,12 +5706,21 @@ function setConnDot(ok) {
 
     function initCanvas(){
         drawCanvas=document.getElementById('drawCanvas'); if(!drawCanvas)return; drawCtx=drawCanvas.getContext('2d'); clearCanvas();
-        drawCanvas.onpointerdown=e=>{if(!isMyTurn(localRoomCache))return; drawingDown=true; const p=canvasPoint(e); lastX=p.x;lastY=p.y;drawCtx.beginPath();drawCtx.moveTo(lastX,lastY);drawCtx.lineTo(lastX+.1,lastY+.1);drawCtx.stroke();drawCanvas.setPointerCapture?.(e.pointerId);};
-        drawCanvas.onpointermove=e=>{if(!drawingDown)return; const p=canvasPoint(e); drawCtx.lineWidth=Number(document.getElementById('drawSize')?.value||7); drawCtx.lineCap='round';drawCtx.lineJoin='round';drawCtx.strokeStyle='#111';drawCtx.beginPath();drawCtx.moveTo(lastX,lastY);drawCtx.lineTo(p.x,p.y);drawCtx.stroke();lastX=p.x;lastY=p.y;};
-        drawCanvas.onpointerup=()=>drawingDown=false; drawCanvas.onpointercancel=()=>drawingDown=false;
+        drawCanvas.onpointerdown=e=>{
+            const room=localRoomCache||{}; const d=room.draw||{};
+            if(!isMyTurn(room))return;
+            if(d.mode==='oneStroke' && strokeUsed)return;
+            drawingDown=true; strokeUsed=true;
+            const p=canvasPoint(e); lastX=p.x;lastY=p.y;
+            drawCtx.lineWidth=Number(document.getElementById('drawSize')?.value||7); drawCtx.lineCap='round';drawCtx.lineJoin='round';
+            drawCtx.strokeStyle=drawEraser?'#fff':drawColor; drawCtx.beginPath();drawCtx.moveTo(lastX,lastY);drawCtx.lineTo(lastX+.1,lastY+.1);drawCtx.stroke();
+            drawCanvas.setPointerCapture?.(e.pointerId);
+        };
+        drawCanvas.onpointermove=e=>{if(!drawingDown)return; const p=canvasPoint(e); drawCtx.lineWidth=Number(document.getElementById('drawSize')?.value||7); drawCtx.lineCap='round';drawCtx.lineJoin='round';drawCtx.strokeStyle=drawEraser?'#fff':drawColor;drawCtx.beginPath();drawCtx.moveTo(lastX,lastY);drawCtx.lineTo(p.x,p.y);drawCtx.stroke();lastX=p.x;lastY=p.y;};
+        drawCanvas.onpointerup=()=>{drawingDown=false; if(drawCtx) try{drawSnapshots.push(drawCtx.getImageData(0,0,drawCanvas.width,drawCanvas.height)); if(drawSnapshots.length>30)drawSnapshots.shift();}catch(_){}}; drawCanvas.onpointercancel=()=>drawingDown=false;
     }
     function canvasPoint(e){const r=drawCanvas.getBoundingClientRect();return{x:(e.clientX-r.left)*drawCanvas.width/r.width,y:(e.clientY-r.top)*drawCanvas.height/r.height};}
-    function clearCanvas(){if(!drawCtx)return;drawCtx.fillStyle='#fff';drawCtx.fillRect(0,0,drawCanvas.width,drawCanvas.height);}
+    function clearCanvas(){if(!drawCtx)return;drawCtx.fillStyle='#fff';drawCtx.fillRect(0,0,drawCanvas.width,drawCanvas.height);drawSnapshots=[];strokeUsed=false;}
     function setDrawButton(id,disabled){const e=document.getElementById(id);if(e)e.disabled=disabled;}
 
     window.startDrawMode=function(){
@@ -5701,9 +5728,9 @@ function setConnDot(ok) {
         const total=(room.teams?.red||[]).length+(room.teams?.blue||[]).length;
         if(room.gameMode!=='draw'){alert('هذه ليست غرفة Draw & Guess.');return;}
         if(!isDrawLeader(room)){alert('فقط قائد الغرفة يستطيع بدء وضع الرسم.');return;}
-        if(total<3){alert('يحتاج Draw & Guess إلى 3 لاعبين على الأقل.');return;}
+        if(total<1){alert('أضف لاعباً واحداً على الأقل لبدء Draw & Guess.');return;}
         const humans=drawHumans(room);
-        if(humans.length<3){alert('يحتاج Draw & Guess إلى 3 لاعبين بشريين على الأقل. البوتات غير مسموحة هنا.');return;}
+        if(humans.length<1){alert('أضف لاعباً بشرياً واحداً على الأقل. البوتات غير مسموحة هنا.');return;}
         sendDrawEvent({type:'startDraw',actor:safeMeName()});
     };
 
@@ -5718,7 +5745,7 @@ function setConnDot(ok) {
             const artist=d.artists[d.artistIndex]||'';
             if(artist===safeMeName()){
                 prompt.textContent=d.prompt||'ارسم!';
-                info.textContent='🎨 دورك! ارسم ثم اضغط إرسال.'+(d.mode==='speed'?' لديك 30 ثانية.':'')+' اللاعبون الآخرون لا يرون المهمة.';
+                info.textContent='🎨 دورك! ارسم ثم اضغط إرسال.'+(d.mode==='speed'?' لديك 30 ثانية.':d.mode==='blitz'?' لديك 15 ثانية.':d.mode==='oneStroke'?' لديك خط واحد فقط — لا ترفع القلم.':d.mode==='shapes'?' حاول إدخال 3 أشكال هندسية في الرسم.':'')+' اللاعبون الآخرون لا يرون المهمة.';
             }else{
                 prompt.textContent='🎨 شخص آخر يرسم الآن';
                 info.textContent='⏳ الآن يرسم: '+artist+' — لا يمكنك رؤية المهمة.';
@@ -5734,7 +5761,10 @@ function setConnDot(ok) {
         }else{prompt.textContent='انتظر قائد الغرفة';info.textContent='';}
         renderDrawPlayers(room,d); renderDrawGallery(d); renderDrawChat(room.chat||[]);
         const myTurn=isMyTurn(room); const canDraw=myTurn && d.phase==='drawing';
-        setDrawButton('drawClearBtn',!canDraw); setDrawButton('drawSkipBtn',!canDraw); setDrawButton('drawSubmitBtn',!canDraw);
+        strokeUsed=!!d.strokeUsed;
+        const modeNote=document.getElementById('drawModeNote');
+        if(modeNote) modeNote.textContent=d.mode==='oneStroke'?'🖊️ خط واحد: بمجرد رفع القلم لن تستطيع الرسم مرة أخرى.':d.mode==='shapes'?'🔺 تحدي الأشكال: حاول أن تجعل الرسم يحتوي على دائرة ومربع ومثلث.':d.mode==='blitz'?'🔥 Blitz: لديك 15 ثانية فقط.':d.mode==='speed'?'⚡ سباق الوقت: لديك 30 ثانية.':d.mode==='free'?'🎨 رسم حر: ابتكر أي شيء.':'📝 تحدي الكلمات: لا يرى الآخرون الكلمة التي ترسمها.';
+        setDrawButton('drawClearBtn',!canDraw); setDrawButton('drawSkipBtn',!canDraw); setDrawButton('drawSubmitBtn',!canDraw); setDrawButton('drawUndoBtn',!canDraw || drawSnapshots.length<1);
         document.getElementById('drawCanvas').style.pointerEvents=canDraw?'auto':'none';
         const preview=document.getElementById('drawSubmittedImage');
         const sub=d.submissions && d.submissions[d.submissions.length-1];
@@ -5775,7 +5805,7 @@ function setConnDot(ok) {
             box.appendChild(b);
         });
     }
-    function renderReveal(room,d,finished){const box=document.getElementById('drawRevealText'); if(!box)return;const sub=d.submissions[d.submissions.length-1];let html=sub?'<b>الرسم:</b> '+escapeHtml(sub.artist)+'<br>': '';if(sub?.skipped)html+='⏭️ تم تخطي الرسم.<br>';if(d.guesses.length){html+='<div style="margin-top:6px">'+d.guesses.map(g=>'👤 '+escapeHtml(g.name)+' → '+(g.correct?'✅ صحيح':'❌ خطأ')).join('<br>')+'</div>';}box.innerHTML=html||'لا توجد نتيجة بعد.';const next=document.getElementById('drawNextBtn');next.style.display=finished?'none':(isDrawLeader(room)?'inline-flex':'none');}
+    function renderReveal(room,d,finished){const box=document.getElementById('drawRevealText'); if(!box)return;const sub=d.submissions[d.submissions.length-1];let html=sub?'<b>🎨 الرسام:</b> '+escapeHtml(sub.artist)+'<br>': '';if(sub?.skipped)html+='⏭️ تم تخطي الرسم.<br>';if(d.guesses.length){html+='<div style="margin-top:6px">'+d.guesses.map(g=>'👤 '+escapeHtml(g.name)+' → '+(g.correct?'✅ صحيح':'❌ خطأ')).join('<br>')+'</div>';}box.innerHTML=html||'لا توجد نتيجة بعد.';const img=document.getElementById('drawRevealImage');if(img){if(sub?.image){img.src=sub.image;img.classList.remove('hidden');}else{img.removeAttribute('src');img.classList.add('hidden');}}const next=document.getElementById('drawNextBtn');next.style.display=finished?'none':(isDrawLeader(room)?'inline-flex':'none');}
     function renderDrawGallery(d){const el=document.getElementById('drawGallery');if(!el)return;el.innerHTML='';if(!d.gallery.length){el.innerHTML='<div class="empty-hint">لم يتم كشف رسومات بعد.</div>';return;}d.gallery.forEach(g=>{const card=document.createElement('div');card.className='draw-gallery-card';if(g.image){const img=document.createElement('img');img.src=g.image;img.alt=g.prompt||'drawing';card.appendChild(img);}const meta=document.createElement('div');meta.className='draw-gallery-meta';meta.innerHTML='📝 '+escapeHtml(g.prompt||'')+'<br>🎨 الرسام: <strong>'+escapeHtml(g.artist)+'</strong>';if(g.scores?.length)meta.innerHTML+='<br>'+g.scores.map(x=>'👤 '+escapeHtml(x.name)+' '+(x.correct?'✅':'❌')).join(' · ');card.appendChild(meta);el.appendChild(card);});}
     function renderDrawChat(messages){const el=document.getElementById('drawChatMessages');if(!el)return;el.innerHTML='';messages.slice(-80).forEach(m=>{const d=document.createElement('div');d.className='draw-chat-msg';d.innerHTML='<b>'+escapeHtml(m.name||'لاعب')+'</b> '+escapeHtml(m.text||'');el.appendChild(d)});el.scrollTop=el.scrollHeight;}
     function escapeHtml(x){return String(x??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
@@ -5787,6 +5817,11 @@ function setConnDot(ok) {
             document.querySelectorAll('.draw-mode-choice').forEach(btn=>btn.addEventListener('click',()=>sendDrawEvent({type:'setDrawMode',actor:safeMeName(),mode:btn.dataset.drawMode})));
             document.querySelectorAll('.draw-lobby-mode').forEach(btn=>btn.addEventListener('click',()=>sendDrawEvent({type:'setDrawMode',actor:safeMeName(),mode:btn.dataset.drawMode})));
             document.getElementById('drawClearBtn')?.addEventListener('click',clearCanvas);
+            document.getElementById('drawBlackBtn')?.addEventListener('click',()=>{drawColor='#111';drawEraser=false;});
+            document.getElementById('drawRedBtn')?.addEventListener('click',()=>{drawColor='#e53935';drawEraser=false;});
+            document.getElementById('drawBlueBtn')?.addEventListener('click',()=>{drawColor='#1976d2';drawEraser=false;});
+            document.getElementById('drawEraserBtn')?.addEventListener('click',()=>{drawEraser=true;});
+            document.getElementById('drawUndoBtn')?.addEventListener('click',()=>{if(!drawSnapshots.length||!drawCtx)return;const snap=drawSnapshots.pop();drawCtx.putImageData(snap,0,0);});
             document.getElementById('drawSkipBtn')?.addEventListener('click',()=>sendDrawEvent({type:'skipDrawing',actor:safeMeName()}));
             document.getElementById('drawSubmitBtn')?.addEventListener('click',()=>{if(isMyTurn(localRoomCache)){const image=drawCanvas.toDataURL('image/png',.82);sendDrawEvent({type:'submitDrawing',actor:safeMeName(),image});}});
             document.getElementById('drawNextBtn')?.addEventListener('click',()=>sendDrawEvent({type:'nextDrawing',actor:safeMeName()}));
@@ -5812,7 +5847,7 @@ function setConnDot(ok) {
     'use strict';
 
     const DRAW_LOBBY_ID='drawLobbyScreen';
-    const DRAW_MODES={prompt:'تحدي الكلمات',free:'رسم حر',speed:'سباق الوقت'};
+    const DRAW_MODES={prompt:'📝 تحدي الكلمات',free:'🎨 رسم حر',speed:'⚡ سباق الوقت',oneStroke:'🖊️ خط واحد',shapes:'🔺 تحدي الأشكال',blitz:'🔥 Blitz 15 ثانية'};
 
     function drawRoom(){
         return (typeof localRoomCache!=='undefined' && localRoomCache && localRoomCache.gameMode==='draw') ? localRoomCache : null;
@@ -5861,7 +5896,7 @@ function setConnDot(ok) {
             btn.classList.toggle('active',active);
             // Everyone can select the preferred mode in the lobby.
             // Only the room leader is allowed to START the actual game.
-            btn.disabled=room.phase!=='lobby';
+            btn.disabled=room.phase!=='lobby' || !leader;
             btn.title=leader ? 'اختر وضع الرسم' : 'يمكنك اختيار الوضع؛ قائد الغرفة هو من يبدأ اللعبة';
         });
 
@@ -5881,21 +5916,21 @@ function setConnDot(ok) {
         }
 
         const count=document.getElementById('drawLobbyCount');
-        if(count)count.textContent=humans.length+' لاعبين بشريين — الحد الأدنى 3، ولا يوجد حد أقصى';
+        if(count)count.textContent=humans.length+' لاعب بشري — لا يوجد حد أدنى أو أقصى • يوصى بـ 4+ لتجربة أفضل';
 
         const start=document.getElementById('drawLobbyStartBtn');
         if(start){
-            const canStart=leader && room.phase==='lobby' && humans.length>=3;
+            const canStart=leader && room.phase==='lobby' && humans.length>=1;
             start.disabled=!canStart;
-            start.textContent=humans.length<3
-                ? '🎨 يحتاج 3 لاعبين بشريين ('+humans.length+'/3)'
+            start.textContent=humans.length<1
+                ? '🎨 يحتاج لاعباً واحداً على الأقل'
                 : '🎨 ابدأ Draw & Guess ('+humans.length+' لاعبين)';
         }
 
         const hint=document.getElementById('drawLobbyStartHint');
         if(hint){
             if(!leader) hint.textContent='👑 قائد الغرفة فقط يستطيع اختيار الوضع وبدء اللعبة.';
-            else if(humans.length<3) hint.textContent='⏳ أضف '+(3-humans.length)+' لاعب بشري آخر على الأقل.';
+            else if(humans.length<4) hint.textContent='💡 جاهز! يوصى بـ 4+ لاعبين لتجربة أفضل.';
             else hint.textContent='✅ جاهز! اختر الوضع ثم اضغط ابدأ.';
         }
 
@@ -5975,10 +6010,13 @@ function setConnDot(ok) {
         const room=drawRoom();
         if(!room || room.phase!=='lobby')return;
         if(!myName()){setDrawLobbyError('✏️ انضم للغرفة باسمك أولاً.');return;}
-        if(!['prompt','free','speed'].includes(mode))return;
-        if(typeof window.sendDrawEvent==='function'){
-            window.sendDrawEvent({type:'setDrawMode',actor:myName(),mode:mode});
-        }
+        if(!isLeader(room)){setDrawLobbyError('👑 قائد الغرفة فقط يختار وضع الرسم.');return;}
+        if(!['prompt','free','speed','oneStroke','shapes','blitz'].includes(mode))return;
+        room.draw=room.draw||{}; room.draw.mode=mode; room.draw.timeLimit=mode==='speed'?30:(mode==='blitz'?15:0); room.draw.strokeUsed=false;
+        localRoomCache=room;
+        if(typeof writeRoom==='function')writeRoom(roomCode,room);
+        if(typeof broadcastState==='function')broadcastState();
+        renderDrawLobby(room);
     }
 
     function startDrawLobby(){
@@ -5986,7 +6024,7 @@ function setConnDot(ok) {
         const humans=drawHumansSafe(room);
         if(!room || room.phase!=='lobby')return;
         if(!isLeader(room)){setDrawLobbyError('⚠️ فقط قائد الغرفة يستطيع بدء اللعبة.');return;}
-        if(humans.length<3){setDrawLobbyError('⚠️ تحتاج إلى 3 لاعبين بشريين على الأقل.');return;}
+        if(humans.length<1){setDrawLobbyError('⚠️ تحتاج إلى لاعب بشري واحد على الأقل.');return;}
         if(typeof window.sendDrawEvent==='function'){
             window.sendDrawEvent({type:'startDraw',actor:myName()});
         }
@@ -6052,7 +6090,7 @@ function setConnDot(ok) {
         const room=drawRoom();
         if(!badge || !room)return;
         const d=room.draw||{};
-        if(d.mode!=='speed' || d.phase!=='drawing'){
+        if(!['speed','blitz'].includes(d.mode) || d.phase!=='drawing'){
             badge.textContent='⏱ بدون حد';
             return;
         }
@@ -6071,6 +6109,230 @@ function setConnDot(ok) {
     // Rebind after the old page's own load handler has run.
     window.addEventListener('load',()=>{bindDrawLobby();patchLegacyDrawButton();});
 })();
+</script>
+
+<style id="rewrite-draw-css">
+.rewrite-draw-app{max-width:1250px;margin:0 auto;padding:22px 16px 50px}.rewrite-draw-head{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:14px}.rewrite-head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.rewrite-stage{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px}.rewrite-canvas-card{background:linear-gradient(145deg,rgba(22,37,28,.98),rgba(8,14,10,.98));border:1px solid rgba(232,200,74,.16);border-radius:20px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.28)}.rewrite-phase{text-align:center;color:var(--gold);font-weight:1000;font-size:15px}.rewrite-prompt{text-align:center;color:#fff;font-size:28px;font-weight:1000;margin:8px 0 3px}.rewrite-info{text-align:center;color:var(--text-secondary);font-size:12px;margin-bottom:12px;min-height:20px}.rewrite-canvas-card canvas{width:100%;height:auto;display:block;background:#fff;border-radius:16px;touch-action:none;cursor:crosshair;box-shadow:0 10px 35px rgba(0,0,0,.25)}.rewrite-toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:10px}.rewrite-toolbar button{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:#fff;border-radius:10px;padding:8px 11px;cursor:pointer}.rewrite-toolbar button:hover{background:rgba(232,200,74,.12)}.rewrite-toolbar input{width:120px}.rewrite-actions{display:flex;justify-content:center;gap:9px;margin-top:10px}.rewrite-panel{margin-top:12px;padding:14px;border-radius:14px;background:rgba(255,255,255,.045);text-align:center}.rewrite-guess-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}.rewrite-guess-grid button{padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:#0c1710;color:#fff;cursor:pointer;font-weight:900}.rewrite-guess-grid button:hover{border-color:var(--gold);background:rgba(232,200,74,.10)}.rewrite-reveal-img{max-width:100%;max-height:500px;display:block;margin:10px auto;border-radius:13px;background:#fff}.rewrite-side{display:flex;flex-direction:column;gap:14px}.rewrite-side h3,.rewrite-gallery h3{color:var(--gold);margin:0 0 10px}.rewrite-chat{min-height:400px;display:flex;flex-direction:column}.rewrite-chat>div:nth-child(2){flex:1;min-height:230px;max-height:340px;overflow:auto}.rewrite-chat-row{display:flex;gap:6px;margin-top:8px}.rewrite-chat-row input{flex:1;min-width:0}.rewrite-gallery{margin-top:14px}.rewrite-gallery>div{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}.rewrite-gallery img{width:100%;display:block;border-radius:10px;background:#fff}.rewrite-draw-app .draw-player-row{margin-bottom:6px}.rewrite-draw-app .draw-player-row.artist{border:1px solid rgba(232,200,74,.35)}
+@media(max-width:900px){.rewrite-stage{grid-template-columns:1fr}.rewrite-side{display:grid;grid-template-columns:1fr 1fr}.rewrite-chat{min-height:300px}}
+@media(max-width:650px){.rewrite-side{display:flex}.rewrite-draw-head{flex-direction:column;align-items:stretch}.rewrite-prompt{font-size:22px}}
+#rewriteDrawModes .rewrite-draw-mode{border:1px solid rgba(255,255,255,.10);background:#0b1510;color:#fff;border-radius:16px;min-height:105px;transition:.16s}.rewrite-draw-mode:hover:not(:disabled){transform:translateY(-2px);border-color:rgba(232,200,74,.65);box-shadow:0 10px 28px rgba(232,200,74,.08)}.rewrite-draw-mode.gold,.rewrite-draw-mode.active{background:linear-gradient(145deg,rgba(232,200,74,.30),rgba(232,200,74,.08));border-color:var(--gold);box-shadow:0 0 0 2px rgba(232,200,74,.10) inset}.rewrite-draw-mode:disabled{opacity:.65;cursor:not-allowed}.draw-mode-new-grid{display:none!important}
+</style>
+<script id="draw-complete-rewrite">
+// DRAW & GUESS COMPLETE REWRITE PATCH
+(function(){
+  'use strict';
+  const MODES={
+    prompt:{name:'تحدي الكلمات',icon:'📝',desc:'ارسم كلمة سرية — الكلمة لا تظهر للآخرين',time:0},
+    free:{name:'رسم حر',icon:'🎨',desc:'ارسم أي شيء تريده',time:0},
+    speed:{name:'سباق الوقت',icon:'⚡',desc:'30 ثانية فقط',time:30},
+    oneStroke:{name:'خط واحد',icon:'🖊️',desc:'خط واحد فقط بدون رفع القلم',time:0},
+    shapes:{name:'تحدي الأشكال',icon:'🔺',desc:'حاول تضمين دائرة ومربع ومثلث',time:0},
+    blitz:{name:'Blitz',icon:'🔥',desc:'15 ثانية — ارسم بسرعة',time:15}
+  };
+  let selected='prompt';
+  let canvas=null,ctx=null,down=false,last=null,undoStack=[],color='#111',eraser=false,oneStrokeUsed=false;
+  const $=id=>document.getElementById(id);
+  const meName=()=>String((window.me&&window.me.name)||'').trim();
+  const room=()=>window.localRoomCache||null;
+  const isDrawRoom=r=>!!r&&r.gameMode==='draw';
+  const humans=r=>{
+    const a=[]; const seen=new Set();
+    ['red','blue'].forEach(t=>(r?.teams?.[t]||[]).forEach(p=>{if(p&&!p.bot&&p.name&&!seen.has(p.name)){seen.add(p.name);a.push({...p,team:t});}}));
+    (r?.players||[]).forEach(p=>{if(p&&!p.bot&&p.name&&!seen.has(p.name)){seen.add(p.name);a.push({...p});}});
+    return a;
+  };
+  function leader(r){
+    if(!r)return false;
+    if(!r.leader && window.isHost && meName()) { r.leader=meName(); window.localRoomCache=r; try{window.writeRoom(window.roomCode,r)}catch(e){} }
+    return !!meName() && r.leader===meName();
+  }
+  function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function send(e){ if(typeof window.sendDrawEvent==='function') window.sendDrawEvent(e); }
+  function setMsg(t){const e=$('drawLobbyJoinStatus')||$('oErr');if(e)e.textContent=t||'';}
+
+  // ---------- PRE-ROOM MODE SELECTOR ----------
+  function selectPendingMode(mode){
+    if(!MODES[mode])return;
+    selected=mode;
+    window.drawSelectedMode=mode;
+    document.querySelectorAll('#drawModePanel .draw-lobby-mode').forEach(b=>{
+      b.classList.toggle('gold',b.dataset.drawMode===mode);
+      b.classList.toggle('active',b.dataset.drawMode===mode);
+    });
+    const t=$('drawLobbyModeText'); if(t)t.textContent='الوضع المختار: '+MODES[mode].icon+' '+MODES[mode].name+' — '+MODES[mode].desc;
+  }
+
+  // ---------- REBUILD THE DRAW PANEL INSIDE ONLINE LOBBY ----------
+  function rebuildOnlineDrawPanel(){
+    const p=$('drawModePanel'); if(!p)return;
+    p.innerHTML=`
+      <div style="font-size:22px;font-weight:1000;color:var(--gold);">🎨 Draw & Guess — وضع مستقل</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin:6px 0 14px">لا فرق ولا قاتل ولا كلمات Codenames. <b>لا يوجد حد أدنى أو أقصى</b> — يوصى بـ 4+ لاعبين لتجربة أفضل — والبوتات ممنوعة.</div>
+      <div id="rewriteDrawModes" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0"></div>
+      <div id="rewriteDrawSelected" style="font-size:13px;color:var(--text-secondary);padding:9px;border-radius:12px;background:rgba(232,200,74,.06)"></div>
+      <div id="rewriteDrawPeople" style="margin:12px 0"></div>
+      <button type="button" class="stamp-btn" id="rewriteDrawStart" style="min-width:300px;font-size:17px">🎨 ابدأ Draw & Guess</button>
+      <div id="rewriteDrawHint" style="margin-top:8px;font-size:11px;color:var(--text-muted)"></div>`;
+    const grid=$('rewriteDrawModes');
+    Object.entries(MODES).forEach(([key,m])=>{
+      const b=document.createElement('button'); b.type='button'; b.dataset.drawMode=key; b.className='stamp-btn ghost rewrite-draw-mode';
+      b.style.cssText='min-height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;';
+      b.innerHTML=`<span style="font-size:25px">${m.icon}</span><strong>${m.name}</strong><small>${m.desc}</small>`;
+      grid.appendChild(b);
+    });
+    selectPendingMode(window.drawSelectedMode||selected||'prompt');
+  }
+
+  // ---------- COMPLETELY NEW DRAW SCREEN ----------
+  function rebuildDrawScreen(){
+    const s=$('drawScreen'); if(!s)return;
+    s.innerHTML=`
+      <div class="rewrite-draw-app">
+        <div class="rewrite-draw-head">
+          <div><div class="draw-title">🎨 Draw & Guess</div><div id="rwRound" class="draw-subtitle">الجولة</div></div>
+          <div class="rewrite-head-actions"><span id="rwTimer" class="draw-timer-badge">⏱ —</span><span class="draw-room-badge">🔑 <b id="rwRoom">-----</b></span><button type="button" class="stamp-btn ghost" id="rwLeave">↩ مغادرة</button></div>
+        </div>
+        <div class="rewrite-stage">
+          <main class="rewrite-canvas-card">
+            <div id="rwPhase" class="rewrite-phase">انتظر...</div>
+            <div id="rwPrompt" class="rewrite-prompt">🎨</div>
+            <div id="rwInfo" class="rewrite-info"></div>
+            <canvas id="rwCanvas" width="1000" height="620"></canvas>
+            <div class="rewrite-toolbar">
+              <label>حجم <input id="rwSize" type="range" min="2" max="35" value="8"></label>
+              <button type="button" data-rw-tool="black">⚫</button><button type="button" data-rw-tool="red">🔴</button><button type="button" data-rw-tool="blue">🔵</button><button type="button" data-rw-tool="eraser">🧽</button><button type="button" id="rwUndo">↩ تراجع</button><button type="button" id="rwClear">🧹 مسح</button>
+            </div>
+            <div class="rewrite-actions"><button type="button" class="stamp-btn ghost" id="rwSkip">⏭ تخطي</button><button type="button" class="stamp-btn" id="rwSubmit">✅ إرسال الرسم</button></div>
+            <div id="rwGuess" class="rewrite-panel hidden"></div>
+            <div id="rwReveal" class="rewrite-panel hidden"></div>
+          </main>
+          <aside class="rewrite-side">
+            <section class="card-box"><h3>👥 اللاعبون</h3><div id="rwPlayers"></div></section>
+            <section class="card-box rewrite-chat"><h3>💬 الدردشة</h3><div id="rwChat"></div><div class="rewrite-chat-row"><input id="rwChatInput" maxlength="180" placeholder="اكتب رسالة..."><button type="button" class="stamp-btn" id="rwChatSend">إرسال</button></div></section>
+          </aside>
+        </div>
+        <section class="card-box rewrite-gallery"><h3>🖼️ معرض الرسومات</h3><div id="rwGallery"></div></section>
+        <div class="discord-footer"><div class="discord-footer-title">💬 اقتراح أو مشكلة؟ تواصل معنا على Discord</div><a class="discord-footer-link" href="https://discord.gg/4JFMPzM8Y" target="_blank" rel="noopener noreferrer">💜 انضم إلى Discord</a></div>
+      </div>`;
+    initRewriteCanvas();
+  }
+
+  function initRewriteCanvas(){
+    canvas=$('rwCanvas'); if(!canvas)return; ctx=canvas.getContext('2d');
+    fillWhite();
+    const point=e=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};};
+    canvas.addEventListener('pointerdown',e=>{
+      const r=room(),d=r&&r.draw||{}; if(!r||d.phase!=='drawing'||d.artists?.[d.artistIndex]!==meName())return;
+      if(d.mode==='oneStroke'&&oneStrokeUsed)return;
+      down=true; oneStrokeUsed=true; canvas.setPointerCapture?.(e.pointerId); last=point(e); ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(last.x+.1,last.y+.1);ctx.stroke();
+    });
+    canvas.addEventListener('pointermove',e=>{if(!down||!ctx)return;const p=point(e);ctx.lineWidth=Number($('rwSize')?.value||8);ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=eraser?'#fff':color;ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;});
+    const up=()=>{if(down){down=false;try{undoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height));if(undoStack.length>25)undoStack.shift();}catch(e){}}};
+    canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);canvas.addEventListener('pointerleave',()=>{if(down)up();});
+    $('rwUndo').onclick=()=>{const snap=undoStack.pop();if(snap)ctx.putImageData(snap,0,0);};
+    $('rwClear').onclick=fillWhite;
+    document.querySelectorAll('[data-rw-tool]').forEach(b=>b.onclick=()=>{const t=b.dataset.rwTool;eraser=t==='eraser';color=t==='red'?'#e53935':t==='blue'?'#1976d2':'#111';});
+    $('rwSkip').onclick=()=>send({type:'skipDrawing',actor:meName()});
+    $('rwSubmit').onclick=()=>submitRewriteDrawing();
+    $('rwChatSend').onclick=sendRewriteChat;$('rwChatInput').onkeydown=e=>{if(e.key==='Enter')sendRewriteChat();};
+    $('rwLeave').onclick=()=>{try{if(typeof leaveRoom==='function')leaveRoom();}catch(e){show('modeScreen');}};
+  }
+  function fillWhite(){if(!ctx)return;ctx.save();ctx.globalCompositeOperation='source-over';ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();undoStack=[];oneStrokeUsed=false;}
+  function submitRewriteDrawing(){const r=room(),d=r&&r.draw||{};if(!r||d.phase!=='drawing'||d.artists?.[d.artistIndex]!==meName())return;let image='';try{image=canvas.toDataURL('image/jpeg',.72);}catch(e){}if(image)send({type:'submitDrawing',actor:meName(),image});}
+  function sendRewriteChat(){const i=$('rwChatInput');const t=(i?.value||'').trim();if(!t)return;send({type:'chat',actor:meName(),text:t});i.value='';}
+
+  function rebuildDrawLobby(){
+    const s=$('drawLobbyScreen');if(!s)return;
+    s.innerHTML=`
+      <div class="rewrite-lobby">
+        <div class="rewrite-lobby-head"><div><div class="draw-title">🎨 Draw & Guess</div><div class="draw-subtitle">وضع مستقل تماماً — لا فرق، لا قاتل، ولا Codenames.</div></div><div class="rewrite-head-actions"><span class="draw-room-badge">🔑 <b id="rwLobbyRoom">-----</b></span><button type="button" class="stamp-btn ghost" id="rwLobbyLeave">↩ مغادرة</button></div></div>
+        <div class="rewrite-lobby-card">
+          <div class="rewrite-rules">👥 <b>لا يوجد حد أدنى من اللاعبين</b> — لا يوجد حد أقصى<br>🤖 البوتات ممنوعة تماماً في Draw & Guess<br>👑 قائد الغرفة فقط يختار الوضع ويبدأ اللعبة</div>
+          <h3>1️⃣ ادخل باسمك</h3><div class="rewrite-join"><input id="rwLobbyName" maxlength="18" placeholder="✏️ اسم اللاعب"><button type="button" class="stamp-btn" id="rwLobbyJoin">➕ انضم</button></div><div id="rwLobbyMsg" class="setup-err"></div>
+          <h3>2️⃣ اختر وضع الرسم</h3><div id="rwLobbyModes" class="rewrite-lobby-modes"></div><div id="rwLobbySelected" class="rewrite-lobby-selected"></div>
+          <h3>3️⃣ اللاعبون</h3><div id="rwLobbyPeople" class="rewrite-lobby-people"></div><div id="rwLobbyCount" class="rewrite-lobby-count"></div>
+          <div class="rewrite-lobby-start"><button type="button" class="stamp-btn" id="rwLobbyStart">🎨 ابدأ Draw & Guess</button><div id="rwLobbyHint" class="rewrite-lobby-hint"></div></div>
+          <div class="discord-footer"><div class="discord-footer-title">💬 اقتراح أو مشكلة؟ تواصل معنا على Discord</div><a class="discord-footer-link" href="https://discord.gg/4JFMPzM8Y" target="_blank" rel="noopener noreferrer">💜 انضم إلى Discord</a></div>
+        </div>
+      </div>`;
+    const grid=$('rwLobbyModes');Object.entries(MODES).forEach(([key,m])=>{const b=document.createElement('button');b.type='button';b.dataset.drawMode=key;b.className='rewrite-lobby-mode';b.innerHTML=`<span>${m.icon}</span><strong>${m.name}</strong><small>${m.desc}</small>`;grid.appendChild(b);});
+    $('rwLobbyLeave').onclick=()=>{try{leaveRoom();}catch(e){show('modeScreen');}};
+    $('rwLobbyJoin').onclick=()=>joinRewriteLobby();$('rwLobbyName').onkeydown=e=>{if(e.key==='Enter')joinRewriteLobby();};
+    $('rwLobbyStart').onclick=startRewriteDraw;
+    grid.querySelectorAll('button').forEach(b=>b.onclick=()=>chooseRewriteMode(b.dataset.drawMode));
+  }
+  function joinRewriteLobby(){const r=room();if(!isDrawRoom(r)){setMsg('❌ الغرفة غير جاهزة.');return;}const i=$('rwLobbyName');const n=(i?.value||'').trim().slice(0,18);if(!n){$('rwLobbyMsg').textContent='✏️ اكتب اسمك أولاً.';return;}const hs=humans(r);if(hs.some(p=>p.name===n)){$('rwLobbyMsg').textContent='⚠️ هذا الاسم مستخدم.';return;}const team=((r.teams?.red||[]).length<=(r.teams?.blue||[]).length)?'red':'blue';window.me={name:n,team};if(window.isHost){r.teams=r.teams||{red:[],blue:[]};r.teams[team]=r.teams[team]||[];r.teams[team].push({name:n,team,bot:false,spymaster:false});if(!r.leader)r.leader=n;r.bots=[];window.localRoomCache=r;try{window.writeRoom(window.roomCode,r);window.broadcastState?.();}catch(e){}renderRewriteLobby(r);$('rwLobbyMsg').textContent='✅ تم الانضمام.';}else if(window.guestConn&&window.guestConn.open){try{window.guestConn.send({type:'join',name:n,team});$('rwLobbyMsg').textContent='⏳ جاري الانضمام...';}catch(e){$('rwLobbyMsg').textContent='❌ تعذر الانضمام.';}}else $('rwLobbyMsg').textContent='❌ الاتصال غير جاهز.';}
+  function chooseRewriteMode(m){const r=room();if(!r){selectPendingMode(m);return;}if(!leader(r)){$('rwLobbyMsg').textContent='👑 قائد الغرفة فقط يستطيع اختيار الوضع.';return;}r.draw=r.draw||{};r.draw.mode=m;r.draw.timeLimit=MODES[m].time;window.localRoomCache=r;try{window.writeRoom(window.roomCode,r);}catch(e){}send({type:'setDrawMode',actor:meName(),mode:m});renderRewriteLobby(r);}
+
+  function renderRewriteLobby(r){
+    if(!isDrawRoom(r))return;
+    if(!r.draw)r.draw={phase:'lobby',mode:window.drawSelectedMode||selected||'prompt',round:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0};
+    if(!r.leader&&window.isHost&&meName()){r.leader=meName();window.localRoomCache=r;try{window.writeRoom(window.roomCode,r)}catch(e){}}
+    const mine=leader(r),list=humans(r),mode=r.draw.mode||'prompt';selected=mode;
+    if(!$('rwLobbyModes'))rebuildDrawLobby();
+    if($('rwLobbyRoom'))$('rwLobbyRoom').textContent=r.code||'';
+    const grid=$('rwLobbyModes');if(grid)grid.querySelectorAll('button').forEach(b=>{b.classList.toggle('active',b.dataset.drawMode===mode);b.disabled=!mine||r.phase!=='lobby';});
+    if($('rwLobbySelected'))$('rwLobbySelected').textContent='الوضع الحالي: '+MODES[mode].icon+' '+MODES[mode].name+' — '+MODES[mode].desc;
+    if($('rwLobbyPeople'))$('rwLobbyPeople').innerHTML=list.length?list.map(p=>`<div class="draw-lobby-player ${p.name===r.leader?'leader':''}"><span>👤 ${safe(p.name)}</span><span>${p.name===r.leader?'👑 قائد':'✓ جاهز'}</span></div>`).join(''):'<div class="empty-hint">لا يوجد لاعبون بعد.</div>';
+    if($('rwLobbyCount'))$('rwLobbyCount').textContent=`${list.length} لاعب بشري — لا يوجد حد أدنى أو أقصى — يوصى بـ 4+ لتجربة أفضل`;
+    const start=$('rwLobbyStart');if(start){start.disabled=!mine||r.phase!=='lobby'||list.length<1;start.textContent=list.length<1?`🎨 يحتاج لاعباً واحداً على الأقل`:`🎨 ابدأ ${MODES[mode].icon} ${MODES[mode].name}`;}
+    const hint=$('rwLobbyHint');if(hint)hint.textContent=!mine?'👑 قائد الغرفة فقط يستطيع اختيار الوضع وبدء اللعبة.':list.length<1?`⏳ أضف لاعباً بشرياً واحداً على الأقل.`:(list.length<4?`💡 جاهز! يوصى بـ 4+ لاعبين لتجربة أفضل.`:'✅ ممتاز! عدد اللاعبين مثالي تقريباً.');
+    const name=$('rwLobbyName'),join=$('rwLobbyJoin');const already=list.some(p=>p.name===meName());if(name&&meName()){name.value=meName();name.disabled=true;}if(join)join.disabled=already||r.phase!=='lobby';
+  }
+  function startRewriteDraw(){const r=room();if(!isDrawRoom(r)){window.drawModeRequested=true;window.drawSelectedMode=selected;const c=$('createRoomBtn');if(c){c.click();return;}setMsg('❌ أنشئ غرفة Draw & Guess أولاً.');return;}if(!leader(r)){setMsg('👑 فقط قائد الغرفة يستطيع بدء Draw & Guess.');return;}if(humans(r).length<1){setMsg('⚠️ تحتاج لاعباً بشرياً واحداً على الأقل.');return;}send({type:'startDraw',actor:meName()});}
+
+  function renderRewriteGame(r){
+    if(!isDrawRoom(r))return;const d=r.draw||{};const h=humans(r);const artist=d.artists?.[d.artistIndex]||'';const mine=artist===meName();const drawing=d.phase==='drawing';
+    if($('rwRoom'))$('rwRoom').textContent=r.code||'';$('rwRound').textContent=d.phase==='finished'?'🏆 انتهت اللعبة':`الجولة ${d.round||1} / ${d.artists?.length||h.length||1}`;
+    const mode=MODES[d.mode||'prompt']||MODES.prompt; $('rwPhase').textContent=d.phase==='drawing'?(mine?'🎨 دورك بالرسم':'👀 انتظر الرسام'):d.phase==='guessing'?'🤔 مرحلة التخمين':d.phase==='reveal'?'🎉 كشف النتيجة':'🏆 المعرض النهائي';
+    $('rwPrompt').textContent=d.phase==='drawing'?(mine?(d.prompt||'ارسم أي شيء'):'🎨 شخص آخر يرسم الآن'):(d.phase==='guessing'?'من رسم هذا؟':'شاهد الرسم والنتيجة');
+    $('rwInfo').textContent=d.phase==='drawing'?(mine?mode.desc+' — لا يرى الآخرون المهمة.':'الرسام الحالي: '+artist):d.phase==='guessing'?(mine?'أنت الرسام — انتظر التخمينات.':'اختر اسم اللاعب الذي رسم الصورة.'):'يمكن للجميع مشاهدة الرسم.';
+    const remain=(d.deadline?Math.max(0,Math.ceil((d.deadline-Date.now())/1000)):0);$('rwTimer').textContent=d.timeLimit?`⏱ ${remain} ث`:'⏱ بدون حد';
+    $('rwCanvas').style.pointerEvents=drawing&&mine?'auto':'none';$('rwSubmit').disabled=!(drawing&&mine);$('rwSkip').disabled=!(drawing&&mine);$('rwClear').disabled=!(drawing&&mine);$('rwUndo').disabled=!(drawing&&mine);
+    renderRWPlayers(r,d);renderRWChat(r.chat||[]);renderRWGallery(d);renderRWGuess(r,d);renderRWReveal(r,d);
+  }
+  function renderRWPlayers(r,d){const e=$('rwPlayers');if(!e)return;e.innerHTML=humans(r).map(p=>`<div class="draw-player-row ${d.artists?.[d.artistIndex]===p.name&&d.phase==='drawing'?'artist':''}"><span>👤 ${safe(p.name)}</span><span>${d.artists?.[d.artistIndex]===p.name&&d.phase==='drawing'?'🎨 يرسم':'✓'}</span></div>`).join('');}
+  function renderRWChat(ms){const e=$('rwChat');if(!e)return;e.innerHTML=ms.slice(-60).map(m=>`<div class="draw-chat-msg"><b>${safe(m.name)}</b> ${safe(m.text)}</div>`).join('');e.scrollTop=e.scrollHeight;}
+  function renderRWGallery(d){const e=$('rwGallery');if(!e)return;e.innerHTML=(d.gallery||[]).length?(d.gallery||[]).map(g=>`<div class="draw-gallery-card">${g.image?`<img src="${g.image}" alt="drawing">`:''}<div class="draw-gallery-meta">🎨 <strong>${safe(g.artist)}</strong>${g.prompt?'<br>📝 '+safe(g.prompt):''}</div></div>`).join(''):'<div class="empty-hint">ستظهر الرسومات هنا بعد كشفها.</div>';}
+  function renderRWGuess(r,d){const e=$('rwGuess');if(!e)return;if(d.phase!=='guessing'){e.classList.add('hidden');return;}e.classList.remove('hidden');const a=d.artists?.[d.artistIndex],already=(d.guesses||[]).some(g=>g.name===meName());if(a===meName()){e.innerHTML='<b>🎨 أنت الرسام</b><div class="draw-mode-note">انتظر تخمينات اللاعبين الآخرين.</div>';return;}if(already){e.innerHTML='<b>✅ تم تسجيل تخمينك</b><div class="draw-mode-note">انتظر بقية اللاعبين.</div>';return;}e.innerHTML='<b>🤔 من رسم الصورة؟</b><div class="rewrite-guess-grid">'+(d.artists||[]).filter(n=>n!==meName()).map(n=>`<button type="button" data-guess="${safe(n)}">👤 ${safe(n)}</button>`).join('')+'</div>';e.querySelectorAll('[data-guess]').forEach(b=>b.onclick=()=>send({type:'guessArtist',actor:meName(),guess:b.dataset.guess}));}
+  function renderRWReveal(r,d){const e=$('rwReveal');if(!e)return;if(!['reveal','finished'].includes(d.phase)){e.classList.add('hidden');return;}e.classList.remove('hidden');const sub=d.submissions?.[d.submissions.length-1];const scores=d.guesses||[];e.innerHTML=`<div style="font-size:17px;font-weight:900">🎨 الرسام: ${safe(sub?.artist||'—')}</div>${sub?.image?`<img class="rewrite-reveal-img" src="${sub.image}" alt="drawing">`:''}<div>${sub?.skipped?'⏭️ تم تخطي الرسم.':''}${scores.map(g=>`<div>${safe(g.name)} → ${g.correct?'✅ صحيح':'❌ خطأ'}</div>`).join('')}</div>${d.phase==='reveal'&&leader(r)?'<button type="button" class="stamp-btn" id="rwNext">➡️ الرسم التالي</button>':''}`;if($('rwNext'))$('rwNext').onclick=()=>send({type:'nextDrawing',actor:meName()});}
+
+  function route(r){if(!isDrawRoom(r))return;if(r.phase==='lobby'||r.phase==='idle'){if(typeof window.show==='function')window.show('drawLobbyScreen');renderRewriteLobby(r);}else{if(typeof window.show==='function')window.show('drawScreen');renderRewriteGame(r);}}
+
+  // Capture clicks before all legacy drawing handlers. This removes the old dead buttons.
+  function installCapture(){
+    document.addEventListener('click',e=>{
+      const b=e.target.closest?.('#rewriteDrawModes button,.rewrite-draw-mode,#rewriteDrawStart,#drawModePanel .draw-lobby-mode,#oDrawStart');
+      if(!b)return;e.preventDefault();e.stopImmediatePropagation();
+      if(b.id==='rewriteDrawStart'||b.id==='oDrawStart'){startRewriteDraw();return;}
+      const m=b.dataset.drawMode;if(m){const r=room();if(isDrawRoom(r)){if(!leader(r)){setMsg('👑 قائد الغرفة فقط يستطيع اختيار الوضع.');return;}r.draw=r.draw||{};r.draw.mode=m;r.draw.timeLimit=MODES[m].time;r.draw.strokeUsed=false;window.localRoomCache=r;try{window.writeRoom(window.roomCode,r)}catch(x){}send({type:'setDrawMode',actor:meName(),mode:m});renderRewriteLobby(r);}else{selectPendingMode(m);}}
+    },true);
+  }
+
+  // Make room creation use the selected drawing mode.
+  function patchCreateRoom(){
+    const btn=$('createRoomBtn');if(!btn)return;
+    btn.addEventListener('click',()=>{
+      if(window.drawModeRequested){
+        setTimeout(()=>{
+          const r=room();if(isDrawRoom(r)){r.draw=r.draw||{};r.draw.mode=window.drawSelectedMode||selected;r.draw.timeLimit=MODES[r.draw.mode]?.time||0;window.localRoomCache=r;try{window.writeRoom(window.roomCode,r)}catch(e){}renderRewriteLobby(r);}
+        },100);
+      }
+    },true);
+  }
+
+  // Repair legacy renderLobbyFromRoom effects on the Draw room.
+  function forceRoute(){const r=room();if(!isDrawRoom(r))return;if(!meName()&&window.isHost&&r.leader){}route(r);}
+  setInterval(()=>{try{const r=room();if(isDrawRoom(r)){if(r.phase==='lobby'||r.phase==='idle')renderRewriteLobby(r);else renderRewriteGame(r);}}catch(e){}},500);
+  setInterval(()=>{try{const r=room();if(isDrawRoom(r)&&r.draw?.phase==='drawing'&&r.draw.deadline&&Date.now()>=r.draw.deadline&&window.isHost){send({type:'skipDrawing',actor:r.draw.artists?.[r.draw.artistIndex]||''});}}catch(e){}},500);
+
+  window.renderDrawLobby=renderRewriteLobby;
+  window.renderDraw=renderRewriteGame;
+  window.startDrawMode=startRewriteDraw;
+  window.addEventListener('load',()=>{rebuildDrawScreen();rebuildDrawLobby();rebuildOnlineDrawPanel();installCapture();patchCreateRoom();forceRoute();});
+  if(document.readyState!=='loading'){setTimeout(()=>{rebuildDrawScreen();rebuildDrawLobby();rebuildOnlineDrawPanel();installCapture();patchCreateRoom();forceRoute();},50);}
+})();
+
 </script>
 </body>
 </html>

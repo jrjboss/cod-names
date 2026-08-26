@@ -5997,343 +5997,111 @@ function setConnDot(ok) {
 #drawScreen{position:relative;z-index:5;width:min(1200px,100%);margin:0 auto;padding:20px 12px 40px}.du-game-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.du-game-title{font-size:30px;font-weight:1000;color:var(--gold)}.du-game-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.du-timer{padding:9px 13px;border-radius:11px;background:rgba(232,200,74,.10);border:1px solid rgba(232,200,74,.25);color:var(--gold);font-weight:1000}.du-game-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px}.du-board{background:linear-gradient(145deg,rgba(18,31,23,.98),rgba(7,13,10,.99));border:1px solid rgba(232,200,74,.18);border-radius:20px;padding:16px}.du-phase{text-align:center;color:var(--gold);font-weight:1000;font-size:17px}.du-prompt{text-align:center;font-size:24px;font-weight:1000;margin:10px 0 4px}.du-info{text-align:center;color:var(--text-secondary);font-size:12px;margin-bottom:10px}.du-board canvas{display:block;width:100%;aspect-ratio:5/3;background:#fff;border-radius:16px;touch-action:none;cursor:crosshair;border:2px solid rgba(232,200,74,.12)}.du-toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:10px}.du-toolbar button{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:#fff;border-radius:10px;padding:9px 11px;cursor:pointer;font-weight:800}.du-toolbar button:hover{border-color:var(--gold)}.du-toolbar input{width:120px}.du-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}.du-panel{margin-top:12px;padding:13px;border-radius:14px;background:rgba(255,255,255,.04)}.du-guess-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.du-guess-grid button{border:1px solid rgba(255,255,255,.1);background:#0b1510;color:#fff;border-radius:10px;padding:11px;cursor:pointer;font-weight:900}.du-guess-grid button:hover{border-color:var(--gold)}.du-side{display:flex;flex-direction:column;gap:14px}.du-side-card{background:linear-gradient(145deg,rgba(18,31,23,.98),rgba(7,13,10,.99));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px}.du-side-card h3{color:var(--gold);margin-bottom:10px}.du-player-row{display:flex;justify-content:space-between;padding:9px;border-radius:10px;background:rgba(255,255,255,.035);margin-bottom:6px}.du-player-row.artist{outline:1px solid rgba(232,200,74,.4)}.du-chat{min-height:330px;display:flex;flex-direction:column}.du-chat-list{flex:1;max-height:260px;overflow:auto}.du-chat-msg{padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.04);font-size:12px;margin-bottom:5px}.du-chat-msg b{color:var(--gold)}.du-chat-row{display:flex;gap:6px;margin-top:8px}.du-chat-row input{flex:1;min-width:0}.du-gallery{margin-top:14px;background:linear-gradient(145deg,rgba(18,31,23,.98),rgba(7,13,10,.99));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px}.du-gallery h3{color:var(--gold);margin-bottom:10px}.du-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}.du-gallery-card{background:rgba(255,255,255,.035);border-radius:12px;padding:8px}.du-gallery-card img{width:100%;display:block;border-radius:9px;background:#fff}.du-gallery-meta{font-size:11px;color:var(--text-secondary);margin-top:6px}.du-reveal-img{display:block;max-width:100%;max-height:480px;background:#fff;border-radius:13px;margin:10px auto}
 @media(max-width:850px){.du-modes{grid-template-columns:1fr 1fr}.du-game-grid{grid-template-columns:1fr}}@media(max-width:600px){.du-head,.du-game-head{flex-direction:column;align-items:stretch}.du-modes{grid-template-columns:1fr}.du-join{grid-template-columns:1fr}.du-start button{width:100%;min-width:0}.du-guess-grid{grid-template-columns:1fr}}
 </style>
-<!-- FINAL DRAW TAKEOVER: single Painting mode -->
-<style id="painting-mode-css">
-#drawTakeover{position:fixed;inset:0;z-index:2147483647;display:none;overflow:auto;background:radial-gradient(circle at 50% 0%,#17301f 0,#07100b 42%,#040806 100%);color:#fff;font-family:inherit;direction:rtl;pointer-events:auto}
-#drawTakeover.show{display:block}
-#drawTakeover *{box-sizing:border-box}
-#drawTakeover button,#drawTakeover input,#drawTakeover canvas{pointer-events:auto!important}
-.paint-wrap{width:min(1180px,100%);margin:auto;padding:24px 16px 50px}
-.paint-card{background:linear-gradient(145deg,#142319,#09110c);border:1px solid rgba(232,200,74,.2);border-radius:22px;padding:22px;box-shadow:0 20px 70px rgba(0,0,0,.4);margin-bottom:14px}
-.paint-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.paint-title{font-size:32px;font-weight:1000;color:#f0cf45}.paint-sub{color:#aeb7ae;font-size:13px;margin-top:4px}.paint-code{padding:9px 12px;border-radius:10px;background:#ffffff08;border:1px solid #ffffff12;color:#f0cf45;font-weight:900}.paint-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.paint-rules{text-align:center;line-height:1.9;color:#c8cec8;background:#f0cf450b;border-radius:15px;padding:14px;margin-bottom:20px}.paint-step{color:#f0cf45;font-size:19px;font-weight:1000;margin:16px 0 10px}.paint-join{display:grid;grid-template-columns:1fr auto;gap:10px}.paint-input{width:100%;height:56px;border-radius:14px;border:1px solid #ffffff18;background:#050b07;color:#fff;padding:0 16px;font-size:17px;outline:none}.paint-input:focus{border-color:#f0cf45;box-shadow:0 0 0 4px #f0cf4515}.paint-btn{border:1px solid #ffffff18;background:#17251b;color:#fff;border-radius:13px;padding:12px 18px;font-weight:900;font-size:15px;cursor:pointer}.paint-btn:hover{border-color:#f0cf45;background:#202f22}.paint-btn.primary{background:linear-gradient(135deg,#e7c640,#a98717);color:#111;border-color:#f0cf45}.paint-btn.danger{background:linear-gradient(135deg,#8f2e20,#5f1d16)}.paint-btn:disabled{opacity:.45;cursor:not-allowed}.paint-msg{text-align:center;min-height:24px;color:#f0cf45;margin-top:8px}.paint-players{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}.paint-player{padding:12px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff0d;display:flex;justify-content:space-between}.paint-player.leader{border-color:#f0cf4560}.paint-count{text-align:center;color:#aeb7ae;margin-top:9px}.paint-start{text-align:center;margin-top:18px}.paint-start .paint-btn{min-width:300px;font-size:17px}
-.paint-game{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px}.paint-board,.paint-side{background:linear-gradient(145deg,#142319,#09110c);border:1px solid #ffffff12;border-radius:20px;padding:15px}.paint-phase{text-align:center;color:#f0cf45;font-weight:1000;font-size:18px}.paint-task{text-align:center;font-size:28px;font-weight:1000;margin:8px 0}.paint-info{text-align:center;color:#b7c0b8;font-size:13px;margin-bottom:12px}.paint-timer{display:inline-block;color:#f0cf45;font-weight:1000;padding:8px 12px;background:#f0cf4512;border:1px solid #f0cf4533;border-radius:10px}.paint-canvas{display:block;width:100%;aspect-ratio:5/3;background:#fff;border-radius:15px;touch-action:none;cursor:crosshair;border:2px solid #f0cf4515}.paint-tools{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:10px}.paint-tools input{width:120px}.paint-tool{min-width:42px}.paint-side{display:flex;flex-direction:column;gap:14px}.paint-side-box{padding:14px;border-radius:14px;background:#ffffff07}.paint-side-title{color:#f0cf45;font-weight:1000;margin-bottom:9px}.paint-player-mini{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #ffffff0a}.paint-player-mini:last-child{border-bottom:0}.paint-guess{margin-top:12px;padding:16px;border-radius:15px;background:#f0cf450b;border:1px solid #f0cf4520}.paint-guess-title{text-align:center;font-weight:1000;color:#f0cf45;margin-bottom:10px}.paint-guess-row{display:flex;gap:7px}.paint-guess-row .paint-input{height:48px}.paint-result{text-align:center;padding:16px;border-radius:15px;background:#ffffff08;margin-top:12px}.paint-result-word{font-size:25px;font-weight:1000;color:#f0cf45;margin:8px 0}.paint-chat-list{max-height:220px;overflow:auto}.paint-chat-msg{padding:7px 9px;border-radius:9px;background:#ffffff08;font-size:12px;margin-bottom:5px}.paint-chat-row{display:flex;gap:6px;margin-top:8px}.paint-chat-row .paint-input{height:44px}.paint-gallery{margin-top:14px}.paint-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}.paint-gallery-card{background:#ffffff08;border-radius:12px;padding:8px}.paint-gallery-card img{width:100%;display:block;border-radius:9px;background:#fff}.paint-muted{color:#aeb7ae;font-size:12px}.paint-hidden{display:none!important}
-@media(max-width:850px){.paint-game{grid-template-columns:1fr}.paint-head{flex-direction:column;align-items:stretch}}@media(max-width:600px){.paint-join{grid-template-columns:1fr}.paint-start .paint-btn{width:100%;min-width:0}.paint-guess-row{flex-direction:column}}
-</style>
-
-<style id="painting-only-clean-css">
+<!-- PAINTING MODE V2: standalone, room-code based, no Codenames UI -->
+<style id="painting-v2-css">
 #paintingConnectScreen,#drawLobbyScreen,#drawScreen{position:relative!important;z-index:1000!important}
-.painting-wrap{max-width:1180px;margin:0 auto;padding:24px 16px 48px;color:#f7f2df;font-family:inherit}
-.painting-card{background:linear-gradient(145deg,#101b16,#08100c);border:1px solid rgba(232,200,74,.28);border-radius:24px;padding:24px;box-shadow:0 20px 70px rgba(0,0,0,.35)}
-.painting-head{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
-.painting-title{font-size:30px;font-weight:900}.painting-sub{color:#b9b3a3;margin-top:4px}
-.painting-input{width:100%;box-sizing:border-box;background:#0b120e!important;color:#fff!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:14px;padding:14px 16px;font-size:17px;outline:none}
-.painting-input:focus{border-color:#e8c84a!important;box-shadow:0 0 0 3px rgba(232,200,74,.12)}
-.painting-btn{border:0;border-radius:14px;padding:13px 18px;font-weight:900;cursor:pointer;background:#e8c84a;color:#111;min-height:46px}
-.painting-btn.secondary{background:#18231d;color:#f7f2df;border:1px solid rgba(255,255,255,.14)}
-.painting-btn:disabled{opacity:.45;cursor:not-allowed}
-.painting-lobby-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:18px}
-@media(max-width:800px){.painting-lobby-grid{grid-template-columns:1fr}}
-.painting-players{display:grid;gap:8px;margin-top:12px}.painting-player{padding:11px 13px;border-radius:12px;background:#0c1510;display:flex;justify-content:space-between}.painting-player.leader{border:1px solid rgba(232,200,74,.35)}
-.painting-note{padding:12px;border-radius:12px;background:rgba(232,200,74,.08);color:#ded6bd;margin-top:12px}
-.painting-game-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px}
-@media(max-width:900px){.painting-game-grid{grid-template-columns:1fr}}
-.painting-canvas-wrap{background:#fff;border-radius:18px;padding:8px;overflow:hidden}
-#paintingCanvas{display:block;width:100%;height:auto;background:#fff;border-radius:12px;touch-action:none;cursor:crosshair}
-.painting-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.painting-tools button{background:#17221c;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 13px;cursor:pointer}
-.painting-side{display:grid;gap:14px;align-content:start}.painting-panel{background:#0b140f;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:16px}
-.painting-prompt{font-size:26px;font-weight:900;color:#e8c84a;margin:8px 0}.painting-timer{font-size:30px;font-weight:900}
-.painting-guess-row{display:flex;gap:8px;margin-top:10px}.painting-guess-row input{flex:1}
-.painting-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:18px}
-.painting-gallery img{width:100%;border-radius:12px;background:#fff}.painting-muted{color:#9f9a8d}
-.painting-chat{max-height:230px;overflow:auto;display:grid;gap:7px}.painting-chat div{padding:7px 9px;background:#101b15;border-radius:9px}
+#drawLobbyScreen,#drawScreen{min-height:100vh}
+.paint-v2{width:min(1180px,100%);margin:0 auto;padding:22px 14px 50px;color:#f7f3e8}
+.paint-v2-card{background:linear-gradient(145deg,#122018,#07100b);border:1px solid rgba(232,200,74,.24);border-radius:24px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.paint-v2-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.paint-v2-title{font-size:32px;font-weight:1000;color:#f0cf45}.paint-v2-sub{color:#aeb7ae;margin-top:3px;font-size:13px}
+.paint-v2-room{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.paint-v2-code{font-weight:1000;letter-spacing:4px;color:#f0cf45;background:#f0cf4512;border:1px solid #f0cf4540;border-radius:12px;padding:10px 13px;font-size:20px}
+.paint-v2-grid{display:grid;grid-template-columns:1fr 1.45fr;gap:14px}.paint-v2-panel{background:#0b150f;border:1px solid #ffffff12;border-radius:17px;padding:16px}.paint-v2-panel h3{margin-bottom:10px;color:#f0cf45}
+.paint-v2-input{width:100%;height:52px;border:1px solid #ffffff18!important;border-radius:13px;background:#050b07!important;color:#fff!important;padding:0 14px;font-size:17px;outline:none}.paint-v2-input:focus{border-color:#f0cf45!important;box-shadow:0 0 0 4px #f0cf4512}
+.paint-v2-row{display:flex;gap:8px;flex-wrap:wrap}.paint-v2-btn{border:1px solid #ffffff18;background:#17241b;color:#fff;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer;min-height:46px}.paint-v2-btn:hover{border-color:#f0cf45;background:#203024}.paint-v2-btn.primary{background:linear-gradient(135deg,#e9ca49,#aa891b);color:#111;border-color:#f0cf45}.paint-v2-btn.danger{background:#69271d}.paint-v2-btn:disabled{opacity:.42;cursor:not-allowed}
+.paint-v2-msg{text-align:center;min-height:22px;margin-top:9px;color:#f0cf45}.paint-v2-note{padding:11px;border-radius:12px;background:#f0cf450b;border:1px solid #f0cf4515;color:#cbd1ca;font-size:12px;margin-top:10px;line-height:1.8}
+.paint-v2-players{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}.paint-v2-player{padding:11px 12px;border-radius:12px;background:#ffffff07;border:1px solid #ffffff0c;display:flex;justify-content:space-between;gap:8px}.paint-v2-player.leader{border-color:#f0cf4560}.paint-v2-empty{text-align:center;color:#7f897f;padding:20px}
+.paint-v2-settings{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:13px}.paint-v2-select{width:100%;height:46px;background:#09110c;color:#fff;border:1px solid #ffffff18;border-radius:11px;padding:0 10px;font-weight:800}
+.paint-v2-setting-label{font-size:11px;color:#9ea89f;margin-bottom:5px}.paint-v2-start{margin-top:14px;text-align:center}.paint-v2-start .paint-v2-btn{min-width:310px;font-size:17px}
+.paint-v2-game{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px}.paint-v2-board,.paint-v2-side{background:linear-gradient(145deg,#122018,#07100b);border:1px solid #ffffff12;border-radius:20px;padding:14px}.paint-v2-status{display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap}.paint-v2-timer{font-size:24px;font-weight:1000;color:#f0cf45;background:#f0cf4510;border:1px solid #f0cf4530;border-radius:11px;padding:8px 12px}.paint-v2-phase{font-weight:1000;color:#f0cf45}.paint-v2-task{text-align:center;font-size:25px;font-weight:1000;margin:10px 0}.paint-v2-info{text-align:center;color:#aeb7ae;font-size:12px;min-height:20px}
+.paint-v2-canvas-wrap{background:#fff;border-radius:17px;padding:7px;margin-top:12px}.paint-v2-canvas{display:block;width:100%;aspect-ratio:5/3;background:#fff;border-radius:12px;touch-action:none;cursor:crosshair}
+.paint-v2-tools{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:10px}.paint-v2-color{width:42px;height:42px;border-radius:11px;border:2px solid #ffffff22;cursor:pointer}.paint-v2-range{width:110px}.paint-v2-side{display:flex;flex-direction:column;gap:12px}.paint-v2-sidebox{background:#ffffff07;border:1px solid #ffffff0b;border-radius:15px;padding:13px}.paint-v2-sidebox h3{color:#f0cf45;margin-bottom:8px;font-size:15px}.paint-v2-score{display:grid;gap:6px}.paint-v2-score-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #ffffff0a;font-size:12px}.paint-v2-score-row:last-child{border-bottom:0}.paint-v2-guess-row{display:flex;gap:7px}.paint-v2-guess-row .paint-v2-input{height:46px}.paint-v2-chat{max-height:180px;overflow:auto}.paint-v2-chat div{padding:6px 8px;background:#101b15;border-radius:8px;margin-bottom:5px;font-size:12px}.paint-v2-gallery{margin-top:14px}.paint-v2-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}.paint-v2-gallery-card{background:#ffffff07;border-radius:12px;padding:8px}.paint-v2-gallery-card img{width:100%;display:block;background:#fff;border-radius:9px}.paint-v2-reveal{margin-top:12px;padding:16px;border-radius:15px;background:#f0cf450c;border:1px solid #f0cf4520;text-align:center}.paint-v2-reveal-word{font-size:28px;font-weight:1000;color:#f0cf45}.paint-v2-hint{margin-top:8px;color:#d7d1bd;font-size:13px}.paint-v2-badge{padding:7px 10px;border-radius:10px;background:#ffffff08;color:#c5cbc5;font-size:12px}
+@media(max-width:850px){.paint-v2-grid,.paint-v2-game{grid-template-columns:1fr}.paint-v2-settings{grid-template-columns:1fr 1fr}}@media(max-width:600px){.paint-v2-settings{grid-template-columns:1fr}.paint-v2-start .paint-v2-btn{width:100%;min-width:0}.paint-v2-guess-row{flex-direction:column}.paint-v2-head{align-items:stretch}}
 </style>
 
-<script id="painting-only-clean-script">
+<script id="painting-v2-script">
 (function(){
 'use strict';
 
-const MODES={prompt:'Painting Mode'};
-const PROMPTS=[
- 'قطة','كلب','أسد','فيل','زرافة','سيارة','طائرة','سفينة','صاروخ','بيت',
- 'قلعة','شجرة','شمس','قمر','نجم','بيتزا','برغر','آيس كريم','تفاحة','موزة',
- 'روبوت','ديناصور','تنين','تاج','مظلة','غيتار','كرة قدم','كاميرا','هاتف','كمبيوتر',
- 'سمكة','فراشة','زهرة','جبل','بركان','شاطئ','جزيرة','بالون','رجل ثلج','رائد فضاء'
-];
-
-let uiBuilt=false, canvas=null, ctx=null, drawing=false, lastX=0,lastY=0, color='#111', size=8;
-let pollTimer=null, lastStateKey='', secretPrompt='', promptRound=0;
+const PSETS={
+  mixed:['قطة','كلب','أسد','فيل','زرافة','سيارة','طائرة','سفينة','صاروخ','بيت','قلعة','شجرة','شمس','قمر','نجم','بيتزا','برغر','آيس كريم','تفاحة','موزة','روبوت','ديناصور','تنين','تاج','مظلة','غيتار','كرة قدم','كاميرا','هاتف','كمبيوتر','سمكة','فراشة','زهرة','جبل','بركان','شاطئ','جزيرة','بالون','رجل ثلج','رائد فضاء'],
+ animals:['قطة','كلب','أسد','فيل','زرافة','فأر','حصان','سمكة','فراشة','بطريق','أخطبوط','نمر','دب','قرد','أرنب','سلحفاة'],
+ food:['بيتزا','برغر','آيس كريم','تفاحة','موزة','بطيخ','كعكة','دونات','بطاطس','شوكولاتة','ساندويتش','بوشار'],
+ objects:['هاتف','كاميرا','كمبيوتر','غيتار','تاج','مظلة','ساعة','نظارة','مصباح','مفتاح','كرسي','كتاب'],
+ places:['بيت','قلعة','شاطئ','جزيرة','جبل','بركان','مدرسة','ملعب','مطار','سفينة','مدينة'],
+ fantasy:['تنين','روبوت','رائد فضاء','وحش','ساحر','قلعة سحرية','صاروخ','وحيد قرن','مجرة','كوكب'],
+ anime:['نينجا','ساموراي','بطلة سحرية','روبوت عملاق','نينجا آلي','محارب مقنّع','شخصية شعرها طويل','وحش أنمي','سيف طاقة','بطل خارق']
+};
+const CATNAME={mixed:'متنوع',animals:'حيوانات',food:'أكل',objects:'أشياء',places:'أماكن',fantasy:'خيال',anime:'أنمي'};
+let pv={ui:'',canvas:null,ctx:null,drawing:false,lastX:0,lastY:0,color:'#111111',size:8,tool:'pen',timer:null,strokeBuffer:[],strokeFlush:null,secret:'',round:0,lastRenderKey:'',hintUsed:false};
 window.__paintingHostSecrets=window.__paintingHostSecrets||{};
 
 function room(){return (typeof localRoomCache!=='undefined'&&localRoomCache)?localRoomCache:null}
-function name(){return String((typeof me!=='undefined'&&me&&me.name)||'').trim()}
-function humans(r){
-  const a=[];
-  for(const t of ['red','blue']) for(const p of ((r&&r.teams&&r.teams[t])||[]))
-    if(p&&!p.bot&&p.name&&!a.some(x=>x.name===p.name))a.push(p);
-  return a;
-}
-function leader(r){return !!r&&!!name()&&r.leader===name()}
-function isDraw(r){return !!r&&r.gameMode==='draw'}
+function myName(){return String((typeof me!=='undefined'&&me&&me.name)||'').trim()}
 function esc(x){return String(x??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
-function ensure(r){
-  r=r||{};
-  r.gameMode='draw';
-  r.teams=r.teams||{red:[],blue:[]};
-  r.teams.red=(r.teams.red||[]).filter(p=>p&&!p.bot);
-  r.teams.blue=(r.teams.blue||[]).filter(p=>p&&!p.bot);
-  r.bots=[];
-  r.phase=r.phase||'lobby';
-  r.draw=r.draw||{};
-  const d=r.draw;
-  d.phase=d.phase||'lobby';
-  d.round=d.round||1;
-  d.rounds=d.rounds||humans(r).length||1;
-  d.artists=Array.isArray(d.artists)?d.artists:[];
-  d.artistIndex=Number.isInteger(d.artistIndex)?d.artistIndex:0;
-  d.submissions=Array.isArray(d.submissions)?d.submissions:[];
-  d.guesses=Array.isArray(d.guesses)?d.guesses:[];
-  d.gallery=Array.isArray(d.gallery)?d.gallery:[];
-  d.chat=Array.isArray(d.chat)?d.chat:(Array.isArray(r.chat)?r.chat:[]);
-  d.mode='painting';
-  d.prompt=''; // NEVER publish the secret prompt.
-  return r;
-}
-function persist(r){
-  localRoomCache=ensure(r);
-  try{ if(typeof writeRoom==='function') writeRoom(roomCode,localRoomCache); }catch(e){}
-  try{ if(typeof broadcastState==='function') broadcastState(); }catch(e){}
-}
-function send(ev){
-  if(typeof isHost!=='undefined'&&isHost){handlePaintingEvent(ev);return}
-  if(typeof guestConn!=='undefined'&&guestConn&&guestConn.open){
-    try{guestConn.send({type:'drawEvent',event:ev})}catch(e){}
-  }
-}
-function privatePromptTo(artist,prompt){
-  if(typeof isHost==='undefined'||!isHost)return;
-  if(artist===name()){secretPrompt=prompt;promptRound=room()?.draw?.round||0;return}
-  for(const c of (typeof hostConns!=='undefined'?hostConns:[])){
-    if(c&&c.open&&c.paintPlayerName===artist){
-      try{c.send({type:'drawPrivatePrompt',prompt,round:room()?.draw?.round||0})}catch(e){}
-    }
-  }
-}
-function newPrompt(){return PROMPTS[Math.floor(Math.random()*PROMPTS.length)]}
-function norm(x){return String(x||'').trim().toLowerCase().replace(/[\u064B-\u065F\u0670]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/\s+/g,' ')}
-function correctGuess(g,p){
-  const a=norm(g),b=norm(p);
-  return !!a&&!!b&&(a===b || (a.length>=4&&b.includes(a)) || (b.length>=4&&a.includes(b)));
-}
-
-function buildLobby(){
-  const s=document.getElementById('drawLobbyScreen');if(!s)return;
-  s.innerHTML=`<div class="painting-wrap"><div class="painting-card">
-    <div class="painting-head"><div><div class="painting-title">🎨 Painting Mode</div><div class="painting-sub">ارسم الكلمة السرية واجعل الآخرين يخمنونها</div></div><button type="button" class="painting-btn secondary" id="paintBack">↩ رجوع</button></div>
-    <div class="painting-lobby-grid">
-      <div class="painting-panel">
-        <h3>👤 دخول الغرفة</h3>
-        <input id="paintName" class="painting-input" maxlength="18" autocomplete="off" placeholder="اكتب اسمك">
-        <button type="button" class="painting-btn" id="paintJoin" style="width:100%;margin-top:10px">انضم إلى الغرفة</button>
-        <div id="paintMsg" class="painting-note">يمكن للاعب واحد البدء. يوصى بـ 4+ لتجربة أفضل.</div>
-      </div>
-      <div class="painting-panel">
-        <h3>👥 اللاعبون</h3>
-        <div id="paintCount" class="painting-muted"></div>
-        <div id="paintPlayers" class="painting-players"></div>
-        <button type="button" class="painting-btn" id="paintStart" style="width:100%;margin-top:14px">🎨 ابدأ Painting Mode</button>
-        <div id="paintStartHint" class="painting-note"></div>
-      </div>
-    </div>
-  </div></div>`;
-  document.getElementById('paintJoin').onclick=join;
-  document.getElementById('paintStart').onclick=startPaintingGame;
-  document.getElementById('paintBack').onclick=()=>{try{leaveRoom()}catch(e){try{show('modeScreen')}catch(_){}}};
-  document.getElementById('paintName').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();join()}};
-  uiBuilt=true;
-}
-function buildGame(){
-  const s=document.getElementById('drawScreen');if(!s)return;
-  s.innerHTML=`<div class="painting-wrap"><div class="painting-card">
-    <div class="painting-head"><div><div class="painting-title">🎨 Painting Mode</div><div id="paintRound" class="painting-sub"></div></div><div><span id="paintTimer" class="painting-timer">⏱ 90</span> <button type="button" class="painting-btn secondary" id="paintLeave">↩ رجوع</button></div></div>
-    <div class="painting-game-grid">
-      <main><div class="painting-panel"><div id="paintPhase"></div><div id="paintPrompt" class="painting-prompt"></div><div id="paintInfo" class="painting-muted"></div></div>
-      <div class="painting-canvas-wrap" style="margin-top:14px"><canvas id="paintingCanvas" width="1000" height="650"></canvas></div>
-      <div class="painting-tools">
-        <button type="button" id="paintBlack">⚫</button><button type="button" id="paintRed">🔴</button><button type="button" id="paintBlue">🔵</button><button type="button" id="paintEraser">🧽</button><button type="button" id="paintClear">🧹 مسح</button><button type="button" id="paintSubmit">✅ أرسل الرسم</button>
-      </div></main>
-      <aside class="painting-side">
-        <div class="painting-panel"><h3>🤔 خمن الكلمة</h3><div id="paintGuessState"></div><div class="painting-guess-row"><input id="paintGuess" class="painting-input" placeholder="ما الكلمة؟" autocomplete="off"><button type="button" class="painting-btn" id="paintGuessBtn">خمن</button></div></div>
-        <div class="painting-panel"><h3>👥 اللاعبون</h3><div id="paintGamePlayers"></div></div>
-        <div class="painting-panel"><h3>💬 Chat</h3><div id="paintChat" class="painting-chat"></div><div class="painting-guess-row"><input id="paintChatInput" class="painting-input" placeholder="اكتب رسالة..." autocomplete="off"><button type="button" class="painting-btn" id="paintChatBtn">إرسال</button></div></div>
-      </aside>
-    </div>
-    <div id="paintGallery" class="painting-gallery"></div>
-  </div></div>`;
-  canvas=document.getElementById('paintingCanvas');ctx=canvas.getContext('2d');
-  clearCanvas();
-  canvas.onpointerdown=e=>{const r=room(),d=r?.draw;if(!r||d?.phase!=='drawing'||d.artists?.[d.artistIndex]!==name())return;drawing=true;const p=point(e);lastX=p.x;lastY=p.y;canvas.setPointerCapture?.(e.pointerId);stroke(e)};
-  canvas.onpointermove=e=>{if(!drawing)return;stroke(e)};
-  canvas.onpointerup=()=>drawing=false;canvas.onpointercancel=()=>drawing=false;
-  document.getElementById('paintBlack').onclick=()=>{color='#111'};
-  document.getElementById('paintRed').onclick=()=>{color='#e53935'};
-  document.getElementById('paintBlue').onclick=()=>{color='#1976d2'};
-  document.getElementById('paintEraser').onclick=()=>{color='#fff'};
-  document.getElementById('paintClear').onclick=clearCanvas;
-  document.getElementById('paintSubmit').onclick=submit;
-  document.getElementById('paintGuessBtn').onclick=guess;
-  document.getElementById('paintGuess').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();guess()}};
-  document.getElementById('paintChatBtn').onclick=chat;
-  document.getElementById('paintChatInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();chat()}};
-  document.getElementById('paintLeave').onclick=()=>{try{leaveRoom()}catch(e){show('modeScreen')}};
-}
-function point(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}
-function stroke(e){const p=point(e);ctx.strokeStyle=color;ctx.lineWidth=size;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(p.x,p.y);ctx.stroke();lastX=p.x;lastY=p.y}
-function clearCanvas(){if(!ctx)return;ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height)}
-function join(){
-  const r=ensure(room());if(!isDraw(r))return;
-  const input=document.getElementById('paintName');const n=String(input?.value||'').trim().replace(/\s+/g,' ').slice(0,18);
-  if(!n){document.getElementById('paintMsg').textContent='✏️ اكتب اسمك أولاً.';input?.focus();return}
-  if(humans(r).some(p=>p.name.toLowerCase()===n.toLowerCase())){if(name().toLowerCase()===n.toLowerCase())return;document.getElementById('paintMsg').textContent='⚠️ الاسم مستخدم.';return}
-  const team=r.teams.red.length<=r.teams.blue.length?'red':'blue';
-  window.me={name:n,team};
-  if(typeof isHost!=='undefined'&&isHost){
-    r.teams[team].push({name:n,team,bot:false,spymaster:false});if(!r.leader)r.leader=n;persist(r);renderLobby(r);return;
-  }
-  if(typeof guestConn!=='undefined'&&guestConn?.open){guestConn.send({type:'join',name:n,team});document.getElementById('paintMsg').textContent='⏳ جاري الانضمام...'}
-  else document.getElementById('paintMsg').textContent='❌ الاتصال غير جاهز.';
-}
-function chooseStartPrompt(r){
-  const artist=r.draw.artists[r.draw.artistIndex];const p=newPrompt();
-  window.__paintingHostSecrets[artist+'|'+r.draw.round]=p;
-  privatePromptTo(artist,p);
-  return p;
-}
-function startPaintingGame(){
-  const r=ensure(room());if(!isDraw(r))return;
-  if(!name()){document.getElementById('paintMsg').textContent='✏️ اكتب اسمك وانضم أولاً.';return}
-  if(!humans(r).some(p=>p.name===name())){document.getElementById('paintMsg').textContent='⏳ انضم أولاً.';return}
-  if(!leader(r)){document.getElementById('paintMsg').textContent='👑 قائد الغرفة فقط يستطيع البدء.';return}
-  r.phase='drawing';r.draw.phase='drawing';r.draw.artists=humans(r).map(p=>p.name);r.draw.artistIndex=0;r.draw.round=1;r.draw.rounds=r.draw.artists.length;r.draw.submissions=[];r.draw.guesses=[];r.draw.gallery=[];r.draw.startedAt=Date.now();r.draw.deadline=Date.now()+90000;persist(r);
-  chooseStartPrompt(r);
-  persist(r);
-  route(r);
-}
-function handlePaintingEvent(ev){
-  const r=ensure(room()),d=r.draw;if(!r||!isDraw(r))return;
-  const actor=String(ev.actor||'').trim();
+function players(r){const out=[];for(const t of ['red','blue'])for(const p of ((r?.teams?.[t])||[]))if(p&&!p.bot&&p.name&&!out.some(x=>x.name===p.name))out.push(p);return out}
+function isHostRoom(r){return !!r&&r.gameMode==='draw'}
+function isLeader(r){return !!r&&r.leader===myName()}
+function norm(x){return String(x||'').trim().toLowerCase().replace(/[\u064B-\u065F\u0670]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/\s+/g,' ')}
+function sameWord(a,b){const x=norm(a),y=norm(b);if(!x||!y)return false;if(x===y)return true;if(x.length>=3&&y.length>=3&&(x.includes(y)||y.includes(x)))return true;return false}
+function code(){return String((typeof roomCode!=='undefined'&&roomCode)||'').toUpperCase()}
+function persist(r){localRoomCache=paintEnsure(r);try{writeRoom(code(),localRoomCache)}catch(e){try{writeRoom(localRoomCache)}catch(_){}}}
+function sendPaint(ev){if(typeof isHost!=='undefined'&&isHost){paintHandleHost(ev);return}if(typeof guestConn!=='undefined'&&guestConn?.open){try{guestConn.send({type:'drawEvent',event:ev})}catch(e){console.error(e)}}}
+function paintEnsure(r){r=r||{};r.gameMode='draw';r.phase=r.phase||'lobby';r.teams=r.teams||{red:[],blue:[]};r.teams.red=(r.teams.red||[]).filter(p=>p&&!p.bot);r.teams.blue=(r.teams.blue||[]).filter(p=>p&&!p.bot);r.bots=[];r.draw=r.draw||{};const d=r.draw;d.mode='painting';d.phase=d.phase||'lobby';d.round=Number(d.round)||1;d.rounds=Number(d.rounds)||Math.max(1,players(r).length);d.artists=Array.isArray(d.artists)?d.artists:[];d.artistIndex=Number.isInteger(d.artistIndex)?d.artistIndex:0;d.category=d.category||'mixed';d.difficulty=d.difficulty||'normal';d.timeLimit=Number(d.timeLimit)||90;d.submissions=Array.isArray(d.submissions)?d.submissions:[];d.guesses=Array.isArray(d.guesses)?d.guesses:[];d.gallery=Array.isArray(d.gallery)?d.gallery:[];d.scores=d.scores&&typeof d.scores==='object'?d.scores:{};d.hints=Array.isArray(d.hints)?d.hints:[];d.strokes=Array.isArray(d.strokes)?d.strokes.slice(-1400):[];d.winner=d.winner||null;d.secretHint=d.secretHint||'';d.prompt=String(d.prompt||'');return r}
+function promptFor(r){const list=PSETS[r.draw.category]||PSETS.mixed;return list[Math.floor(Math.random()*list.length)]}
+function sendPrivatePrompt(artist,prompt,round){if(typeof isHost==='undefined'||!isHost)return;if(artist===myName()){pv.secret=prompt;pv.round=round;return}for(const c of (typeof hostConns!=='undefined'?hostConns:[])){if(c?.open&&c.paintPlayerName===artist){try{c.send({type:'drawPrivatePrompt',prompt,round})}catch(e){}}}}
+function setSecretForRound(r){const d=r.draw;const artist=d.artists[d.artistIndex];const p=promptFor(r);window.__paintingHostSecrets[artist+'|'+d.round]=p;sendPrivatePrompt(artist,p,d.round)}
+function currentSecret(r){const d=r.draw,artist=d.artists[d.artistIndex];return window.__paintingHostSecrets[artist+'|'+d.round]||pv.secret||''}
+function scoreAdd(r,n,amount){if(!n)return;r.draw.scores=r.draw.scores||{};r.draw.scores[n]=(Number(r.draw.scores[n])||0)+amount}
+function startRound(r){const d=r.draw;d.phase='drawing';d.submissions=[];d.guesses=[];d.winner=null;d.hints=[];d.strokes=[];d.secretHint='';d.deadline=Date.now()+d.timeLimit*1000;setSecretForRound(r);persist(r)}
+function startGame(r){if(!isLeader(r)||r.phase!=='lobby')return;const ps=players(r);if(!ps.length)return;r.phase='drawing';const d=r.draw;d.artists=ps.map(p=>p.name);d.artistIndex=0;d.round=1;d.rounds=ps.length;d.scores={};ps.forEach(p=>d.scores[p.name]=0);startRound(r);paintRoute(r)}
+function nextRound(r,reason){const d=r.draw;const sub=d.submissions?.[0];if(sub)d.gallery.push({artist:sub.artist,image:sub.image,prompt:sub.prompt,winner:d.winner||null,reason:reason||'done'});d.artistIndex++;if(d.artistIndex>=d.artists.length){d.phase='finished';r.phase='drawing-finished';d.deadline=0;persist(r);return}d.round++;startRound(r);paintRoute(r)}
+function submitDrawing(r,actor,image){const d=r.draw;if(d.phase!=='drawing'||d.artists[d.artistIndex]!==actor)return;const prompt=currentSecret(r);if(!prompt||!image||image.length>4000000)return;d.submissions=[{artist:actor,image,prompt,at:Date.now()}];d.phase='guessing';scoreAdd(r,actor,20);persist(r)}
+function handleGuess(r,actor,guess){const d=r.draw;if(d.phase!=='guessing'||d.artists[d.artistIndex]===actor)return;guess=String(guess||'').trim().slice(0,80);if(!guess)return;d.guesses=d.guesses||[];if(d.guesses.some(g=>g.name===actor))return;const prompt=d.submissions?.[0]?.prompt||currentSecret(r);const ok=sameWord(guess,prompt);d.guesses.push({name:actor,guess,correct:ok,at:Date.now()});if(ok){const remain=Math.max(0,Math.ceil((d.deadline-Date.now())/1000));const bonus=30+Math.min(70,remain);scoreAdd(r,actor,bonus);d.winner=actor;d.phase='reveal'}persist(r)}
+function handleHint(r,actor){const d=r.draw;if(d.phase!=='guessing'||d.artists[d.artistIndex]===actor)return;if(d.hints.includes(actor))return;const prompt=d.submissions?.[0]?.prompt||currentSecret(r);if(!prompt)return;d.hints.push(actor);d.secretHint=prompt.charAt(0)+' • '.repeat(Math.min(3,Math.max(0,prompt.length-1)));scoreAdd(r,actor,-10);persist(r)}
+function paintHandleHost(ev){const r=paintEnsure(room());if(!r||!isHostRoom(r))return;const d=r.draw,actor=String(ev.actor||'').trim();if(!actor)return;
+  if(ev.type==='joinPaint'){if(r.phase!=='lobby')return;const n=actor;if(players(r).some(p=>p.name.toLowerCase()===n.toLowerCase()))return;const team=r.teams.red.length<=r.teams.blue.length?'red':'blue';r.teams[team].push({name:n,team,bot:false,spymaster:false});for(const c of (typeof hostConns!=='undefined'?hostConns:[])){if(c?.open&&c.peer===ev.peer)try{c.paintPlayerName=n}catch(e){}}persist(r);return}
+  if(ev.type==='paintStart'){startGame(r);return}
+  if(ev.type==='paintSettings'){if(actor!==r.leader||r.phase!=='lobby')return;d.category=PSETS[ev.category]?ev.category:'mixed';d.timeLimit=[30,60,90,120].includes(Number(ev.time))?Number(ev.time):90;d.rounds=Math.max(1,players(r).length);d.difficulty=['easy','normal','hard'].includes(ev.difficulty)?ev.difficulty:'normal';persist(r);return}
+  if(ev.type==='clearCanvas'){if(d.phase!=='drawing'||d.artists[d.artistIndex]!==actor)return;d.strokes=[];broadcastState();return}
+  if(ev.type==='strokes'){if(d.phase!=='drawing'||d.artists[d.artistIndex]!==actor)return;const list=Array.isArray(ev.strokes)?ev.strokes.slice(0,40):[];for(const s of list){if(!s)continue;const clean={x1:+s.x1,y1:+s.y1,x2:+s.x2,y2:+s.y2,color:String(s.color||'#111').slice(0,12),size:Math.max(1,Math.min(40,+s.size||8)),tool:s.tool==='eraser'?'eraser':'pen'};if([clean.x1,clean.y1,clean.x2,clean.y2].some(v=>!Number.isFinite(v)))continue;d.strokes.push(clean)}if(d.strokes.length>1400)d.strokes=d.strokes.slice(-1400);broadcastState();return}
+  if(ev.type==='submit'){submitDrawing(r,actor,String(ev.image||''));return}
+  if(ev.type==='guess'){handleGuess(r,actor,ev.guess);return}
+  if(ev.type==='hint'){handleHint(r,actor);return}
   if(ev.type==='chat'){const text=String(ev.text||'').trim().slice(0,180);if(!text)return;r.chat=r.chat||[];r.chat.push({name:actor,text,at:Date.now()});r.chat=r.chat.slice(-80);persist(r);return}
-  if(ev.type==='startDraw'){if(actor!==r.leader||d.phase!=='lobby')return;start();return}
-  if(ev.type==='submitPainting'){if(d.phase!=='drawing'||actor!==d.artists[d.artistIndex])return;const image=String(ev.image||'');if(!image||image.length>3000000)return;const prompt=window.__paintingHostSecrets[actor+'|'+d.round]||secretPrompt||'';d.submissions=[{artist:actor,image,prompt,at:Date.now()}];d.phase='guessing';r.phase='drawing';persist(r);return}
-  if(ev.type==='guessWord'){if(d.phase!=='guessing'||actor===d.artists[d.artistIndex])return;const guess=String(ev.guess||'').trim().slice(0,80);if(!guess)return;const sub=d.submissions[0];const prompt=sub?.prompt||window.__paintingHostSecrets[d.artists[d.artistIndex]+'|'+d.round]||'';d.guesses=d.guesses||[];if(d.guesses.some(g=>g.name===actor))return;const ok=correctGuess(guess,prompt);d.guesses.push({name:actor,guess,correct:ok});if(ok){d.phase='reveal';d.winner=actor}persist(r);return}
-  if(ev.type==='nextPainting'){if(actor!==r.leader||d.phase!=='reveal')return;const sub=d.submissions[0];d.gallery=d.gallery||[];if(sub)d.gallery.push({artist:sub.artist,image:sub.image,prompt:sub.prompt,winner:d.winner||null});d.artistIndex++;if(d.artistIndex>=d.artists.length){d.phase='finished';r.phase='drawing-finished'}else{d.phase='drawing';d.round++;d.submissions=[];d.guesses=[];d.winner=null;d.deadline=Date.now()+90000;chooseStartPrompt(r)}persist(r);return}
+  if(ev.type==='next'){if(actor!==r.leader||d.phase!=='reveal')return;nextRound(r,'guessed');return}
 }
-function submit(){const r=room(),d=r?.draw;if(!r||d?.phase!=='drawing'||d.artists[d.artistIndex]!==name())return;send({type:'submitPainting',actor:name(),image:canvas.toDataURL('image/jpeg',.72)})}
-function guess(){const r=room(),d=r?.draw;if(!r||d?.phase!=='guessing'||d.artists[d.artistIndex]===name())return;const i=document.getElementById('paintGuess');const g=i.value.trim();if(!g)return;send({type:'guessWord',actor:name(),guess:g});i.value=''}
-function chat(){const i=document.getElementById('paintChatInput'),t=i.value.trim();if(!t)return;send({type:'chat',actor:name(),text:t});i.value=''}
-function renderLobby(r){
-  if(!uiBuilt)buildLobby();const hs=humans(r),mine=hs.some(p=>p.name===name()),lead=leader(r);
-  document.getElementById('paintCount').textContent=hs.length+' لاعب — لا يوجد حد أدنى • يوصى بـ 4+';
-  document.getElementById('paintPlayers').innerHTML=hs.length?hs.map(p=>`<div class="painting-player ${p.name===r.leader?'leader':''}"><span>👤 ${esc(p.name)}</span><span>${p.name===r.leader?'👑 قائد':'✓ جاهز'}</span></div>`).join(''):'<div class="painting-muted">لم ينضم أي لاعب بعد.</div>';
-  const inp=document.getElementById('paintName'),joinBtn=document.getElementById('paintJoin'),startBtn=document.getElementById('paintStart');
-  if(inp&&!mine){inp.disabled=false;if(document.activeElement!==inp)inp.value=inp.value||''}
-  if(mine){inp.value=name();inp.disabled=true}
-  joinBtn.disabled=mine||r.phase!=='lobby';startBtn.disabled=!lead||!mine||r.phase!=='lobby';
-  document.getElementById('paintStartHint').textContent=!mine?'✏️ اكتب اسمك ثم انضم.':!lead?'👑 أنت لاعب؛ القائد يبدأ.':hs.length<4?'💡 لاعب واحد يكفي، و4+ أفضل.':'✅ جاهز!';
-}
-function renderGame(r){
-  if(!uiBuilt)buildGame();const d=r.draw,artist=d.artists[d.artistIndex]||'',mine=artist===name();
-  document.getElementById('paintRound').textContent='الجولة '+d.round+' / '+d.rounds;
-  const remain=Math.max(0,Math.ceil(((d.deadline||0)-Date.now())/1000));document.getElementById('paintTimer').textContent='⏱ '+remain;
-  document.getElementById('paintPhase').textContent=d.phase==='drawing'?'🎨 الرسم':d.phase==='guessing'?'🤔 التخمين':d.phase==='reveal'?'🎉 الكشف':'🏆 انتهت اللعبة';
-  document.getElementById('paintPrompt').textContent=d.phase==='drawing'?(mine?(secretPrompt||'🎨 ارسم الكلمة التي ظهرت لك'): '🎨 الرسام يرسم الآن — حاول تخمين الكلمة'):(d.phase==='guessing'?'🤔 اكتب الكلمة التي تعتقد أن الرسم يمثلها':'🔓 '+(d.submissions?.[0]?.prompt||''));
-  document.getElementById('paintInfo').textContent=mine&&d.phase==='drawing'?'لا يرى اللاعبون الآخرون الكلمة.':d.phase==='guessing'?'أرسل تخمينك.':'';
-  document.getElementById('paintGuessState').textContent=d.phase==='guessing'?(mine?'أنت الرسام — انتظر التخمين.':'حاول تخمين الكلمة السرية.'):(d.winner?'🏆 الفائز: '+d.winner:'');
-  document.getElementById('paintGuess').disabled=d.phase!=='guessing'||mine;
-  document.getElementById('paintGuessBtn').disabled=d.phase!=='guessing'||mine;
-  document.getElementById('paintSubmit').disabled=!mine||d.phase!=='drawing';
-  canvas.style.pointerEvents=mine&&d.phase==='drawing'?'auto':'none';
-  document.getElementById('paintGamePlayers').innerHTML=d.artists.map((p,i)=>`<div class="painting-player ${i===d.artistIndex?'leader':''}"><span>👤 ${esc(p)}</span><span>${i===d.artistIndex?'🎨 يرسم':'✓'}</span></div>`).join('');
-  const sub=d.submissions?.[0];if(sub?.image&&d.phase!=='drawing'){if(!document.getElementById('paintRevealImage')){const im=document.createElement('img');im.id='paintRevealImage';im.style='width:100%;border-radius:14px;margin-top:14px';document.querySelector('#drawScreen .painting-game-grid').after(im)}document.getElementById('paintRevealImage').src=sub.image}else if(document.getElementById('paintRevealImage'))document.getElementById('paintRevealImage').remove();
-  const g=document.getElementById('paintGallery');g.innerHTML=(d.gallery||[]).map(x=>`<div class="painting-panel"><img src="${x.image}" alt=""><div>🎨 ${esc(x.artist)}<br>📝 ${esc(x.prompt)}<br>🏆 ${esc(x.winner||'لم يكتمل')}</div></div>`).join('');
-  const chatBox=document.getElementById('paintChat');chatBox.innerHTML=(r.chat||[]).slice(-60).map(m=>`<div><b>${esc(m.name)}</b> ${esc(m.text)}</div>`).join('');chatBox.scrollTop=chatBox.scrollHeight;
-  document.getElementById('paintSubmit').textContent=mine?'✅ أرسل الرسم':'✋ لست الرسام';
-  const next=document.getElementById('paintNext');if(next)next.remove();
-  if(d.phase==='reveal'&&leader(r)){const b=document.createElement('button');b.id='paintNext';b.className='painting-btn';b.textContent=d.artistIndex+1<d.artists.length?'➡️ الرسام التالي':'🏆 إنهاء';b.onclick=()=>send({type:'nextPainting',actor:name()});document.querySelector('#drawScreen .painting-card').appendChild(b)}
-}
-function route(r){
-  if(!isDraw(r))return;
-  if(r.phase==='lobby'||r.draw?.phase==='lobby'){try{show('drawLobbyScreen')}catch(e){}renderLobby(r)}
-  else {try{show('drawScreen')}catch(e){}renderGame(r)}
-}
-window.renderDrawLobby=renderLobby;window.renderDraw=renderGame;
-window.handleDrawEventOnHost=handlePaintingEvent;
-window.sendDrawEvent=send;
-
-function paintingRoomTemplate(code){
-  return ensure({
-    code:code,
-    phase:'lobby',
-    teams:{red:[],blue:[]},
-    cards:[],turn:'red',clue:null,gameOver:false,winner:null,reason:'',
-    assassinCount:1,assassinRevealed:0,
-    settings:{assassinCount:1,difficulty:'normal',timer:0,category:'all',customWords:[]},
-    customWords:[],bots:[],matchmaking:false,leader:null,gameMode:'draw',maxPlayers:null,
-    draw:{phase:'lobby',round:1,rounds:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0,mode:'painting',timeLimit:90000,strokeUsed:false},chat:[]
-  });
-}
-function paintingConnectMessage(t){
-  const el=document.getElementById('paintingConnectMsg'); if(el) el.textContent=t;
-}
-async function paintingCreateRoomDirect(){
-  const n=String(document.getElementById('paintingConnectName')?.value||'').trim().replace(/\s+/g,' ').slice(0,18);
-  if(!n){paintingConnectMessage('✏️ اكتب اسمك أولاً.');document.getElementById('paintingConnectName')?.focus();return;}
-  const code=makeCode().toUpperCase();
-  roomCode=code; me={name:n,team:'red'};
-  const r=paintingRoomTemplate(code); localRoomCache=r;
-  paintingConnectMessage('⏳ جاري إنشاء الغرفة...');
-  try{
-    await createHostPeer(code);
-    r.leader=n;
-    r.teams.red.push({name:n,team:'red',bot:false,spymaster:false});
-    localRoomCache=ensure(r);
-    writeRoom(code,localRoomCache);
-    startListening();
-    setConnDot(true);
-    show('drawLobbyScreen');
-    uiBuilt=false; renderLobby(localRoomCache);
-  }catch(e){console.error(e);paintingConnectMessage('❌ تعذر إنشاء الغرفة: '+(e?.message||'خطأ اتصال'));}
-}
-async function paintingJoinRoomDirect(){
-  const n=String(document.getElementById('paintingConnectName')?.value||'').trim().replace(/\s+/g,' ').slice(0,18);
-  const code=String(document.getElementById('paintingRoomCode')?.value||'').trim().toUpperCase();
-  if(!n){paintingConnectMessage('✏️ اكتب اسمك أولاً.');document.getElementById('paintingConnectName')?.focus();return;}
-  if(!code){paintingConnectMessage('🔑 اكتب رمز الغرفة.');document.getElementById('paintingRoomCode')?.focus();return;}
-  paintingConnectMessage('⏳ جاري الدخول إلى '+code+'...');
-  try{
-    const r=await connectAsGuest(code);
-    if(!r||r.gameMode!=='draw')throw new Error('هذه ليست غرفة Painting Mode');
-    roomCode=code; me={name:n,team:'red'}; localRoomCache=ensure(r);
-    startListening(); setConnDot(true);
-    show(localRoomCache.phase==='lobby'?'drawLobbyScreen':'drawScreen');
-    uiBuilt=false;
-    if(localRoomCache.phase==='lobby') renderLobby(localRoomCache); else renderGame(localRoomCache);
-  }catch(e){console.error(e);paintingConnectMessage('❌ تعذر الدخول: '+(e?.message||'تأكد من الرمز'));}
-}
-
-function rebuild(){uiBuilt=false;buildLobby();buildGame();uiBuilt=true}
-function tick(){
-  const r=room();if(!isDraw(r))return;
-  route(r);
-  // Only update the timer text in-place; never rebuild the DOM.
-}
-function startPaintingPolling(){
-  if(pollTimer)return;
-  pollTimer=setInterval(tick,1000);
-  tick();
-}
-window.addEventListener('load',startPaintingPolling);
-if(document.readyState!=='loading')startPaintingPolling();
-
-function bindPaintingConnect(){
-  document.getElementById('paintingCreateRoom')?.addEventListener('click',paintingCreateRoomDirect);
-  document.getElementById('paintingJoinRoom')?.addEventListener('click',paintingJoinRoomDirect);
-  document.getElementById('paintingConnectBack')?.addEventListener('click',()=>show('modeScreen'));
-  document.getElementById('paintingRoomCode')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();paintingJoinRoomDirect();}});
-  document.getElementById('paintingConnectName')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();paintingCreateRoomDirect();}});
-}
-bindPaintingConnect();
+function broadcastState(){try{if(typeof localRoomCache!=='undefined')localRoomCache=paintEnsure(localRoomCache);if(typeof hostConns!=='undefined')hostConns.filter(c=>c?.open).forEach(c=>{try{c.send({type:'state',room:localRoomCache})}catch(e){}})}catch(e){console.error(e)}}
+function applyStroke(s){if(!pv.ctx||!pv.canvas)return;pv.ctx.save();pv.ctx.strokeStyle=s.tool==='eraser'?'#fff':s.color;pv.ctx.lineWidth=s.size;pv.ctx.lineCap='round';pv.ctx.lineJoin='round';pv.ctx.beginPath();pv.ctx.moveTo(s.x1,s.y1);pv.ctx.lineTo(s.x2,s.y2);pv.ctx.stroke();pv.ctx.restore()}
+function redrawStrokes(r){if(!pv.ctx||!pv.canvas)return;pv.ctx.fillStyle='#fff';pv.ctx.fillRect(0,0,pv.canvas.width,pv.canvas.height);for(const s of (r?.draw?.strokes||[]))applyStroke(s)}
+function point(e){const r=pv.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*pv.canvas.width/r.width,y:(e.clientY-r.top)*pv.canvas.height/r.height}}
+function localStroke(e){const r=room(),d=r?.draw;if(!r||d?.phase!=='drawing'||d.artists[d.artistIndex]!==myName())return;const p=point(e);const s={x1:pv.lastX,y1:pv.lastY,x2:p.x,y2:p.y,color:pv.color,size:pv.size,tool:pv.tool};applyStroke(s);pv.strokeBuffer.push(s);pv.lastX=p.x;pv.lastY=p.y;queueStrokeFlush()}
+function queueStrokeFlush(){if(pv.strokeFlush)return;pv.strokeFlush=setTimeout(()=>{pv.strokeFlush=null;const r=room(),d=r?.draw;if(!r||d?.phase!=='drawing'||d.artists[d.artistIndex]!==myName()){pv.strokeBuffer=[];return}const batch=pv.strokeBuffer.splice(0,18);if(batch.length)sendPaint({type:'strokes',actor:myName(),strokes:batch});},55)}
+function clearLocal(){if(!pv.ctx)return;pv.ctx.fillStyle='#fff';pv.ctx.fillRect(0,0,pv.canvas.width,pv.canvas.height);const r=room(),d=r?.draw;if(r&&d?.phase==='drawing'&&d.artists[d.artistIndex]===myName()){pv.strokeBuffer=[];sendPaint({type:'clearCanvas',actor:myName()})}}
+function buildLobby(){const s=document.getElementById('drawLobbyScreen');if(!s)return;s.innerHTML=`<div class="paint-v2"><div class="paint-v2-card"><div class="paint-v2-head"><div><div class="paint-v2-title">🎨 Painting</div><div class="paint-v2-sub">ارسم الكلمة السرية — والآخرون يخمنونها. بدون Codenames وبدون فرق.</div></div><div class="paint-v2-room"><span class="paint-v2-badge">🔑 رمز الغرفة</span><span class="paint-v2-code" id="pvCode">${esc(code()||'------')}</span><button class="paint-v2-btn" id="pvCopy">📋 نسخ</button><button class="paint-v2-btn danger" id="pvLeave">↩ مغادرة</button></div></div><div class="paint-v2-grid"><div class="paint-v2-panel"><h3>👤 اللاعب</h3><input id="pvName" class="paint-v2-input" maxlength="18" placeholder="اكتب اسمك"><button id="pvJoin" class="paint-v2-btn primary" style="width:100%;margin-top:9px">➕ انضم للغرفة</button><div id="pvMsg" class="paint-v2-msg"></div><div class="paint-v2-note">يمكنك البدء بلاعب واحد. يوصى بـ 4+ للمتعة. لا توجد بوتات في Painting.</div></div><div class="paint-v2-panel"><h3>👥 اللاعبون <span id="pvCount"></span></h3><div id="pvPlayers" class="paint-v2-players"></div><div class="paint-v2-settings"><div><div class="paint-v2-setting-label">الفئة</div><select id="pvCat" class="paint-v2-select"><option value="mixed">🎲 متنوع</option><option value="animals">🐾 حيوانات</option><option value="food">🍕 أكل</option><option value="objects">📦 أشياء</option><option value="places">🌍 أماكن</option><option value="fantasy">🐉 خيال</option><option value="anime">🌸 أنمي</option></select></div><div><div class="paint-v2-setting-label">الوقت</div><select id="pvTime" class="paint-v2-select"><option value="30">30 ثانية</option><option value="60">60 ثانية</option><option value="90" selected>90 ثانية</option><option value="120">120 ثانية</option></select></div><div><div class="paint-v2-setting-label">الصعوبة</div><select id="pvDiff" class="paint-v2-select"><option value="easy">سهل</option><option value="normal" selected>متوسط</option><option value="hard">صعب</option></select></div></div><div class="paint-v2-start"><button id="pvStart" class="paint-v2-btn primary">🚀 ابدأ Painting</button><div id="pvStartMsg" class="paint-v2-note"></div></div></div></div></div></div>`;
+  document.getElementById('pvJoin').onclick=paintJoin;document.getElementById('pvName').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();paintJoin()}};document.getElementById('pvStart').onclick=()=>sendPaint({type:'paintStart',actor:myName()});document.getElementById('pvCat').onchange=paintSettings;document.getElementById('pvTime').onchange=paintSettings;document.getElementById('pvDiff').onchange=paintSettings;document.getElementById('pvCopy').onclick=async()=>{try{await navigator.clipboard.writeText(code());document.getElementById('pvMsg').textContent='✅ تم نسخ رمز الغرفة.'}catch(e){document.getElementById('pvMsg').textContent='🔑 الرمز: '+code()}};document.getElementById('pvLeave').onclick=()=>{try{leaveRoom()}catch(e){show('modeScreen')}};pv.ui='lobby'}
+function paintSettings(){const r=room();if(!r||!isLeader(r))return;sendPaint({type:'paintSettings',actor:myName(),category:document.getElementById('pvCat').value,time:+document.getElementById('pvTime').value,difficulty:document.getElementById('pvDiff').value})}
+function paintJoin(){const r=paintEnsure(room()),i=document.getElementById('pvName'),n=String(i?.value||'').trim().replace(/\s+/g,' ').slice(0,18);const msg=document.getElementById('pvMsg');if(!n){msg.textContent='✏️ اكتب اسمك أولاً.';i?.focus();return}if(players(r).some(p=>p.name.toLowerCase()===n.toLowerCase())){if(myName().toLowerCase()===n.toLowerCase())return;msg.textContent='⚠️ الاسم مستخدم.';return}window.me={name:n,team:'red'};if(typeof isHost!=='undefined'&&isHost){r.teams.red.length<=r.teams.blue.length?r.teams.red.push({name:n,team:'red',bot:false,spymaster:false}):r.teams.blue.push({name:n,team:'blue',bot:false,spymaster:false});if(!r.leader)r.leader=n;persist(r);paintRenderLobby(r)}else if(typeof guestConn!=='undefined'&&guestConn?.open){guestConn.send({type:'join',name:n,team:'red'});msg.textContent='⏳ جاري الانضمام...'}else msg.textContent='❌ الاتصال غير جاهز.'}
+function buildGame(){const s=document.getElementById('drawScreen');if(!s)return;s.innerHTML=`<div class="paint-v2"><div class="paint-v2-card"><div class="paint-v2-head"><div><div class="paint-v2-title">🎨 Painting</div><div id="pvRound" class="paint-v2-sub"></div></div><div class="paint-v2-room"><span id="pvTimer" class="paint-v2-timer">⏱ 90</span><button class="paint-v2-btn" id="pvGameLeave">↩ مغادرة</button></div></div><div class="paint-v2-game"><main class="paint-v2-board"><div class="paint-v2-status"><span id="pvPhase" class="paint-v2-phase"></span><span id="pvArtist" class="paint-v2-badge"></span></div><div id="pvTask" class="paint-v2-task"></div><div id="pvInfo" class="paint-v2-info"></div><div class="paint-v2-canvas-wrap"><canvas id="pvCanvas" class="paint-v2-canvas" width="1000" height="600"></canvas></div><div class="paint-v2-tools"><button class="paint-v2-btn" data-c="#111111">⚫</button><button class="paint-v2-btn" data-c="#e53935">🔴</button><button class="paint-v2-btn" data-c="#1976d2">🔵</button><button class="paint-v2-btn" data-c="#2e7d32">🟢</button><button class="paint-v2-btn" data-c="#f5a623">🟠</button><button class="paint-v2-btn" data-c="#8e44ad">🟣</button><button class="paint-v2-btn" id="pvEraser">🧽 ممحاة</button><label class="paint-v2-badge">الحجم <input id="pvSize" class="paint-v2-range" type="range" min="2" max="32" value="8"></label><button class="paint-v2-btn" id="pvClear">🧹 مسح</button><button class="paint-v2-btn primary" id="pvSubmit">✅ تم</button></div><div id="pvReveal" class="paint-v2-reveal" style="display:none"></div></main><aside class="paint-v2-side"><div class="paint-v2-sidebox"><h3>🤔 التخمين</h3><div id="pvGuessState" class="paint-v2-hint"></div><div class="paint-v2-guess-row"><input id="pvGuess" class="paint-v2-input" placeholder="اكتب تخمينك"><button id="pvGuessBtn" class="paint-v2-btn primary">خمن</button></div><button id="pvHint" class="paint-v2-btn" style="width:100%;margin-top:8px">💡 تلميح (-10 نقاط)</button></div><div class="paint-v2-sidebox"><h3>🏆 النقاط</h3><div id="pvScores" class="paint-v2-score"></div></div><div class="paint-v2-sidebox"><h3>👥 اللاعبون</h3><div id="pvGamePlayers"></div></div><div class="paint-v2-sidebox"><h3>💬 الدردشة</h3><div id="pvChat" class="paint-v2-chat"></div><div class="paint-v2-guess-row"><input id="pvChatInput" class="paint-v2-input" placeholder="اكتب رسالة"><button id="pvChatBtn" class="paint-v2-btn">إرسال</button></div></div></aside></div><div id="pvGallery" class="paint-v2-gallery"></div></div></div>`;
+  pv.canvas=document.getElementById('pvCanvas');pv.ctx=pv.canvas.getContext('2d');pv.ctx.fillStyle='#fff';pv.ctx.fillRect(0,0,pv.canvas.width,pv.canvas.height);
+  pv.canvas.onpointerdown=e=>{const r=room(),d=r?.draw;if(!r||d?.phase!=='drawing'||d.artists[d.artistIndex]!==myName())return;pv.drawing=true;const p=point(e);pv.lastX=p.x;pv.lastY=p.y;pv.canvas.setPointerCapture?.(e.pointerId)};
+  pv.canvas.onpointermove=e=>{if(pv.drawing)localStroke(e)};pv.canvas.onpointerup=()=>{pv.drawing=false;queueStrokeFlush()};pv.canvas.onpointercancel=()=>{pv.drawing=false;queueStrokeFlush()};
+  document.querySelectorAll('#drawScreen [data-c]').forEach(b=>b.onclick=()=>{pv.color=b.dataset.c;pv.tool='pen'});document.getElementById('pvEraser').onclick=()=>{pv.tool='eraser'};document.getElementById('pvSize').oninput=e=>pv.size=+e.target.value;document.getElementById('pvClear').onclick=clearLocal;document.getElementById('pvSubmit').onclick=()=>{const r=room();if(r)sendPaint({type:'submit',actor:myName(),image:pv.canvas.toDataURL('image/jpeg',.78)})};document.getElementById('pvGuessBtn').onclick=paintGuess;document.getElementById('pvGuess').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();paintGuess()}};document.getElementById('pvHint').onclick=()=>sendPaint({type:'hint',actor:myName()});document.getElementById('pvChatBtn').onclick=paintChat;document.getElementById('pvChatInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();paintChat()}};document.getElementById('pvGameLeave').onclick=()=>{try{leaveRoom()}catch(e){show('modeScreen')}};pv.ui='game'}
+function paintGuess(){const i=document.getElementById('pvGuess'),g=String(i?.value||'').trim();if(!g)return;sendPaint({type:'guess',actor:myName(),guess:g});i.value=''}
+function paintChat(){const i=document.getElementById('pvChatInput'),t=String(i?.value||'').trim();if(!t)return;sendPaint({type:'chat',actor:myName(),text:t});i.value=''}
+function paintRenderLobby(r){if(pv.ui!=='lobby')buildLobby();r=paintEnsure(r);const ps=players(r),mine=ps.some(p=>p.name===myName()),lead=isLeader(r);document.getElementById('pvCode').textContent=code();document.getElementById('pvCount').textContent=' ('+ps.length+')';document.getElementById('pvPlayers').innerHTML=ps.length?ps.map(p=>`<div class="paint-v2-player ${p.name===r.leader?'leader':''}"><span>👤 ${esc(p.name)}</span><span>${p.name===r.leader?'👑 قائد':'✓ جاهز'}</span></div>`).join(''):'<div class="paint-v2-empty">لا يوجد لاعبون بعد.</div>';const inp=document.getElementById('pvName');if(mine){inp.value=myName();inp.disabled=true}else inp.disabled=false;document.getElementById('pvJoin').disabled=mine;document.getElementById('pvStart').disabled=!lead||!mine||r.phase!=='lobby';document.getElementById('pvStartMsg').textContent=!mine?'اكتب اسمك وانضم.':!lead?'القائد يختار الإعدادات ويبدأ.':ps.length===1?'✨ جاهز! لاعب واحد مسموح — 4+ موصى بها.':'🔥 جاهز للبدء!';if(lead){document.getElementById('pvCat').disabled=false;document.getElementById('pvTime').disabled=false;document.getElementById('pvDiff').disabled=false}else{document.getElementById('pvCat').disabled=true;document.getElementById('pvTime').disabled=true;document.getElementById('pvDiff').disabled=true}document.getElementById('pvCat').value=r.draw.category;document.getElementById('pvTime').value=String(r.draw.timeLimit);document.getElementById('pvDiff').value=r.draw.difficulty}
+function paintRenderGame(r){if(pv.ui!=='game')buildGame();r=paintEnsure(r);if(r.draw?.prompt&&r.draw.artists?.[r.draw.artistIndex]===myName())pv.secret=r.draw.prompt;const d=r.draw,artist=d.artists[d.artistIndex]||'',mine=artist===myName();document.getElementById('pvRound').textContent=`الجولة ${d.round} / ${d.rounds} • ${CATNAME[d.category]||'متنوع'}`;const remain=Math.max(0,Math.ceil(((d.deadline||0)-Date.now())/1000));document.getElementById('pvTimer').textContent='⏱ '+remain;document.getElementById('pvPhase').textContent=d.phase==='drawing'?'🎨 الرسم':d.phase==='guessing'?'🤔 التخمين':d.phase==='reveal'?'🎉 الكشف':'🏆 انتهت';document.getElementById('pvArtist').textContent='🎨 '+(artist||'—');document.getElementById('pvTask').textContent=d.phase==='drawing'?(mine?(pv.secret||d.prompt||'🎨 الكلمة الخاصة بك'): 'الرسام يرسم — حاول التخمين'):d.phase==='guessing'?'🤔 خمن الكلمة':d.phase==='reveal'?'🔓 '+(d.submissions?.[0]?.prompt||''): '🏆 انتهت اللعبة';document.getElementById('pvInfo').textContent=mine&&d.phase==='drawing'?'هذه الكلمة سرية — لا تكتبها في الدردشة.':d.phase==='guessing'?'يمكنك استخدام تلميح واحد مقابل 10 نقاط.':'';document.getElementById('pvSubmit').disabled=!mine||d.phase!=='drawing';document.getElementById('pvClear').disabled=!mine||d.phase!=='drawing';document.getElementById('pvHint').disabled=d.phase!=='guessing'||mine||d.hints.includes(myName());document.getElementById('pvGuess').disabled=d.phase!=='guessing'||mine;document.getElementById('pvGuessBtn').disabled=d.phase!=='guessing'||mine;document.getElementById('pvCanvas').style.cursor=mine&&d.phase==='drawing'?'crosshair':'default';document.getElementById('pvGuessState').textContent=d.phase==='guessing'?(d.secretHint?'💡 تلميح: '+d.secretHint:'حاول تخمين الكلمة.'):d.winner?'🏆 الفائز: '+esc(d.winner):'';redrawStrokes(r);document.getElementById('pvGamePlayers').innerHTML=d.artists.map((p,i)=>`<div class="paint-v2-player ${i===d.artistIndex?'leader':''}"><span>👤 ${esc(p)}</span><span>${i===d.artistIndex?'🎨 يرسم':'✓'}</span></div>`).join('');document.getElementById('pvScores').innerHTML=Object.entries(d.scores||{}).sort((a,b)=>b[1]-a[1]).map(([n,s])=>`<div class="paint-v2-score-row"><span>${esc(n)}</span><b>${s}</b></div>`).join('')||'<div class="paint-v2-empty">لا نقاط بعد.</div>';const chat=(r.chat||[]).slice(-50);const cb=document.getElementById('pvChat');cb.innerHTML=chat.map(m=>`<div><b>${esc(m.name)}</b> ${esc(m.text)}</div>`).join('');cb.scrollTop=cb.scrollHeight;const sub=d.submissions?.[0];const rev=document.getElementById('pvReveal');if(sub&&d.phase!=='drawing'){rev.style.display='block';rev.innerHTML=`<div>الكلمة كانت</div><div class="paint-v2-reveal-word">${esc(sub.prompt)}</div><div>${d.winner?'🏆 '+esc(d.winner)+' خمّنها بشكل صحيح!':'⏰ انتهى الوقت.'}</div>`}else rev.style.display='none';const g=document.getElementById('pvGallery');g.innerHTML=(d.gallery||[]).map(x=>`<div class="paint-v2-gallery-grid"><div class="paint-v2-gallery-card"><img src="${x.image}" alt=""><div class="paint-v2-hint">🎨 ${esc(x.artist)} • 📝 ${esc(x.prompt)}${x.winner?' • 🏆 '+esc(x.winner):''}</div></div></div>`).join('');let nx=document.getElementById('pvNext');if(nx)nx.remove();if(d.phase==='reveal'&&isLeader(r)){nx=document.createElement('button');nx.id='pvNext';nx.className='paint-v2-btn primary';nx.style='display:block;margin:14px auto 0;min-width:280px';nx.textContent=d.artistIndex+1<d.artists.length?'➡️ الجولة التالية':'🏆 إنهاء اللعبة';nx.onclick=()=>sendPaint({type:'next',actor:myName()});document.querySelector('#drawScreen .paint-v2-card').appendChild(nx)} }
+function paintRoute(r){if(!isHostRoom(r))return;if(r.phase==='lobby'){show('drawLobbyScreen');paintRenderLobby(r)}else{show('drawScreen');paintRenderGame(r)}}
+function paintTick(){const r=room();if(!isHostRoom(r))return;if((r.draw?.phase==='drawing'||r.draw?.phase==='guessing')&&r.draw.deadline&&Date.now()>=r.draw.deadline&&typeof isHost!=='undefined'&&isHost){const d=r.draw;if(d.phase==='drawing'){const prompt=currentSecret(r);d.submissions=[{artist:d.artists[d.artistIndex],image:canvasPlaceholder(),prompt,at:Date.now()}];d.phase='reveal';d.winner=null;scoreAdd(r,d.artists[d.artistIndex],0);persist(r)}else if(d.phase==='guessing'){d.phase='reveal';d.winner=null;persist(r)}}paintRoute(r)}
+function canvasPlaceholder(){return pv.canvas?pv.canvas.toDataURL('image/jpeg',.65):''}
+function paintingConnectMsg(t){const e=document.getElementById('paintingConnectMsg');if(e)e.textContent=t}
+function paintingRoomTemplate(codeValue){return paintEnsure({code:codeValue,phase:'lobby',teams:{red:[],blue:[]},cards:[],turn:'red',clue:null,gameOver:false,winner:null,settings:{},customWords:[],bots:[],leader:null,gameMode:'draw',maxPlayers:null,draw:{phase:'lobby',round:1,rounds:1,artists:[],artistIndex:0,category:'mixed',difficulty:'normal',timeLimit:90,submissions:[],guesses:[],gallery:[],scores:{},hints:[],strokes:[],prompt:'',secretHint:'',deadline:0,mode:'painting'},chat:[]})}
+async function paintingCreateRoomDirect(){const n=String(document.getElementById('paintingConnectName')?.value||'').trim().replace(/\s+/g,' ').slice(0,18);if(!n){paintingConnectMsg('✏️ اكتب اسمك أولاً.');document.getElementById('paintingConnectName')?.focus();return}const c=makeCode().toUpperCase();roomCode=c;window.me={name:n,team:'red'};localRoomCache=paintingRoomTemplate(c);paintingConnectMsg('⏳ جاري إنشاء الغرفة...');try{await createHostPeer(c);localRoomCache=paintingRoomTemplate(c);localRoomCache.leader=n;localRoomCache.teams.red.push({name:n,team:'red',bot:false,spymaster:false});localRoomCache=paintEnsure(localRoomCache);writeRoom(c,localRoomCache);startListening();setConnDot(true);show('drawLobbyScreen');pv.ui='';paintRenderLobby(localRoomCache)}catch(e){console.error(e);paintingConnectMsg('❌ فشل إنشاء الغرفة: '+(e?.message||'خطأ اتصال'))}}
+async function paintingJoinRoomDirect(){const n=String(document.getElementById('paintingConnectName')?.value||'').trim().replace(/\s+/g,' ').slice(0,18);const c=String(document.getElementById('paintingRoomCode')?.value||'').trim().toUpperCase();if(!n){paintingConnectMsg('✏️ اكتب اسمك أولاً.');document.getElementById('paintingConnectName')?.focus();return}if(!c){paintingConnectMsg('🔑 اكتب رمز الغرفة.');document.getElementById('paintingRoomCode')?.focus();return}paintingConnectMsg('⏳ جاري الدخول إلى '+c+'...');try{const r=await connectAsGuest(c);if(!r||r.gameMode!=='draw')throw new Error('الغرفة ليست Painting');roomCode=c;window.me={name:n,team:'red'};localRoomCache=paintEnsure(r);startListening();setConnDot(true);if(guestConn?.open){guestConn.send({type:'join',name:n,team:'red'})}show(localRoomCache.phase==='lobby'?'drawLobbyScreen':'drawScreen');pv.ui='';localRoomCache.phase==='lobby'?paintRenderLobby(localRoomCache):paintRenderGame(localRoomCache)}catch(e){console.error(e);paintingConnectMsg('❌ تعذر الدخول: '+(e?.message||'تأكد من رمز الغرفة'))}}
+function bindPaint(){if(window.__paintV2Bound)return;window.__paintV2Bound=true;const b1=document.getElementById('paintingCreateRoom'),b2=document.getElementById('paintingJoinRoom'),back=document.getElementById('paintingConnectBack'),nameInput=document.getElementById('paintingConnectName'),codeInput=document.getElementById('paintingRoomCode');b1?.addEventListener('click',paintingCreateRoomDirect);b2?.addEventListener('click',paintingJoinRoomDirect);back?.addEventListener('click',()=>show('modeScreen'));nameInput?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();paintingCreateRoomDirect()}});codeInput?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();paintingJoinRoomDirect()}})}
+window.renderDrawLobby=paintRenderLobby;window.renderDraw=paintRenderGame;window.handleDrawEventOnHost=paintHandleHost;window.sendDrawEvent=sendPaint;
+window.__paintingV2={startGame,paintRoute};
+setInterval(paintTick,1000);bindPaint();
 })();
 </script>
 </body>

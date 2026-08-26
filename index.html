@@ -4623,96 +4623,138 @@ function setConnDot(ok) {
             document.getElementById('playerCount').textContent = count + ' لاعب متصل';
         }
 
-        // ==========================================
-        // ONLINE - START GAME
-        // ==========================================
-        document.getElementById('oStart').addEventListener('click', function() {
-            var err = document.getElementById('oErr');
-            err.textContent = '';
-            var room = localRoomCache;
-            if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.'; return; }
+      // ==========================================
+// ONLINE - ENTER GAME
+// ==========================================
+function enterOnlineGame(room) {
+    room = normalizeRoom(room, roomCode);
 
-            if (room.leader !== me.name) {
-                err.textContent = '⚠️ فقط قائد الغرفة يمكنه بدء المهمة.';
-                return;
-            }
+    teams = room.teams || { red: [], blue: [] };
 
-            if (!room.teams.red || room.teams.red.length < 2 || !room.teams.blue || room.teams.blue.length < 2) {
-                err.textContent = '⚠️ كل فريق يحتاج 2 لاعبين على الأقل (4 لاعبين إجمالاً).';
-                return;
-            }
+    state = {
+        cards: room.cards || [],
+        turn: room.turn || 'red',
+        clue: room.clue || null,
+        gameOver: !!room.gameOver,
+        winner: room.winner || null,
+        reason: room.reason || '',
+        assassinCount: room.assassinCount || 1,
+        assassinRevealed: room.assassinRevealed || 0,
+        timer: room.timer || 0,
+        category: room.category || 'all',
+        turnDeadline: room.turnDeadline || null
+    };
 
-            if (!me.name) { err.textContent = '⚠️ انضم لأحد الفريقين أولاً.'; return; }
+    gameSettings.assassinCount = state.assassinCount;
+    gameSettings.difficulty =
+        (room.settings && room.settings.difficulty) || 'normal';
+    gameSettings.timer = state.timer;
+    gameSettings.category = state.category;
+    gameSettings.customWords =
+        (
+            room.customWords ||
+            (room.settings && room.settings.customWords) ||
+            []
+        ).slice();
 
-            if (!room.teams.red.some(function(p) { return p.spymaster; })) room.teams.red[0].spymaster = true;
-            if (!room.teams.blue.some(function(p) { return p.spymaster; })) room.teams.blue[0].spymaster = true;
-
-            var assassinCount = room.settings && room.settings.assassinCount || 1;
-            var difficulty = room.settings && room.settings.difficulty || 'normal';
-            var timer = room.settings && room.settings.timer || 0;
-            var category = room.settings && room.settings.category || 'all';
-            var customWords = (room.customWords || (room.settings && room.settings.customWords) || []).slice();
-            var built = buildBoard(assassinCount, difficulty, category, customWords);
-
-            room.phase = 'playing';
-            room.cards = built.cards;
-            room.turn = built.turn;
-            room.clue = null;
-            room.gameOver = false;
-            room.winner = null;
-            room.reason = '';
-            room.assassinCount = built.assassinCount;
-            room.assassinRevealed = 0;
-            room.timer = timer;
-            room.category = category;
-            room.customWords = customWords;
-            room.settings.customWords = customWords.slice();
-            room.turnDeadline = timer > 0 ? Date.now() + timer * 1000 : null;
-
-            writeRoom(roomCode, room);
-            enterOnlineGame(room);
-        });
-
-        // ==========================================
-        // ONLINE - ENTER GAME
-        // ==========================================
-        function enterOnlineGame(room) {
-            teams = room.teams || { red: [], blue: [] };
-            state = {
-                cards: room.cards || [],
-                turn: room.turn || 'red',
-                clue: room.clue || null,
-                gameOver: room.gameOver || false,
-                winner: room.winner || null,
-                reason: room.reason || '',
-                assassinCount: room.assassinCount || 1,
-                assassinRevealed: room.assassinRevealed || 0,
-                timer: room.timer || 0,
-                category: room.category || 'all',
-                turnDeadline: room.turnDeadline || null
-            };
-            gameSettings.assassinCount = state.assassinCount;
-            gameSettings.difficulty = room.settings && room.settings.difficulty || 'normal';
-            gameSettings.timer = state.timer;
-            gameSettings.category = state.category;
-            gameSettings.customWords = (room.customWords || (room.settings && room.settings.customWords) || []).slice();
-
-            spymasterMode = false;
-            document.getElementById('spyToggle').classList.remove('on');
-            document.getElementById('spyToggleWrap').classList.toggle('hidden', !amISpymaster());
-            document.getElementById('onlineSyncNote').classList.remove('hidden');
-            document.getElementById('gameRoomCode').textContent = roomCode;
-            document.getElementById('onlineSyncNote').innerHTML = '🌐 وضع أونلاين — رمز الغرفة: <b>' + roomCode + '</b>';
-            document.getElementById('assassinCountDisplay').textContent = '☠ القاتلين: ' + state.assassinCount;
-            document.getElementById('categoryDisplay').textContent = '📂 ' + getCategoryName(state.category);
-            show('gameScreen');
-            renderRoster();
-            render();
-            if (state.gameOver) showEndOverlay();
-            if (state.timer > 0 && !state.gameOver) startTimer(state.timer);
-            runAIMoveIfNeeded();
+    // -----------------------------
+    // Safe DOM helper
+    // -----------------------------
+    function setText(id, value) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.textContent = value;
         }
+    }
 
+    function setHTML(id, value) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = value;
+        }
+    }
+
+    function removeClass(id, className) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.classList.remove(className);
+        }
+    }
+
+    function toggleClass(id, className, condition) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.classList.toggle(className, condition);
+        }
+    }
+
+    // -----------------------------
+    // Online game UI
+    // -----------------------------
+    spymasterMode = false;
+
+    removeClass('spyToggle', 'on');
+
+    toggleClass(
+        'spyToggleWrap',
+        'hidden',
+        !amISpymaster()
+    );
+
+    removeClass('onlineSyncNote', 'hidden');
+
+    setText('gameRoomCode', roomCode);
+
+    setHTML(
+        'onlineSyncNote',
+        '🌐 وضع أونلاين — رمز الغرفة: <b>' +
+        String(roomCode || '') +
+        '</b>'
+    );
+
+    setText(
+        'assassinCountDisplay',
+        '☠ القاتلين: ' + state.assassinCount
+    );
+
+    setText(
+        'categoryDisplay',
+        '📂 ' + getCategoryName(state.category)
+    );
+
+    // -----------------------------
+    // Enter game screen
+    // -----------------------------
+    show('gameScreen');
+
+    // -----------------------------
+    // Render current room/game
+    // -----------------------------
+    renderRoster();
+    render();
+
+    // -----------------------------
+    // Game-over state
+    // -----------------------------
+    if (state.gameOver) {
+        showEndOverlay();
+    }
+
+    // -----------------------------
+    // Timer
+    // -----------------------------
+    if (
+        state.timer > 0 &&
+        !state.gameOver
+    ) {
+        startTimer(state.timer);
+    }
+
+    // -----------------------------
+    // Matchmaking bots
+    // -----------------------------
+    runAIMoveIfNeeded();
+}
         // ==========================================
         // ONLINE - LISTENING
         // ==========================================

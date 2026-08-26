@@ -3595,6 +3595,48 @@ function setConnDot(ok) {
             isTimerRunning = false;
         }
 
+        function newGame() {
+            var assassinCount = parseInt(document.getElementById('localAssassinCount')?.value || '1', 10);
+            var difficulty = document.getElementById('localDifficulty')?.value || 'normal';
+            var timer = parseInt(document.getElementById('localTimer')?.value || '60', 10);
+            var category = document.getElementById('localCategory')?.value || 'all';
+            var customWords = (CATEGORIES.custom || []).slice();
+
+            gameSettings.assassinCount = assassinCount;
+            gameSettings.difficulty = difficulty;
+            gameSettings.timer = timer;
+            gameSettings.category = category;
+            gameSettings.customWords = customWords;
+
+            var built = buildBoard(assassinCount, difficulty, category, customWords);
+            state = {
+                cards: built.cards,
+                turn: built.turn,
+                clue: null,
+                gameOver: false,
+                winner: null,
+                reason: '',
+                assassinCount: built.assassinCount,
+                assassinRevealed: 0,
+                timer: timer,
+                category: category,
+                turnDeadline: timer > 0 ? Date.now() + timer * 1000 : null
+            };
+
+            var a = document.getElementById('assassinCountDisplay');
+            var c = document.getElementById('categoryDisplay');
+            var spy = document.getElementById('spyToggle');
+            var ov = document.getElementById('overlay');
+            if (a) a.textContent = '☠ القاتلين: ' + state.assassinCount;
+            if (c) c.textContent = '📂 ' + getCategoryName(category);
+            spymasterMode = false;
+            if (spy) spy.classList.remove('on');
+            if (ov) ov.classList.remove('show');
+            renderRoster();
+            render();
+            if (timer > 0) startTimer(timer);
+        }
+
         function startTimer(seconds) {
             stopTimer();
             seconds = Math.max(0, parseInt(seconds || 0, 10));
@@ -4873,12 +4915,12 @@ function setConnDot(ok) {
                 renderLobbyFromRoom(room);
                 if (room.gameMode === 'draw') {
                     startListening();
-                    if (room.phase === 'drawing' || room.phase === 'drawing-finished') {
-                        show('drawScreen');
-                        if (typeof window.renderDraw === 'function') window.renderDraw(room);
-                    } else {
+                    if (room.phase === 'lobby') {
                         show('drawLobbyScreen');
                         if (typeof window.renderDrawLobby === 'function') window.renderDrawLobby(room);
+                    } else {
+                        show('drawScreen');
+                        if (typeof window.renderDraw === 'function') window.renderDraw(room);
                     }
                 } else if (room.phase === 'playing') {
                     enterOnlineGame(room);
@@ -5315,12 +5357,14 @@ function setConnDot(ok) {
                 // Always route its lobby/game state first so the normal lobby
                 // can never steal the screen.
                 if (room.gameMode === 'draw') {
-                    if (room.phase === 'drawing' || room.phase === 'drawing-finished') {
-                        show('drawScreen');
-                        if (typeof window.renderDraw === 'function') window.renderDraw(room);
-                    } else {
+                    if (room.phase === 'lobby') {
                         show('drawLobbyScreen');
                         if (typeof window.renderDrawLobby === 'function') window.renderDrawLobby(room);
+                    } else {
+                        // Every active Draw & Guess phase stays on the drawing screen:
+                        // drawing, guessing, reveal, and finished.
+                        show('drawScreen');
+                        if (typeof window.renderDraw === 'function') window.renderDraw(room);
                     }
                     return;
                 }
@@ -5819,7 +5863,7 @@ function setConnDot(ok) {
         }
 
         const count=document.getElementById('drawLobbyCount');
-        if(count)count.textContent=humans.length+' لاعبين بشريين — لا يوجد حد أقصى';
+        if(count)count.textContent=humans.length+' لاعبين بشريين — الحد الأدنى 3، ولا يوجد حد أقصى';
 
         const start=document.getElementById('drawLobbyStartBtn');
         if(start){
@@ -5861,11 +5905,11 @@ function setConnDot(ok) {
 
     function showDrawGame(room){
         if(!room || room.gameMode!=='draw')return;
-        if(room.phase==='drawing' || room.phase==='drawing-finished'){
+        if(room.phase==='lobby'){
+            showDrawLobby(room);
+        }else{
             if(typeof show==='function')show('drawScreen');
             if(typeof window.renderDraw==='function')window.renderDraw(room);
-        }else if(room.phase==='lobby'){
-            showDrawLobby(room);
         }
     }
 
@@ -5885,6 +5929,7 @@ function setConnDot(ok) {
 
         if(typeof isHost!=='undefined' && isHost){
             room.teams[team].push({name:name,bot:false,spymaster:false});
+            if(typeof me!=='undefined') me={name:name,team:team};
             if(!room.leader)room.leader=name;
             room.bots=[];
             localRoomCache=room;
@@ -5938,16 +5983,16 @@ function setConnDot(ok) {
         const room=drawRoom();
         if(!room)return;
         if(room.phase==='lobby')showDrawLobby(room);
-        else if(room.phase==='drawing'||room.phase==='drawing-finished')showDrawGame(room);
+        else showDrawGame(room);
     }
 
     // Explicit event handlers — no reliance on the old Codenames lobby handlers.
     function bindDrawLobby(){
-        document.getElementById('drawLobbyJoinBtn')?.addEventListener('click',joinDrawLobby);
-        document.getElementById('drawLobbyStartBtn')?.addEventListener('click',startDrawLobby);
+        document.getElementById('drawLobbyJoinBtn')?.addEventListener('click',(e)=>{e.preventDefault();e.stopPropagation();joinDrawLobby();});
+        document.getElementById('drawLobbyStartBtn')?.addEventListener('click',(e)=>{e.preventDefault();e.stopPropagation();startDrawLobby();});
         document.getElementById('drawLobbyBackBtn')?.addEventListener('click',leaveDrawLobby);
         document.querySelectorAll('.draw-lobby-mode-new').forEach(btn=>{
-            btn.addEventListener('click',()=>chooseDrawMode(btn.dataset.drawMode));
+            btn.addEventListener('click',(e)=>{e.preventDefault();e.stopPropagation();chooseDrawMode(btn.dataset.drawMode);});
         });
         document.getElementById('drawLobbyName')?.addEventListener('keydown',e=>{
             if(e.key==='Enter')joinDrawLobby();

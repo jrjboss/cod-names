@@ -1796,6 +1796,36 @@
 .draw-mode-selected{box-shadow:0 0 0 2px rgba(232,200,74,.12),0 18px 50px rgba(0,0,0,.25)}
 .discord-footer{width:100%;max-width:1000px;margin:18px auto;padding:18px 20px;text-align:center;border:1px solid rgba(232,200,74,.12);border-radius:16px;background:linear-gradient(145deg,rgba(30,42,34,.96),rgba(15,20,17,.98));box-shadow:0 12px 40px rgba(0,0,0,.25)}.discord-footer-title{color:var(--text-secondary);font-size:13px;margin-bottom:8px}.discord-footer-link{display:inline-flex;align-items:center;justify-content:center;padding:9px 20px;border-radius:10px;text-decoration:none;color:#fff;font-weight:900;font-size:14px;background:linear-gradient(135deg,#5865f2,#4752c4)}.discord-footer-sub{margin-top:7px;color:var(--text-muted);font-size:11px}@media(max-width:850px){.draw-layout{grid-template-columns:1fr}.draw-side{display:grid;grid-template-columns:1fr 1fr}.draw-chat-box{min-height:280px}}@media(max-width:600px){.draw-side{display:flex}.draw-title{font-size:22px}.draw-prompt{font-size:21px}.draw-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
+
+<style id="draw-final-fix-css">
+#drawLobbyScreen{min-height:100vh;padding:24px 16px 40px}
+.draw-lobby-wrap{max-width:1050px;margin:0 auto}
+.draw-lobby-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
+.draw-lobby-card{border:1px solid rgba(232,200,74,.22);border-radius:22px;padding:22px;background:linear-gradient(145deg,rgba(23,38,28,.98),rgba(8,15,11,.98));box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.draw-lobby-rule{border-radius:16px;padding:14px 16px;text-align:center;color:var(--text-secondary);background:rgba(232,200,74,.06);line-height:1.8;margin-bottom:18px}
+.draw-lobby-section-title{text-align:center;color:var(--gold);font-weight:1000;font-size:18px;margin:20px 0 12px}
+.draw-join-row{display:flex;gap:10px;max-width:650px;margin:auto}
+.draw-join-row input{flex:1;min-width:0;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:#07100a;color:#fff;padding:14px 16px;font-size:16px;outline:none}
+.draw-join-row input:focus{border-color:rgba(232,200,74,.55);box-shadow:0 0 0 3px rgba(232,200,74,.08)}
+.draw-lobby-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.draw-lobby-mode-new{border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:18px 12px;background:#0b1510;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:.18s}
+.draw-lobby-mode-new:hover{transform:translateY(-2px);border-color:rgba(232,200,74,.45)}
+.draw-lobby-mode-new.active{background:linear-gradient(145deg,rgba(232,200,74,.28),rgba(232,200,74,.08));border-color:var(--gold);box-shadow:0 0 0 2px rgba(232,200,74,.10) inset}
+.draw-lobby-mode-new span{font-size:30px}.draw-lobby-mode-new strong{font-size:17px}.draw-lobby-mode-new small{color:var(--text-secondary);font-size:12px;line-height:1.5}
+.draw-lobby-selected{text-align:center;color:var(--text-secondary);margin:12px 0}
+.draw-lobby-players{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:9px;min-height:54px}
+.draw-lobby-player{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-radius:13px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.06)}
+.draw-lobby-player.leader{border-color:rgba(232,200,74,.35)}
+.draw-lobby-count{text-align:center;color:var(--text-muted);font-size:13px;margin-top:10px}
+.draw-start-big{display:inline-flex;min-width:300px;justify-content:center;font-size:17px}
+.draw-lobby-start-area{text-align:center;margin-top:22px}
+.draw-lobby-start-area button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.2)}
+.draw-lobby-hint{margin-top:8px;color:var(--text-muted);font-size:12px}
+.draw-discord-inline{margin-top:24px}
+.draw-timer-badge{padding:9px 13px;border-radius:11px;background:rgba(232,200,74,.12);border:1px solid rgba(232,200,74,.22);color:var(--gold);font-weight:1000;min-width:115px;text-align:center}
+.draw-mode-select{display:none!important}
+@media(max-width:760px){.draw-lobby-head{flex-direction:column;align-items:stretch}.draw-lobby-modes{grid-template-columns:1fr}.draw-join-row{flex-direction:column}.draw-start-big{width:100%;min-width:0}}
+</style>
 </head>
 <body>
 
@@ -2124,7 +2154,7 @@
                 <div class="setup-err" id="oErr"></div>
                 <div id="drawModePanel" style="margin:14px 0;padding:16px;border:1px solid rgba(232,200,74,.18);border-radius:14px;background:linear-gradient(145deg,rgba(232,200,74,.08),rgba(255,255,255,.025));text-align:center;">
                     <div style="font-size:20px;font-weight:1000;color:var(--gold);">🎨 Draw & Guess — وضع مستقل</div>
-                    <div style="font-size:12px;color:var(--text-secondary);margin:5px 0 12px;">3 لاعبين بشريين على الأقل. لا يوجد حد أقصى. يمكن إضافة بوتات للمشاهدة والتخمين فقط؛ البوتات لا ترسم.</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin:5px 0 12px;">3 لاعبين بشريين على الأقل. لا يوجد حد أقصى. البوتات غير متاحة في Draw & Guess.</div>
                     <div id="drawLobbyModes" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0 14px;">
                         <button type="button" class="stamp-btn ghost draw-lobby-mode" data-draw-mode="prompt">📝 تحدي الكلمات<br><small>ارسم كلمة سرية</small></button>
                         <button type="button" class="stamp-btn ghost draw-lobby-mode" data-draw-mode="free">🎨 رسم حر<br><small>ارسم أي شيء</small></button>
@@ -2142,6 +2172,68 @@
             </div>
         </div>
 
+
+        <!-- DRAW & GUESS LOBBY — completely separate from Codenames -->
+        <div id="drawLobbyScreen" class="hidden">
+            <div class="draw-lobby-wrap">
+                <div class="draw-lobby-head">
+                    <div>
+                        <div class="draw-title">🎨 Draw & Guess</div>
+                        <div class="draw-subtitle">وضع الرسم المستقل — لا توجد فرق، لا قاتل، لا كلمات Codenames.</div>
+                    </div>
+                    <div class="draw-top-actions">
+                        <span class="draw-room-badge">🔑 <b id="drawLobbyRoomCode">-----</b></span>
+                        <button type="button" class="stamp-btn ghost" id="drawLobbyBackBtn">↩ مغادرة</button>
+                    </div>
+                </div>
+
+                <section class="draw-lobby-card">
+                    <div class="draw-lobby-rule">
+                        👥 <strong>3 لاعبين بشريين على الأقل</strong> لبدء اللعبة — لا يوجد حد أقصى.
+                        <br>🤖 البوتات غير مسموحة في Draw & Guess.
+                        <br>👑 <strong>قائد الغرفة فقط</strong> يستطيع اختيار الوضع وبدء اللعبة.
+                    </div>
+
+                    <div class="draw-lobby-section-title">1️⃣ ادخل باسمك</div>
+                    <div class="draw-join-row">
+                        <input id="drawLobbyName" type="text" maxlength="18" placeholder="✏️ اسم اللاعب">
+                        <button type="button" class="stamp-btn" id="drawLobbyJoinBtn">➕ انضم</button>
+                    </div>
+                    <div id="drawLobbyJoinStatus" class="setup-err"></div>
+
+                    <div class="draw-lobby-section-title">2️⃣ اختر وضع الرسم</div>
+                    <div class="draw-lobby-modes">
+                        <button type="button" class="draw-lobby-mode-new" data-draw-mode="prompt">
+                            <span>📝</span><strong>تحدي الكلمات</strong><small>ارسم كلمة سرية لا يراها الآخرون</small>
+                        </button>
+                        <button type="button" class="draw-lobby-mode-new" data-draw-mode="free">
+                            <span>🎨</span><strong>رسم حر</strong><small>ارسم أي شيء تريده</small>
+                        </button>
+                        <button type="button" class="draw-lobby-mode-new" data-draw-mode="speed">
+                            <span>⚡</span><strong>سباق الوقت</strong><small>30 ثانية لكل رسام</small>
+                        </button>
+                    </div>
+                    <div id="drawLobbySelectedMode" class="draw-lobby-selected">الوضع الحالي: تحدي الكلمات</div>
+
+                    <div class="draw-lobby-section-title">3️⃣ اللاعبون</div>
+                    <div id="drawLobbyPlayers" class="draw-lobby-players"></div>
+                    <div id="drawLobbyCount" class="draw-lobby-count">0 لاعبين بشريين</div>
+
+                    <div class="draw-lobby-start-area">
+                        <button type="button" class="stamp-btn draw-start-big" id="drawLobbyStartBtn">
+                            🎨 ابدأ Draw & Guess
+                        </button>
+                        <div id="drawLobbyStartHint" class="draw-lobby-hint">👑 قائد الغرفة فقط يستطيع بدء اللعبة.</div>
+                    </div>
+
+                    <div class="discord-footer draw-discord-inline">
+                        <div class="discord-footer-title">💬 اقتراح أو مشكلة؟ تواصل معنا على Discord</div>
+                        <a class="discord-footer-link" href="https://discord.gg/4JFMPzM8Y" target="_blank" rel="noopener noreferrer">💜 انضم إلى Discord</a>
+                    </div>
+                </section>
+            </div>
+        </div>
+
         <!-- DRAW & GUESS SCREEN -->
         <div id="drawScreen" class="hidden">
             <div class="draw-topbar">
@@ -2150,6 +2242,7 @@
                     <div class="draw-subtitle" id="drawRoundLabel">الجولة 1</div>
                 </div>
                 <div class="draw-top-actions">
+                    <span class="draw-timer-badge" id="drawTimerBadge">⏱ بدون حد</span>
                     <span class="draw-room-badge">🔑 <b id="drawRoomCode">-----</b></span>
                     <button type="button" class="stamp-btn ghost" id="drawBackBtn">↩ العودة للغرفة</button>
                 </div>
@@ -2433,7 +2526,18 @@ function normalizeRoom(room, code) {
     if (room.gameMode !== 'draw' && room.gameMode !== 'codenames') {
         room.gameMode = room.draw ? 'draw' : 'codenames';
     }
-    room.maxPlayers = room.gameMode === 'draw' ? null : 4;
+    // Draw & Guess is completely separate from Codenames:
+    // - no bots
+    // - no maximum player count
+    // - minimum 3 HUMAN players is enforced only when starting
+    if (room.gameMode === 'draw') {
+        room.maxPlayers = null;
+        room.bots = [];
+        room.teams.red = room.teams.red.filter(function(p){ return p && !p.bot; });
+        room.teams.blue = room.teams.blue.filter(function(p){ return p && !p.bot; });
+    } else {
+        room.maxPlayers = 4;
+    }
 
     if (room.settings.assassinCount == null) {
         room.settings.assassinCount = 1;
@@ -4668,7 +4772,7 @@ function setConnDot(ok) {
                 matchmaking: false,
                 leader: null,
                 gameMode: selectedGameMode,
-                maxPlayers: selectedGameMode === 'draw' ? 3 : 4,
+                maxPlayers: selectedGameMode === 'draw' ? null : 4,
                 draw: selectedGameMode === 'draw'
                     ? { phase: 'idle', round: 1, rounds: 1, artists: [], artistIndex: 0, prompt: '', submissions: [], guesses: [], gallery: [], startedAt: 0, mode:'prompt', timeLimit:0 }
                     : null,
@@ -4876,10 +4980,15 @@ function setConnDot(ok) {
                 var el = document.getElementById(id);
                 if (el) el.disabled = !leaderNow;
             });
-            ['addRedBotBtn', 'addBlueBotBtn', 'removeBotsBtn', 'oDrawStart'].forEach(function(id) {
+            ['addRedBotBtn', 'addBlueBotBtn', 'removeBotsBtn'].forEach(function(id) {
                 var el = document.getElementById(id);
-                if (el) el.disabled = !leaderNow || room.phase !== 'lobby';
+                if (el) {
+                    el.disabled = room.gameMode === 'draw' || !leaderNow || room.phase !== 'lobby';
+                    el.style.display = room.gameMode === 'draw' ? 'none' : '';
+                }
             });
+            var legacyDrawStart = document.getElementById('oDrawStart');
+            if (legacyDrawStart) legacyDrawStart.disabled = true;
             var drawHint = document.getElementById('drawLeaderHint');
             if (drawHint) drawHint.textContent = leaderNow ? '👑 أنت قائد الغرفة — يمكنك بدء وضع الرسم الآن' : '👑 قائد الغرفة فقط يستطيع بدء الوضع';
 
@@ -5377,6 +5486,10 @@ function setConnDot(ok) {
             room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); if(typeof window.renderDraw==='function')window.renderDraw(room); return;
         }
         if(e.type==='startDraw'){
+            // Draw & Guess is human-only. Strip any legacy bots before starting.
+            room.teams.red=(room.teams.red||[]).filter(p=>p&&!p.bot);
+            room.teams.blue=(room.teams.blue||[]).filter(p=>p&&!p.bot);
+            room.bots=[];
             const total=(room.teams?.red||[]).length+(room.teams?.blue||[]).length;
             if(room.gameMode!=='draw' || room.leader!==actor || total<3)return;
             const humans=drawHumans(room); if(humans.length<3)return;
@@ -5563,6 +5676,266 @@ function setConnDot(ok) {
     // the same screen immediately after the host changes the authoritative room.
     const originalShow=window.show;
     window.show=function(id){ originalShow(id); if(id==='drawScreen'){setTimeout(()=>renderDraw(localRoomCache||{}),20);} };
+})();
+</script>
+
+<script id="draw-final-fix-script">
+(function(){
+    'use strict';
+
+    const DRAW_LOBBY_ID='drawLobbyScreen';
+    const DRAW_MODES={prompt:'تحدي الكلمات',free:'رسم حر',speed:'سباق الوقت'};
+
+    function drawRoom(){
+        return (typeof localRoomCache!=='undefined' && localRoomCache && localRoomCache.gameMode==='draw') ? localRoomCache : null;
+    }
+    function drawHumansSafe(room){
+        const out=[];
+        ['red','blue'].forEach(t=>{
+            (room?.teams?.[t]||[]).forEach(p=>{
+                if(p && !p.bot && p.name && !out.some(x=>x.name===p.name)) out.push(p);
+            });
+        });
+        return out;
+    }
+    function myName(){
+        return (typeof me!=='undefined' && me && me.name) ? String(me.name).trim() : '';
+    }
+    function isLeader(room){ return !!room && !!myName() && room.leader===myName(); }
+
+    function setDrawLobbyError(text){
+        const e=document.getElementById('drawLobbyJoinStatus');
+        if(e)e.textContent=text||'';
+    }
+
+    function renderDrawLobby(room){
+        if(!room)return;
+        if(room.gameMode!=='draw')return;
+
+        // Hard safety: Draw & Guess never contains bots.
+        room.bots=[];
+        room.teams=room.teams||{red:[],blue:[]};
+        room.teams.red=(room.teams.red||[]).filter(p=>p&&!p.bot);
+        room.teams.blue=(room.teams.blue||[]).filter(p=>p&&!p.bot);
+
+        const humans=drawHumansSafe(room);
+        const leader=isLeader(room);
+        const mode=(room.draw&&room.draw.mode)||'prompt';
+
+        const code=document.getElementById('drawLobbyRoomCode');
+        if(code)code.textContent=room.code||roomCode||'-----';
+
+        const selected=document.getElementById('drawLobbySelectedMode');
+        if(selected)selected.textContent='الوضع الحالي: '+(DRAW_MODES[mode]||DRAW_MODES.prompt);
+
+        document.querySelectorAll('.draw-lobby-mode-new').forEach(btn=>{
+            const active=btn.dataset.drawMode===mode;
+            btn.classList.toggle('active',active);
+            btn.disabled=!leader || room.phase!=='lobby';
+        });
+
+        const list=document.getElementById('drawLobbyPlayers');
+        if(list){
+            list.innerHTML='';
+            if(!humans.length){
+                list.innerHTML='<div class="empty-hint">لم ينضم أي لاعب بعد.</div>';
+            }else{
+                humans.forEach(p=>{
+                    const row=document.createElement('div');
+                    row.className='draw-lobby-player'+(p.name===room.leader?' leader':'');
+                    row.innerHTML='<span>👤 '+escapeDraw(p.name)+'</span><span>'+(p.name===room.leader?'👑 قائد':'جاهز')+'</span>';
+                    list.appendChild(row);
+                });
+            }
+        }
+
+        const count=document.getElementById('drawLobbyCount');
+        if(count)count.textContent=humans.length+' لاعبين بشريين — لا يوجد حد أقصى';
+
+        const start=document.getElementById('drawLobbyStartBtn');
+        if(start){
+            const canStart=leader && room.phase==='lobby' && humans.length>=3;
+            start.disabled=!canStart;
+            start.textContent=humans.length<3
+                ? '🎨 يحتاج 3 لاعبين بشريين ('+humans.length+'/3)'
+                : '🎨 ابدأ Draw & Guess ('+humans.length+' لاعبين)';
+        }
+
+        const hint=document.getElementById('drawLobbyStartHint');
+        if(hint){
+            if(!leader) hint.textContent='👑 قائد الغرفة فقط يستطيع اختيار الوضع وبدء اللعبة.';
+            else if(humans.length<3) hint.textContent='⏳ أضف '+(3-humans.length)+' لاعب بشري آخر على الأقل.';
+            else hint.textContent='✅ جاهز! اختر الوضع ثم اضغط ابدأ.';
+        }
+
+        const nameInput=document.getElementById('drawLobbyName');
+        const joinBtn=document.getElementById('drawLobbyJoinBtn');
+        const already=humans.some(p=>p.name===myName());
+        if(nameInput && myName()){
+            nameInput.value=myName();
+            nameInput.disabled=true;
+        }
+        if(joinBtn)joinBtn.disabled=already || room.phase!=='lobby';
+    }
+
+    function escapeDraw(v){
+        return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    }
+
+    function showDrawLobby(room){
+        if(!room || room.gameMode!=='draw' || room.phase!=='lobby')return;
+        if(typeof show==='function')show(DRAW_LOBBY_ID);
+        renderDrawLobby(room);
+    }
+
+    function showDrawGame(room){
+        if(!room || room.gameMode!=='draw')return;
+        if(room.phase==='drawing' || room.phase==='drawing-finished'){
+            if(typeof show==='function')show('drawScreen');
+            if(typeof window.renderDraw==='function')window.renderDraw(room);
+        }else if(room.phase==='lobby'){
+            showDrawLobby(room);
+        }
+    }
+
+    // Join a Draw room without teams/bots.
+    function joinDrawLobby(){
+        const room=drawRoom();
+        if(!room || room.phase!=='lobby'){setDrawLobbyError('❌ الغرفة ليست جاهزة للانضمام.');return;}
+        const input=document.getElementById('drawLobbyName');
+        const name=(input?.value||'').trim().slice(0,18);
+        if(!name){setDrawLobbyError('✏️ اكتب اسمك أولاً.');return;}
+
+        const humans=drawHumansSafe(room);
+        if(humans.some(p=>p.name===name)){setDrawLobbyError('⚠️ هذا الاسم مستخدم بالفعل.');return;}
+
+        // Assign an invisible storage team only for the existing transport.
+        const team=(room.teams.red||[]).length <= (room.teams.blue||[]).length ? 'red' : 'blue';
+
+        if(typeof isHost!=='undefined' && isHost){
+            room.teams[team].push({name:name,bot:false,spymaster:false});
+            if(!room.leader)room.leader=name;
+            room.bots=[];
+            localRoomCache=room;
+            if(typeof writeRoom==='function')writeRoom(roomCode,room);
+            if(typeof broadcastState==='function')broadcastState();
+            renderDrawLobby(room);
+            setDrawLobbyError('✅ تم انضمامك.');
+            return;
+        }
+
+        if(typeof guestConn!=='undefined' && guestConn && guestConn.open){
+            try{
+                guestConn.send({type:'join',name:name,team:team});
+                if(typeof me!=='undefined')me={name:name,team:team};
+                setDrawLobbyError('⏳ جاري الانضمام...');
+            }catch(err){
+                setDrawLobbyError('❌ تعذر إرسال طلب الانضمام.');
+            }
+        }else{
+            setDrawLobbyError('❌ الاتصال بالغرفة غير جاهز.');
+        }
+    }
+
+    function chooseDrawMode(mode){
+        const room=drawRoom();
+        if(!room || room.phase!=='lobby')return;
+        if(!isLeader(room)){setDrawLobbyError('👑 فقط قائد الغرفة يستطيع تغيير الوضع.');return;}
+        if(!['prompt','free','speed'].includes(mode))return;
+        if(typeof window.sendDrawEvent==='function'){
+            window.sendDrawEvent({type:'setDrawMode',actor:myName(),mode:mode});
+        }
+    }
+
+    function startDrawLobby(){
+        const room=drawRoom();
+        const humans=drawHumansSafe(room);
+        if(!room || room.phase!=='lobby')return;
+        if(!isLeader(room)){setDrawLobbyError('⚠️ فقط قائد الغرفة يستطيع بدء اللعبة.');return;}
+        if(humans.length<3){setDrawLobbyError('⚠️ تحتاج إلى 3 لاعبين بشريين على الأقل.');return;}
+        if(typeof window.sendDrawEvent==='function'){
+            window.sendDrawEvent({type:'startDraw',actor:myName()});
+        }
+    }
+
+    function leaveDrawLobby(){
+        if(typeof leaveRoom==='function')leaveRoom();
+        else if(typeof show==='function')show('modeScreen');
+    }
+
+    function routeDrawScreen(){
+        const room=drawRoom();
+        if(!room)return;
+        if(room.phase==='lobby')showDrawLobby(room);
+        else if(room.phase==='drawing'||room.phase==='drawing-finished')showDrawGame(room);
+    }
+
+    // Explicit event handlers — no reliance on the old Codenames lobby handlers.
+    function bindDrawLobby(){
+        document.getElementById('drawLobbyJoinBtn')?.addEventListener('click',joinDrawLobby);
+        document.getElementById('drawLobbyStartBtn')?.addEventListener('click',startDrawLobby);
+        document.getElementById('drawLobbyBackBtn')?.addEventListener('click',leaveDrawLobby);
+        document.querySelectorAll('.draw-lobby-mode-new').forEach(btn=>{
+            btn.addEventListener('click',()=>chooseDrawMode(btn.dataset.drawMode));
+        });
+        document.getElementById('drawLobbyName')?.addEventListener('keydown',e=>{
+            if(e.key==='Enter')joinDrawLobby();
+        });
+    }
+
+    // Make the old draw-start button safe too, in case an old screen is briefly visible.
+    function patchLegacyDrawButton(){
+        const b=document.getElementById('oDrawStart');
+        if(b){
+            b.onclick=function(e){e.preventDefault();e.stopPropagation();startDrawLobby();};
+        }
+        document.querySelectorAll('.draw-lobby-mode').forEach(btn=>{
+            btn.onclick=function(e){e.preventDefault();e.stopPropagation();chooseDrawMode(btn.dataset.drawMode);};
+        });
+    }
+
+    // Watch authoritative room state. This fixes the old problem where the
+    // normal Codenames lobby kept winning the screen switch.
+    let lastKey='';
+    setInterval(()=>{
+        try{
+            const room=drawRoom();
+            if(!room)return;
+            const humans=drawHumansSafe(room).length;
+            const key=[room.code,room.phase,room.leader,(room.draw&&room.draw.mode)||'prompt',humans,(room.draw&&room.draw.artistIndex)||0].join('|');
+            if(key!==lastKey){
+                lastKey=key;
+                routeDrawScreen();
+                if(room.phase==='lobby')renderDrawLobby(room);
+            }
+        }catch(e){}
+    },250);
+
+    // Keep active Draw UI independent from Codenames controls and show a real timer.
+    let drawTimerInterval=null;
+    function updateDrawTimer(){
+        const badge=document.getElementById('drawTimerBadge');
+        const room=drawRoom();
+        if(!badge || !room)return;
+        const d=room.draw||{};
+        if(d.mode!=='speed' || d.phase!=='drawing'){
+            badge.textContent='⏱ بدون حد';
+            return;
+        }
+        const remain=Math.max(0,Math.ceil(((d.deadline||0)-Date.now())/1000));
+        badge.textContent='⏱ '+remain+' ثانية';
+    }
+    drawTimerInterval=setInterval(updateDrawTimer,250);
+
+    // When page first loads, attach immediately.
+    if(document.readyState==='loading'){
+        document.addEventListener('DOMContentLoaded',()=>{bindDrawLobby();patchLegacyDrawButton();});
+    }else{
+        bindDrawLobby();patchLegacyDrawButton();
+    }
+
+    // Rebind after the old page's own load handler has run.
+    window.addEventListener('load',()=>{bindDrawLobby();patchLegacyDrawButton();});
 })();
 </script>
 </body>

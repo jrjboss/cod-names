@@ -1757,11 +1757,6 @@
         .custom-word-count { color: var(--text-muted); font-size: 12px; margin-top: 6px; }
         .bot-chip { border-color: rgba(232,200,74,.35) !important; }
         .bot-badge { color: var(--gold); font-size: 11px; margin-right: 5px; }
-        .bot-controls { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:10px 0 14px; }
-        .bot-controls .stamp-btn { font-size:12px; padding:8px 14px; }
-        .bot-note { text-align:center; color:var(--text-muted); font-size:11px; margin:-4px 0 12px; }
-        .player-chip.bot-chip { background:rgba(232,200,74,.045); }
-        .community-contact.hidden-contact { display:none !important; }
         .matchmaking-card { text-align:center; }
         .matchmaking-spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(232,200,74,.25); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:-3px; margin-left:6px; }
         @keyframes spin { to { transform:rotate(360deg); } }
@@ -2056,12 +2051,6 @@
                     </div>
                     <button type="button" class="add-btn" id="oJoinBtn">➕ انضم للفريق</button>
                 </div>
-                <div class="bot-controls" id="botControls">
-                    <button type="button" class="stamp-btn ghost" id="addRedBotBtn">🤖 إضافة بوت أحمر</button>
-                    <button type="button" class="stamp-btn ghost" id="addBlueBotBtn">🤖 إضافة بوت أزرق</button>
-                    <button type="button" class="stamp-btn ghost" id="clearBotsBtn">🗑 إزالة البوتات</button>
-                </div>
-                <div class="bot-note" id="botLobbyNote">👑 قائد الغرفة فقط يستطيع إضافة/إزالة البوتات وبدء المباراة.</div>
                 <div class="teams-grid">
                     <div class="team-col red-col"><h3>🔴 الفريق الأحمر</h3><div id="oRedList"></div></div>
                     <div class="team-col blue-col"><h3>🔵 الفريق الأزرق</h3><div id="oBlueList"></div></div>
@@ -2293,9 +2282,6 @@ function normalizeRoom(room, code) {
     if (!Array.isArray(room.settings.customWords)) room.settings.customWords = [];
     if (!Array.isArray(room.customWords)) room.customWords = room.settings.customWords.slice();
     if (!Array.isArray(room.bots)) room.bots = [];
-    room.teams.red.forEach(function(p) { if (p && p.bot == null) p.bot = false; });
-    room.teams.blue.forEach(function(p) { if (p && p.bot == null) p.bot = false; });
-    room.bots = room.teams.red.concat(room.teams.blue).filter(function(p) { return p && p.bot; });
     if (room.matchmaking === undefined) room.matchmaking = false;
 
     if (room.settings.assassinCount == null) {
@@ -2961,15 +2947,11 @@ function setupConnectionHandlers(conn) {
                 }
 
                 const player = {
-                    id: 'human-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
                     name: name,
-                    team: team,
-                    bot: false,
                     spymaster:
                         localRoomCache.teams[team].length === 0
                 };
 
-                conn.playerName = name;
                 localRoomCache.teams[team].push(player);
 
                 if (!localRoomCache.leader) {
@@ -3033,18 +3015,10 @@ function setupConnectionHandlers(conn) {
                     roomCode
                 );
 
-                // The host is authoritative. A guest may synchronize game
-                // moves, but only the human room leader may change lobby
-                // settings or move the room from lobby -> playing.
-                var current = normalizeRoom(localRoomCache, roomCode);
-                var sender = conn.playerName || '';
-                var phaseChangedToPlaying = current.phase !== 'playing' && incoming.phase === 'playing';
-                var settingsChanged = JSON.stringify(current.settings || {}) !== JSON.stringify(incoming.settings || {});
-                if ((phaseChangedToPlaying || settingsChanged) && sender !== current.leader) {
-                    if (conn.open) conn.send({ type: 'state', room: current });
-                    return;
-                }
-
+                // Keep the host authoritative. The game already
+                // uses setRoom for game/settings synchronization,
+                // so accept those updates and immediately rebroadcast
+                // the normalized state to every connected player.
                 localRoomCache = incoming;
 
                 broadcastState();
@@ -3269,7 +3243,6 @@ function setConnDot(ok) {
                 var el = document.getElementById(id);
                 if (el) el.classList.toggle('hidden', id !== screenId);
             });
-            syncCommunityContactVisibility();
         }
 
         document.getElementById('homePlayBtn').addEventListener('click', function() { showHomeScreen('modeScreen'); });
@@ -3378,26 +3351,10 @@ function setConnDot(ok) {
         // ==========================================
         // UTILITY FUNCTIONS
         // ==========================================
-        function syncCommunityContactVisibility() {
-            var el = document.getElementById('communityContact');
-            if (!el) return;
-            var activeRoom = document.getElementById('lobbyScreen') && !document.getElementById('lobbyScreen').classList.contains('hidden');
-            var activeGame = document.getElementById('gameScreen') && !document.getElementById('gameScreen').classList.contains('hidden');
-            el.classList.toggle('hidden-contact', !!(activeRoom || activeGame));
-        }
-
-        function safeText(id, value) {
-            var el = document.getElementById(id);
-            if (el) el.textContent = value == null ? '' : String(value);
-            return el;
-        }
-
         function show(id) {
-            ['modeScreen', 'localSetupScreen', 'onlineEntryScreen', 'lobbyScreen', 'gameScreen'].forEach(function(screenId) {
-                var el = document.getElementById(screenId);
-                if (el) el.classList.toggle('hidden', screenId !== id);
+            ['modeScreen', 'localSetupScreen', 'onlineEntryScreen', 'lobbyScreen', 'gameScreen'].forEach(function(s) {
+                document.getElementById(s).classList.toggle('hidden', s !== id);
             });
-            syncCommunityContactVisibility();
         }
 
         function shuffle(arr) {
@@ -3751,7 +3708,7 @@ function setConnDot(ok) {
                 var wrap = document.createElement('div');
                 wrap.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;';
                 wrap.innerHTML =
-                    '<span style="font-size:13px;color:var(--text-secondary);">💡 ' + (state.clue.fromBot ? '🤖 تلميح البوت:' : 'التلميح:') + '</span><span class="clue-word">' +
+                    '<span style="font-size:13px;color:var(--text-secondary);">💡 التلميح:</span><span class="clue-word">' +
                     state.clue.word + '</span><span class="clue-num">' + (state.clue.number === '∞' ? '∞' : state.clue
                         .number) + '</span><span class="guesses">🎯 متبقية: ' + state.clue.guessesLeft + '</span>';
 
@@ -3843,6 +3800,9 @@ function setConnDot(ok) {
                 if (state.timer > 0 && !state.gameOver) {
                     startTimer(state.timer);
                 }
+                // Important: local room listeners are not guaranteed to fire after every
+                // host update, so explicitly wake the bot controller for the new turn.
+                setTimeout(runAIMoveIfNeeded, 150);
             } else {
                 if (state.timer > 0 && !state.gameOver) {
                     startTimer(state.timer);
@@ -3951,89 +3911,173 @@ function setConnDot(ok) {
 
         // ==========================================
         // AI PLAYERS — HOST CONTROLLED
-        // Bots are controlled by the room host so every player sees the
-        // exact same clue/card decisions.
-        var BOT_CLUES = {
-            animals: ['طبيعة','وحش','حيوان','برية'],
-            sports: ['ملعب','بطولة','منافسة','رياضة'],
-            food: ['مطبخ','وجبة','طعم','أكل'],
-            games: ['لعبة','بطل','مغامرة','مرح'],
-            anime: ['شخصية','قتال','يابان','مانغا'],
-            films: ['سينما','فيلم','ممثل','مشهد'],
-            movies: ['سينما','فيلم','بطل','مشهد'],
-            series: ['مسلسل','حلقة','شخصية','دراما'],
-            superheroes: ['بطل','قوة','مدينة','شرير'],
-            technology: ['تقنية','جهاز','رقمي','شبكة'],
-            countries: ['بلد','سفر','مدينة','عاصمة'],
-            music: ['موسيقى','أغنية','صوت','فرقة'],
-            school: ['دراسة','مدرسة','علم','كتاب'],
-            all: ['فكرة','شيء','موضوع','عالم']
-        };
-
+        // ==========================================
+        // Bots are simulated by the room leader so every human sees the same move.
         function getBotForTurn(room) {
-            if (!room || !Array.isArray(room.bots)) return null;
-            var bots = room.bots.filter(function(b) { return b && b.bot && b.team === state.turn; });
+            if (!room) return null;
+
+            var bots = Array.isArray(room.bots) ? room.bots.filter(function(b) {
+                return b && b.bot && b.team === state.turn;
+            }) : [];
+
+            // Fallback: derive bots directly from the team rosters.
+            if (!bots.length) {
+                var roster = room.teams && Array.isArray(room.teams[state.turn])
+                    ? room.teams[state.turn]
+                    : [];
+                bots = roster.filter(function(p) {
+                    return p && p.bot && p.team === state.turn;
+                });
+            }
+
             return bots.length ? bots[0] : null;
         }
 
-        function botSafeClue(room, targets) {
-            var pool = (BOT_CLUES[(room && room.settings && room.settings.category) || state.category] || BOT_CLUES.all).slice();
-            var used = (state.cards || []).map(function(c) { return String(c.word || '').trim().toLowerCase(); });
-            var targetWords = targets.map(function(c) { return String(c.word || '').trim().toLowerCase(); });
-            var candidate = pool.find(function(w) {
-                var x = w.toLowerCase();
-                return used.indexOf(x) === -1 && targetWords.indexOf(x) === -1;
-            });
-            if (candidate) return candidate;
-            var fallback = ['هدف','سر','اتصال','فكرة','إشارة','مهمة','خطة'];
-            return fallback.find(function(w) { return used.indexOf(w.toLowerCase()) === -1; }) || 'فكرة';
+        function getBotRosterForTeam(room, team) {
+            if (!room || !room.teams || !Array.isArray(room.teams[team])) return [];
+            return room.teams[team].filter(function(p) { return p && p.bot; });
         }
 
-        function aiScoreWord(word, clue, cardTeam) {
-            var a = String(word || '').toLowerCase().replace(/[^\u0600-\u06ffa-z0-9]/g, '');
-            var b = String(clue || '').toLowerCase().replace(/[^\u0600-\u06ffa-z0-9]/g, '');
+        function safeSetText(id, value) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = value;
+            return el;
+        }
+
+        function safeSetHtml(id, value) {
+            var el = document.getElementById(id);
+            if (el) el.innerHTML = value;
+            return el;
+        }
+
+        function aiScoreWord(word, clue) {
+            var a = String(word || '').toLowerCase();
+            var b = String(clue || '').toLowerCase();
             if (!a || !b) return 0;
+
+            var normalize = function(v) {
+                return v.replace(/[^\u0600-\u06ffa-z0-9]/gi, '');
+            };
+            a = normalize(a);
+            b = normalize(b);
+            if (!a || !b) return 0;
+
             var score = 0;
-            if (a === b) score += 100;
-            if (a.indexOf(b) !== -1 || b.indexOf(a) !== -1) score += 18;
-            for (var i = 0; i < b.length; i++) if (a.indexOf(b[i]) !== -1) score += 1.5;
-            if (cardTeam === state.turn) score += 8;
-            if (cardTeam === 'assassin') score -= 45;
-            if (cardTeam !== state.turn && cardTeam !== 'neutral') score -= 3;
+            if (a === b) score -= 1000; // never intentionally choose the exact clue word
+            if (a.indexOf(b) !== -1 || b.indexOf(a) !== -1) score += 15;
+
+            var unique = Array.from(new Set(b.split('')));
+            unique.forEach(function(ch) {
+                if (a.indexOf(ch) !== -1) score += 2;
+            });
+
+            // Prefer cards whose team matches the current turn.
+            var card = (state.cards || []).find(function(c) { return c && normalize(c.word) === a; });
+            if (card && card.team === state.turn) score += 10;
+            if (card && card.team === 'assassin') score -= 30;
+            if (card && card.team && card.team !== state.turn && card.team !== 'assassin') score -= 4;
+
             return score + Math.random();
+        }
+
+        function makeBotClue(targets) {
+            if (!targets.length) return null;
+
+            var target = targets[0];
+            var word = String(target.word || '').trim();
+            var letters = word.replace(/[^\u0600-\u06ffa-zA-Z]/g, '').split('');
+            var first = letters[0] || '';
+
+            // A clue must not literally be one of the board words.
+            // Use a small semantic-style fallback dictionary before using a neutral clue.
+            var clues = [
+                'فكرة', 'مفهوم', 'شيء', 'موضوع', 'مكان', 'طبيعة', 'حركة', 'حياة',
+                'عمل', 'شخص', 'أداة', 'رحلة', 'عالم', 'هدف', 'اتجاه', 'مجموعة'
+            ];
+
+            // Give a little variety based on the first character without exposing the target.
+            if (first) {
+                var buckets = {
+                    'a': 'بداية', 'b': 'حركة', 'c': 'فكرة', 'd': 'مكان', 'e': 'عالم',
+                    'f': 'عمل', 'g': 'طبيعة', 'h': 'حياة', 'i': 'شيء', 'j': 'رحلة',
+                    'k': 'اتجاه', 'l': 'مكان', 'm': 'مجموعة', 'n': 'مفهوم', 'o': 'موضوع',
+                    'p': 'شخص', 'q': 'فكرة', 'r': 'حركة', 's': 'شيء', 't': 'عمل',
+                    'u': 'عالم', 'v': 'مكان', 'w': 'رحلة', 'x': 'فكرة', 'y': 'حياة', 'z': 'طبيعة'
+                };
+                var mapped = buckets[first.toLowerCase()];
+                if (mapped) clues.unshift(mapped);
+            }
+
+            for (var i = 0; i < clues.length; i++) {
+                var candidate = clues[i];
+                var used = (state.cards || []).some(function(c) {
+                    return !c.revealed && String(c.word || '').trim().toLowerCase() === candidate.toLowerCase();
+                });
+                if (!used) return candidate;
+            }
+            return 'فكرة';
         }
 
         function aiGiveClue() {
             var room = localRoomCache;
-            if (!isHost || !room || state.gameOver || state.clue) return false;
+            if (!room || !room.matchmaking || room.leader !== me.name || state.gameOver || state.clue) return false;
+
             var bot = getBotForTurn(room);
             if (!bot || !bot.spymaster) return false;
-            var targets = state.cards.filter(function(c) { return !c.revealed && c.team === state.turn; });
+
+            var targets = state.cards.filter(function(c) {
+                return c && !c.revealed && c.team === state.turn;
+            });
             if (!targets.length) return false;
-            targets = targets.slice().sort(function(a,b) { return String(b.word).length - String(a.word).length; });
+
+            targets.sort(function(a, b) {
+                return String(b.word || '').length - String(a.word || '').length;
+            });
+
+            var clue = makeBotClue(targets);
+            if (!clue) return false;
+
             var number = Math.min(2, targets.length);
-            var clue = botSafeClue(room, targets);
-            state.clue = { word: clue, number: number, guessesLeft: number + 1, fromBot: true, botName: bot.name };
+            state.clue = {
+                word: clue,
+                number: number,
+                guessesLeft: number + 1,
+                byBot: true,
+                botName: bot.name
+            };
             state.turnDeadline = state.timer > 0 ? Date.now() + state.timer * 1000 : null;
+
+            console.log('🤖 BOT SPYMASTER:', bot.name, '=>', clue, number);
             render();
             syncGameState();
+
+            if (state.timer > 0) startTimer(state.timer);
             return true;
         }
 
         function aiRevealCard(idx) {
             var room = localRoomCache;
-            if (!isHost || !room || state.gameOver || !state.clue) return false;
+            if (!room || !room.matchmaking || room.leader !== me.name || state.gameOver || !state.clue) return false;
+
             var card = state.cards[idx];
             if (!card || card.revealed) return false;
+
             card.revealed = true;
+
             if (card.team === 'assassin') {
                 stopTimer();
-                state.gameOver = true; state.winner = state.turn === 'red' ? 'blue' : 'red';
-                state.reason = '💀 البوت كشف بطاقة القاتل! ' + (state.winner === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق') + ' يفوز فوراً!';
+                state.gameOver = true;
+                state.winner = state.turn === 'red' ? 'blue' : 'red';
+                state.reason = '💀 الذكاء الاصطناعي كشف بطاقة القاتل! ' +
+                    (state.winner === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق') +
+                    ' يفوز فوراً!';
             } else if (card.team === state.turn) {
                 state.clue.guessesLeft -= 1;
+
                 if (remaining('red') === 0 || remaining('blue') === 0) {
-                    stopTimer(); state.gameOver = true; state.winner = remaining('red') === 0 ? 'red' : 'blue';
+                    stopTimer();
+                    state.gameOver = true;
+                    state.winner = remaining('red') === 0 ? 'red' : 'blue';
                     state.reason = '🏆 تم كشف جميع بطاقات الفريق!';
                 } else if (state.clue.guessesLeft <= 0) {
                     passTurn();
@@ -4043,31 +4087,68 @@ function setConnDot(ok) {
                 passTurn();
                 return true;
             }
-            render(); syncGameState();
+
+            render();
+            syncGameState();
+
             if (state.gameOver) showEndOverlay();
             else setTimeout(runAIMoveIfNeeded, 350);
             return true;
         }
 
         function runAIMoveIfNeeded() {
-            if (aiBusy || !isHost || mode !== 'online' || !localRoomCache || state.gameOver) return;
+            if (
+                aiBusy ||
+                mode !== 'online' ||
+                !localRoomCache ||
+                !localRoomCache.matchmaking ||
+                localRoomCache.leader !== me.name ||
+                state.gameOver
+            ) return;
+
             var bot = getBotForTurn(localRoomCache);
             if (!bot) return;
+
             aiBusy = true;
+            console.log('🤖 AI TURN:', state.turn, bot.name, bot.spymaster ? '(SPYMASTER)' : '(GUESSER)');
+
             if (!state.clue && bot.spymaster) {
-                setTimeout(function() { aiBusy = false; aiGiveClue(); }, 900);
+                setTimeout(function() {
+                    aiBusy = false;
+                    if (!state.gameOver && !state.clue) aiGiveClue();
+                }, 900);
                 return;
             }
-            if (state.clue) {
+
+            if (state.clue && !bot.spymaster) {
                 setTimeout(function() {
-                    var choices = state.cards.map(function(c,i) { return { c:c, i:i, score: aiScoreWord(c.word, state.clue.word, c.team) }; }).filter(function(x) { return !x.c.revealed; });
-                    choices.sort(function(a,b) { return b.score - a.score; });
+                    if (state.gameOver || !state.clue) {
+                        aiBusy = false;
+                        return;
+                    }
+
+                    var choices = state.cards
+                        .map(function(c, i) {
+                            return {
+                                c: c,
+                                i: i,
+                                score: aiScoreWord(c.word, state.clue.word)
+                            };
+                        })
+                        .filter(function(x) { return x.c && !x.c.revealed; });
+
+                    choices.sort(function(a, b) { return b.score - a.score; });
                     aiBusy = false;
-                    if (choices.length) aiRevealCard(choices[0].i);
+
+                    if (choices.length) {
+                        console.log('🤖 BOT GUESS:', bot.name, '=>', choices[0].c.word);
+                        aiRevealCard(choices[0].i);
+                    }
                 }, 1100);
-            } else {
-                aiBusy = false;
+                return;
             }
+
+            aiBusy = false;
         }
 
         // ==========================================
@@ -4258,17 +4339,27 @@ function setConnDot(ok) {
             if (!me.name) return Promise.reject(new Error('name missing'));
 
             var players = Array.isArray(match.players) ? match.players : [];
-            var red = players.filter(function(p) { return p.team === 'red'; }).map(function(p, i) { return { id: p.id || ('r-' + i + '-' + Date.now()), name: p.name, spymaster: false, bot: !!p.bot, team: 'red' }; });
-            var blue = players.filter(function(p) { return p.team === 'blue'; }).map(function(p, i) { return { id: p.id || ('b-' + i + '-' + Date.now()), name: p.name, spymaster: false, bot: !!p.bot, team: 'blue' }; });
+            var red = players.filter(function(p) { return p.team === 'red'; }).map(function(p) { return { name: p.name, spymaster: false, bot: !!p.bot }; });
+            var blue = players.filter(function(p) { return p.team === 'blue'; }).map(function(p) { return { name: p.name, spymaster: false, bot: !!p.bot }; });
             red.forEach(function(p, i) { if (i === 0) p.spymaster = true; });
             blue.forEach(function(p, i) { if (i === 0) p.spymaster = true; });
+
+            // Keep bot records in sync with their actual team/spymaster role.
+            players.forEach(function(p) {
+                if (!p.bot) return;
+                var roster = p.team === 'red' ? red : blue;
+                var rp = roster.find(function(x) { return x.name === p.name; });
+                p.spymaster = !!(rp && rp.spymaster);
+            });
 
             var room = {
                 code: roomCode, phase: 'lobby', teams: { red: red, blue: blue }, cards: [], turn: 'red', clue: null,
                 gameOver: false, winner: null, reason: '', assassinCount: 1, assassinRevealed: 0,
                 settings: { assassinCount: 1, difficulty: 'normal', timer: 60, category: 'all', customWords: CATEGORIES.custom.slice() },
                 customWords: CATEGORIES.custom.slice(),
-                bots: red.concat(blue).filter(function(p) { return !!p.bot; }),
+                bots: players.filter(function(p) { return !!p.bot; }).map(function(p) {
+                    return { id: p.id, name: p.name, team: p.team, bot: true, spymaster: false, difficulty: p.difficulty || 'normal' };
+                }),
                 matchmaking: true, leader: players[0] ? players[0].name : me.name
             };
             localRoomCache = room;
@@ -4282,9 +4373,9 @@ function setConnDot(ok) {
                     startListening();
                     writeRoom(roomCode, room);
                     renderLobbyFromRoom(room);
-                    matchmakingActive = false;
-                    matchmakingPlayerId = null;
-                    setMatchStatus('🎮 المباراة جاهزة. راجع الفرق والبوتات ثم اضغط «ابدأ المهمة».', false);
+                    setMatchStatus('');
+                    // Do NOT auto-start matchmaking. The human room leader must press Start.
+                    console.log('🎮 Matchmaking lobby ready — waiting for the human leader to start.');
                 });
             }
 
@@ -4298,9 +4389,6 @@ function setConnDot(ok) {
                         show('lobbyScreen');
                         startListening();
                         renderLobbyFromRoom(foundRoom);
-                        matchmakingActive = false;
-                        matchmakingPlayerId = null;
-                        setMatchStatus('🎮 المباراة جاهزة. القائد يراجع الغرفة ثم يبدأ المهمة.', false);
                         resolve();
                     }).catch(reject);
                 }, 1200);
@@ -4308,7 +4396,7 @@ function setConnDot(ok) {
         }
 
         function startMatchmakingGame(room) {
-            if (!room || room.phase !== 'lobby' || !me.name || room.leader !== me.name) return;
+            if (!room || !matchmakingActive || room.phase !== 'lobby' || room.leader !== me.name) return;
             var assassinCount = room.settings && room.settings.assassinCount || 1;
             var difficulty = room.settings && room.settings.difficulty || 'normal';
             var timer = room.settings && room.settings.timer || 60;
@@ -4604,12 +4692,10 @@ function setConnDot(ok) {
             }
 
             var startBtn = document.getElementById('oStart');
-            var botControls = document.getElementById('botControls');
             var redCount = (room.teams.red || []).length;
             var blueCount = (room.teams.blue || []).length;
             var total = redCount + blueCount;
-            var isLeader = room.leader === me.name && !!me.name;
-            if (botControls) botControls.style.display = isLeader && room.phase === 'lobby' ? 'flex' : 'none';
+            var isLeader = room.leader === me.name;
 
             if (total >= 4 && redCount >= 2 && blueCount >= 2 && isLeader) {
                 startBtn.disabled = false;
@@ -4619,7 +4705,7 @@ function setConnDot(ok) {
                 startBtn.textContent = '⚔️ يحتاج 4 لاعبين (' + total + '/4)';
             } else if (redCount < 2 || blueCount < 2) {
                 startBtn.disabled = true;
-                startBtn.textContent = '⚔️ كل فريق يحتاج لاعبين';
+                startBtn.textContent = '⚔️ كل فريق يحتاج 2 لاعبين';
             } else if (!isLeader) {
                 startBtn.disabled = true;
                 startBtn.textContent = '⚔️ انتظر قائد الغرفة';
@@ -4628,10 +4714,11 @@ function setConnDot(ok) {
 
         function onlineChip(p, team, room) {
             var el = document.createElement('div');
-            el.className = 'player-chip' + (p.bot ? ' bot-chip' : '');
+            el.className = 'player-chip';
             var nameWrap = document.createElement('div');
             nameWrap.className = 'pname';
-            var isMe = !p.bot && me.name === p.name && me.team === team;
+
+            var isMe = me.name === p.name && me.team === team;
             var isLeader = room && room.leader === p.name;
 
             if (isLeader) {
@@ -4644,27 +4731,20 @@ function setConnDot(ok) {
             var star = document.createElement('button');
             star.className = 'star-btn' + (p.spymaster ? ' on' : '');
             star.textContent = p.spymaster ? '★' : '☆';
-            star.title = p.bot ? 'رئيس جواسيس بوت' : 'رئيس الجواسيس';
-            star.disabled = !isMe || p.bot;
-            if (!isMe || p.bot) star.style.opacity = '0.35';
+            star.title = 'رئيس الجواسيس';
+            star.disabled = !isMe;
+            if (!isMe) star.style.opacity = '0.35';
             star.addEventListener('click', function() {
-                if (!isMe || p.bot || room.phase === 'playing') return;
+                if (!isMe || room.phase === 'playing') return;
                 var roomData = localRoomCache;
                 if (!roomData) return;
                 (roomData.teams[team] || []).forEach(function(pl) { pl.spymaster = (pl.name === p.name); });
-                roomData.bots = roomData.teams.red.concat(roomData.teams.blue).filter(function(pl) { return pl.bot; });
                 writeRoom(roomCode, roomData);
                 renderLobbyFromRoom(roomData);
             });
 
             var name = document.createElement('span');
             name.textContent = p.name + (isMe ? ' (أنت)' : '');
-            if (p.bot) {
-                var badge = document.createElement('span');
-                badge.className = 'bot-badge';
-                badge.textContent = ' 🤖' + (p.spymaster ? ' رئيس جواسيس' : ' بوت');
-                name.appendChild(badge);
-            }
             nameWrap.appendChild(star);
             nameWrap.appendChild(name);
             el.appendChild(nameWrap);
@@ -4673,63 +4753,27 @@ function setConnDot(ok) {
                 var kickBtn = document.createElement('button');
                 kickBtn.className = 'kick-btn';
                 kickBtn.textContent = '🚫';
-                kickBtn.title = p.bot ? 'إزالة البوت' : 'طرد اللاعب';
+                kickBtn.title = 'طرد اللاعب';
                 kickBtn.addEventListener('click', function() {
-                    if (!confirm(p.bot ? 'هل تريد إزالة ' + p.name + '؟' : 'هل تريد طرد ' + p.name + '؟')) return;
-                    var roomData = localRoomCache;
-                    if (!roomData) return;
-                    roomData.teams[team] = (roomData.teams[team] || []).filter(function(pl) { return pl.name !== p.name; });
-                    roomData.bots = roomData.teams.red.concat(roomData.teams.blue).filter(function(pl) { return pl.bot; });
-                    if (!roomData.teams[team].some(function(pl) { return pl.spymaster; }) && roomData.teams[team].length) {
-                        roomData.teams[team][0].spymaster = true;
+                    if (confirm('هل تريد طرد ' + p.name + '؟')) {
+                        var roomData = localRoomCache;
+                        if (!roomData) return;
+                        roomData.teams[team] = roomData.teams[team].filter(function(pl) { return pl.name !== p
+                                .name; });
+                        if (!roomData.teams[team].some(function(pl) { return pl.spymaster; }) && roomData
+                            .teams[team].length) {
+                            roomData.teams[team][0].spymaster = true;
+                        }
+                        writeRoom(roomCode, roomData);
+                        renderLobbyFromRoom(roomData);
+                        updatePlayerCount(roomData);
                     }
-                    writeRoom(roomCode, roomData);
-                    renderLobbyFromRoom(roomData);
                 });
                 el.appendChild(kickBtn);
             }
+
             return el;
         }
-
-        function addLobbyBot(team) {
-            var room = normalizeRoom(localRoomCache, roomCode);
-            if (!room || room.phase !== 'lobby' || room.leader !== me.name) return;
-            var total = (room.teams.red || []).length + (room.teams.blue || []).length;
-            if (total >= 8) {
-                var err = document.getElementById('oErr');
-                if (err) err.textContent = '⚠️ الحد الأقصى 8 لاعبين في الغرفة.';
-                return;
-            }
-            var existing = room.teams.red.concat(room.teams.blue).filter(function(p) { return p.bot; }).length;
-            var bot = {
-                id: 'bot-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
-                name: 'Bot ' + (existing + 1),
-                team: team,
-                bot: true,
-                spymaster: (room.teams[team] || []).length === 0,
-                difficulty: (room.settings && room.settings.difficulty) || 'normal'
-            };
-            room.teams[team].push(bot);
-            room.bots = room.teams.red.concat(room.teams.blue).filter(function(p) { return p.bot; });
-            writeRoom(roomCode, room);
-            renderLobbyFromRoom(room);
-        }
-
-        function clearLobbyBots() {
-            var room = normalizeRoom(localRoomCache, roomCode);
-            if (!room || room.phase !== 'lobby' || room.leader !== me.name) return;
-            room.teams.red = room.teams.red.filter(function(p) { return !p.bot; });
-            room.teams.blue = room.teams.blue.filter(function(p) { return !p.bot; });
-            room.teams.red.forEach(function(p, i) { if (i === 0 && !room.teams.red.some(function(x) { return x.spymaster; })) p.spymaster = true; });
-            room.teams.blue.forEach(function(p, i) { if (i === 0 && !room.teams.blue.some(function(x) { return x.spymaster; })) p.spymaster = true; });
-            room.bots = [];
-            writeRoom(roomCode, room);
-            renderLobbyFromRoom(room);
-        }
-
-        document.getElementById('addRedBotBtn').addEventListener('click', function() { addLobbyBot('red'); });
-        document.getElementById('addBlueBotBtn').addEventListener('click', function() { addLobbyBot('blue'); });
-        document.getElementById('clearBotsBtn').addEventListener('click', clearLobbyBots);
 
         function getPlayerCount(room) {
             room = normalizeRoom(room, roomCode);
@@ -4738,8 +4782,7 @@ function setConnDot(ok) {
 
         function updatePlayerCount(room) {
             var count = getPlayerCount(room);
-            var bots = (room.teams.red || []).concat(room.teams.blue || []).filter(function(p) { return p.bot; }).length;
-            safeText('playerCount', count + ' لاعب' + (bots ? ' (' + bots + ' بوت)' : ''));
+            document.getElementById('playerCount').textContent = count + ' لاعب متصل';
         }
 
         // ==========================================
@@ -4751,13 +4794,13 @@ function setConnDot(ok) {
             var room = localRoomCache;
             if (!room) { err.textContent = '❌ تعذّر الوصول إلى الغرفة.'; return; }
 
-            if (!me.name || room.leader !== me.name || (room.teams.red || []).concat(room.teams.blue || []).some(function(p) { return !p.bot && p.name === me.name; }) === false) {
-                err.textContent = '⚠️ فقط قائد الغرفة البشري يمكنه بدء المهمة.';
+            if (room.leader !== me.name) {
+                err.textContent = '⚠️ فقط قائد الغرفة يمكنه بدء المهمة.';
                 return;
             }
 
             if (!room.teams.red || room.teams.red.length < 2 || !room.teams.blue || room.teams.blue.length < 2) {
-                err.textContent = '⚠️ كل فريق يحتاج لاعبين اثنين على الأقل؛ يمكن أن يكون أحدهما بوتاً.';
+                err.textContent = '⚠️ كل فريق يحتاج 2 لاعبين على الأقل (4 لاعبين إجمالاً).';
                 return;
             }
 
@@ -4796,50 +4839,60 @@ function setConnDot(ok) {
         // ONLINE - ENTER GAME
         // ==========================================
         function enterOnlineGame(room) {
-            room = normalizeRoom(room || {}, roomCode);
-            localRoomCache = room;
             teams = room.teams || { red: [], blue: [] };
             state = {
-                cards: Array.isArray(room.cards) ? room.cards : [],
+                cards: room.cards || [],
                 turn: room.turn || 'red',
                 clue: room.clue || null,
-                gameOver: !!room.gameOver,
+                gameOver: room.gameOver || false,
                 winner: room.winner || null,
                 reason: room.reason || '',
                 assassinCount: room.assassinCount || 1,
                 assassinRevealed: room.assassinRevealed || 0,
-                timer: Number(room.timer || 0),
-                category: room.category || (room.settings && room.settings.category) || 'all',
+                timer: room.timer || 0,
+                category: room.category || 'all',
                 turnDeadline: room.turnDeadline || null
             };
+
             gameSettings.assassinCount = state.assassinCount;
-            gameSettings.difficulty = (room.settings && room.settings.difficulty) || 'normal';
+            gameSettings.difficulty = room.settings && room.settings.difficulty || 'normal';
             gameSettings.timer = state.timer;
             gameSettings.category = state.category;
             gameSettings.customWords = (room.customWords || (room.settings && room.settings.customWords) || []).slice();
 
             spymasterMode = false;
+
             var spyToggle = document.getElementById('spyToggle');
-            var spyWrap = document.getElementById('spyToggleWrap');
             if (spyToggle) spyToggle.classList.remove('on');
+
+            var spyWrap = document.getElementById('spyToggleWrap');
             if (spyWrap) spyWrap.classList.toggle('hidden', !amISpymaster());
+
             var syncNote = document.getElementById('onlineSyncNote');
             if (syncNote) {
                 syncNote.classList.remove('hidden');
-                syncNote.innerHTML = '🌐 وضع أونلاين — رمز الغرفة: <b>' + String(roomCode || '') + '</b>';
+                syncNote.innerHTML = '🌐 وضع أونلاين — رمز الغرفة: <b>' + roomCode + '</b>';
             }
-            safeText('gameRoomCode', roomCode || '');
-            safeText('assassinCountDisplay', '☠ القاتلين: ' + state.assassinCount);
-            safeText('categoryDisplay', '📂 ' + getCategoryName(state.category));
+
+            safeSetText('gameRoomCode', roomCode);
+            safeSetText('assassinCountDisplay', '☠ القاتلين: ' + state.assassinCount);
+            safeSetText('categoryDisplay', '📂 ' + getCategoryName(state.category));
+
             show('gameScreen');
             renderRoster();
             render();
+
             if (state.gameOver) showEndOverlay();
-            else if (state.timer > 0) startTimer(state.timer);
-            runAIMoveIfNeeded();
+            if (state.timer > 0 && !state.gameOver) startTimer(state.timer);
+
+            // Run bot logic AFTER the game UI has been rendered.
+            setTimeout(function() {
+                runAIMoveIfNeeded();
+            }, 100);
         }
 
-        // ==========================================
+        
+// ==========================================
         // ONLINE - LISTENING
         // ==========================================
         function startListening() {
@@ -4977,7 +5030,6 @@ function setConnDot(ok) {
         renderLocalTeams();
         renderCustomWordCounts();
         show('modeScreen');
-        syncCommunityContactVisibility();
 
         console.log('🕵️ كود نيمز - النسخة النهائية مع PeerJS');
         console.log('✅ جميع الأزرار تعمل بشكل صحيح');
@@ -4987,15 +5039,5 @@ function setConnDot(ok) {
         console.log('✅ نظام قائد الغرفة');
         console.log('✅ طرد اللاعبين من قبل القائد');
     </script>
-
-    <!-- COMMUNITY / FEEDBACK -->
-    <div id="communityContact" class="community-contact" style="position:fixed;right:18px;bottom:18px;z-index:9999;max-width:340px;padding:14px 16px;border:1px solid rgba(255,255,255,.16);border-radius:18px;background:rgba(12,16,28,.92);backdrop-filter:blur(14px);box-shadow:0 14px 40px rgba(0,0,0,.28);font-family:inherit;color:#fff;display:flex;align-items:center;gap:12px;">
-        <div style="width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#5865F2,#7289da);font-size:20px;flex:0 0 auto;">💬</div>
-        <div style="min-width:0;flex:1;">
-            <div style="font-weight:800;font-size:14px;margin-bottom:3px;">Have a suggestion?</div>
-            <div style="font-size:12px;opacity:.72;line-height:1.35;">Contact us, report a problem, or suggest new words and categories.</div>
-        </div>
-        <a href="https://discord.gg/4JFMPzM8Y" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border-radius:11px;background:#5865F2;color:#fff;text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap;transition:transform .15s ease,filter .15s ease;" onmouseover="this.style.filter='brightness(1.12)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">Discord ↗</a>
-    </div>
 </body>
 </html>

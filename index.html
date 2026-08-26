@@ -2122,11 +2122,17 @@
                     <button type="button" class="stamp-btn ghost" id="removeBotsBtn">🗑️ إزالة البوتات</button>
                 </div>
                 <div class="setup-err" id="oErr"></div>
-                <div id="drawModePanel" style="margin:14px 0;padding:14px 16px;border:1px solid rgba(232,200,74,.18);border-radius:14px;background:linear-gradient(145deg,rgba(232,200,74,.08),rgba(255,255,255,.025));text-align:center;">
-                    <div style="font-size:18px;font-weight:1000;color:var(--gold);">🎨 Draw & Guess</div>
-                    <div style="font-size:12px;color:var(--text-secondary);margin:5px 0 10px;">2–3 لاعبين فقط. كل لاعب بشري يرسم مرة، والباقي يخمنون من رسمها. البوتات لا ترسم.</div>
-                    <button type="button" class="stamp-btn" id="oDrawStart">🎨 ابدأ وضع الرسم</button>
-                    <div id="drawLeaderHint" style="margin-top:7px;font-size:11px;color:var(--text-muted);">👑 قائد الغرفة فقط يستطيع بدء الوضع</div>
+                <div id="drawModePanel" style="margin:14px 0;padding:16px;border:1px solid rgba(232,200,74,.18);border-radius:14px;background:linear-gradient(145deg,rgba(232,200,74,.08),rgba(255,255,255,.025));text-align:center;">
+                    <div style="font-size:20px;font-weight:1000;color:var(--gold);">🎨 Draw & Guess — وضع مستقل</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin:5px 0 12px;">3 لاعبين بشريين على الأقل. لا يوجد حد أقصى. يمكن إضافة بوتات للمشاهدة والتخمين فقط؛ البوتات لا ترسم.</div>
+                    <div id="drawLobbyModes" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0 14px;">
+                        <button type="button" class="stamp-btn ghost draw-lobby-mode" data-draw-mode="prompt">📝 تحدي الكلمات<br><small>ارسم كلمة سرية</small></button>
+                        <button type="button" class="stamp-btn ghost draw-lobby-mode" data-draw-mode="free">🎨 رسم حر<br><small>ارسم أي شيء</small></button>
+                        <button type="button" class="stamp-btn ghost draw-lobby-mode" data-draw-mode="speed">⚡ سباق الوقت<br><small>30 ثانية</small></button>
+                    </div>
+                    <div id="drawLobbyModeText" style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">الوضع الحالي: تحدي الكلمات</div>
+                    <button type="button" class="stamp-btn" id="oDrawStart">🎨 ابدأ Draw & Guess</button>
+                    <div id="drawLeaderHint" style="margin-top:7px;font-size:11px;color:var(--text-muted);">👑 قائد الغرفة فقط يستطيع اختيار الوضع وبدء اللعبة</div>
                 </div>
                 <div class="setup-actions">
                     <button class="stamp-btn ghost" id="oBack">🚪 مغادرة</button>
@@ -2150,6 +2156,11 @@
             </div>
             <div class="draw-layout">
                 <section class="draw-main card-box">
+                    <div class="draw-mode-select" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+                        <button type="button" class="stamp-btn ghost draw-mode-choice" data-draw-mode="prompt">📝 تحدي الكلمات</button>
+                        <button type="button" class="stamp-btn ghost draw-mode-choice" data-draw-mode="free">🎨 رسم حر</button>
+                        <button type="button" class="stamp-btn ghost draw-mode-choice" data-draw-mode="speed">⚡ سباق الوقت</button>
+                    </div>
                     <div class="draw-prompt-box">
                         <div class="draw-label">📝 ارسم هذا</div>
                         <div id="drawPrompt" class="draw-prompt">انتظر...</div>
@@ -2162,6 +2173,7 @@
                         <button type="button" class="stamp-btn ghost" id="drawSkipBtn">⏭️ تخطي</button>
                         <button type="button" class="stamp-btn" id="drawSubmitBtn">✅ إرسال الرسم</button>
                     </div>
+                    <img id="drawSubmittedImage" class="draw-submitted-image hidden" alt="الرسم الحالي">
                     <div id="drawGuessArea" class="draw-guess-area hidden">
                         <div class="draw-label">🕵️ من رسم هذا؟</div>
                         <div id="drawGuessButtons" class="draw-guess-buttons"></div>
@@ -2421,7 +2433,7 @@ function normalizeRoom(room, code) {
     if (room.gameMode !== 'draw' && room.gameMode !== 'codenames') {
         room.gameMode = room.draw ? 'draw' : 'codenames';
     }
-    room.maxPlayers = room.gameMode === 'draw' ? 3 : 4;
+    room.maxPlayers = room.gameMode === 'draw' ? null : 4;
 
     if (room.settings.assassinCount == null) {
         room.settings.assassinCount = 1;
@@ -3087,8 +3099,8 @@ function setupConnectionHandlers(conn) {
                     return;
                 }
 
-                const roomMaxPlayers = localRoomCache.gameMode === 'draw' ? 3 : 4;
-                if (allPlayers.length >= roomMaxPlayers) {
+                const roomMaxPlayers = localRoomCache.gameMode === 'draw' ? null : 4;
+                if (roomMaxPlayers !== null && allPlayers.length >= roomMaxPlayers) {
                     if (conn.open) {
                         conn.send({
                             type: 'joinResult',
@@ -4575,11 +4587,7 @@ function setConnDot(ok) {
         }
 
         async function startQuickMatch() {
-            if (window.drawModeRequested) {
-                setMatchStatus('🎨 Draw & Guess يستخدم غرفة خاصة بحد أقصى 3 لاعبين. ارجع واختر أونلاين ثم أنشئ غرفة.', false);
-                return;
-            }
-            if (matchmakingActive) return;
+                        if (matchmakingActive) return;
             var input = document.getElementById('quickMatchName');
             var name = input ? input.value.trim() : '';
             var status = document.getElementById('matchStatus');
@@ -4662,7 +4670,7 @@ function setConnDot(ok) {
                 gameMode: selectedGameMode,
                 maxPlayers: selectedGameMode === 'draw' ? 3 : 4,
                 draw: selectedGameMode === 'draw'
-                    ? { phase: 'idle', round: 1, rounds: 1, artists: [], artistIndex: 0, prompt: '', submissions: [], guesses: [], gallery: [], startedAt: 0 }
+                    ? { phase: 'idle', round: 1, rounds: 1, artists: [], artistIndex: 0, prompt: '', submissions: [], guesses: [], gallery: [], startedAt: 0, mode:'prompt', timeLimit:0 }
                     : null,
                 chat: []
             };
@@ -4707,8 +4715,8 @@ function setConnDot(ok) {
                 renderLobbyFromRoom(room);
                 if (room.gameMode === 'draw') {
                     show(room.phase === 'drawing' || room.phase === 'drawing-finished' ? 'drawScreen' : 'lobbyScreen');
-                    if (room.phase === 'drawing' || room.phase === 'drawing-finished') {
-                        if (typeof renderDraw === 'function') renderDraw(room);
+                    if (room.gameMode === 'draw' && (room.phase === 'drawing' || room.phase === 'drawing-finished')) {
+                        if (typeof window.renderDraw === 'function') window.renderDraw(room);
                     }
                     startListening();
                 } else if (room.phase === 'playing') {
@@ -4747,11 +4755,9 @@ function setConnDot(ok) {
             var allNames = (room.teams.red || []).concat(room.teams.blue || []).map(function(p) { return p.name; });
             if (allNames.includes(name)) { err.textContent = '⚠️ هذا الاسم مستخدم في الغرفة بالفعل.'; return; }
 
-            var roomMaxPlayers = room.gameMode === 'draw' ? 3 : 4;
-            if (allNames.length >= roomMaxPlayers) {
-                err.textContent = room.gameMode === 'draw'
-                    ? '⚠️ غرفة الرسم ممتلئة — الحد الأقصى 3 لاعبين.'
-                    : '⚠️ الغرفة ممتلئة.';
+            var roomMaxPlayers = room.gameMode === 'draw' ? null : 4;
+            if (roomMaxPlayers !== null && allNames.length >= roomMaxPlayers) {
+                err.textContent = '⚠️ الغرفة ممتلئة.';
                 return;
             }
 
@@ -4798,8 +4804,8 @@ function setConnDot(ok) {
             if (!room || room.phase !== 'lobby' || room.leader !== me.name) return;
             room = normalizeRoom(room, roomCode);
             var total = (room.teams.red || []).length + (room.teams.blue || []).length;
-            var maxPlayers = room.gameMode === 'draw' ? 3 : 4;
-            if (total >= maxPlayers) return;
+            var maxPlayers = room.gameMode === 'draw' ? null : 4;
+            if (maxPlayers !== null && total >= maxPlayers) return;
             var n = (room.teams.red || []).concat(room.teams.blue || []).filter(function(p) { return p.bot; }).length + 1;
             var bot = { name: 'Bot ' + n, team: team, bot: true, spymaster: !(room.teams[team] || []).some(function(p) { return p.spymaster; }), difficulty: room.settings.difficulty || 'normal' };
             room.teams[team].push(bot);
@@ -4837,6 +4843,11 @@ function setConnDot(ok) {
             roomCode = null;
             me = { name: '', team: 'red' };
             show('modeScreen');
+        }
+
+        function drawHumansForLobby(room){
+            var all=[]; ['red','blue'].forEach(function(t){(room.teams[t]||[]).forEach(function(p){if(p&&!p.bot&&!all.some(function(x){return x.name===p.name;}))all.push(p);});});
+            return all.length;
         }
 
         function renderLobbyFromRoom(room) {
@@ -4893,7 +4904,7 @@ function setConnDot(ok) {
             var total = redCount + blueCount;
             var isLeader = room.leader === me.name;
             var drawRoom = room.gameMode === 'draw';
-            var maxPlayers = drawRoom ? 3 : 4;
+            var humanCount = drawHumansForLobby(room);
 
             if (drawPanel) drawPanel.style.display = drawRoom ? '' : 'none';
             if (startBtn) startBtn.style.display = drawRoom ? 'none' : '';
@@ -4901,18 +4912,25 @@ function setConnDot(ok) {
             if (drawRoom) {
                 if (drawHint) {
                     drawHint.textContent = isLeader
-                        ? '👑 أنت قائد الغرفة — ابدأ عندما يصبح عدد اللاعبين 2 أو 3'
-                        : '👑 قائد الغرفة فقط يستطيع بدء Draw & Guess';
+                        ? '👑 قائد الغرفة: اختر وضع الرسم ثم ابدأ عند وجود 3 لاعبين بشريين على الأقل'
+                        : '👑 قائد الغرفة فقط يستطيع اختيار الوضع وبدء Draw & Guess';
                 }
+                document.querySelectorAll('.draw-lobby-mode').forEach(function(btn){
+                    btn.disabled = !isLeader || room.phase !== 'lobby';
+                    btn.classList.toggle('gold', (room.draw && room.draw.mode || 'prompt') === btn.dataset.drawMode);
+                });
+                var modeNames={prompt:'تحدي الكلمات',free:'رسم حر',speed:'سباق الوقت'};
+                var modeText=document.getElementById('drawLobbyModeText');
+                if(modeText) modeText.textContent='الوضع الحالي: '+(modeNames[(room.draw&&room.draw.mode)||'prompt']||'تحدي الكلمات');
                 var drawStartBtn = document.getElementById('oDrawStart');
                 if (drawStartBtn) {
-                    drawStartBtn.disabled = !isLeader || room.phase !== 'lobby' || total < 2 || total > 3;
-                    drawStartBtn.textContent = total < 2
-                        ? '🎨 ابدأ وضع الرسم (يحتاج لاعبين)'
-                        : '🎨 ابدأ Draw & Guess (' + total + '/3)';
+                    drawStartBtn.disabled = !isLeader || room.phase !== 'lobby' || humanCount < 3;
+                    drawStartBtn.textContent = humanCount < 3
+                        ? '🎨 يحتاج 3 لاعبين بشريين (' + humanCount + '/3)'
+                        : '🎨 ابدأ Draw & Guess (' + humanCount + ' بشري + ' + Math.max(0,total-humanCount) + ' بوت)';
                 }
                 var drawLimit = document.getElementById('playerCount');
-                if (drawLimit) drawLimit.textContent = total + ' / 3 لاعبين';
+                if (drawLimit) drawLimit.textContent = total + ' لاعب — ' + humanCount + ' بشري';
                 return;
             }
 
@@ -5063,6 +5081,7 @@ function setConnDot(ok) {
         // ONLINE - ENTER GAME
         // ==========================================
         function enterOnlineGame(room) {
+            if (room && room.gameMode === 'draw') { show('drawScreen'); if (typeof window.renderDraw==='function') window.renderDraw(room); return; }
             teams = room.teams || { red: [], blue: [] };
             state = {
                 cards: room.cards || [],
@@ -5130,7 +5149,7 @@ function setConnDot(ok) {
                 // lobby/game screen whenever the room is in a drawing phase.
                 if (room.phase === 'drawing' || room.phase === 'drawing-finished') {
                     show('drawScreen');
-                    if (typeof renderDraw === 'function') renderDraw(room);
+                    if (typeof window.renderDraw === 'function') window.renderDraw(room);
                     return;
                 }
 
@@ -5140,12 +5159,14 @@ function setConnDot(ok) {
                     if (room.gameMode === 'draw') {
                         if (room.phase === 'drawing' || room.phase === 'drawing-finished') {
                             show('drawScreen');
-                            if (typeof renderDraw === 'function') renderDraw(room);
+                            if (typeof window.renderDraw === 'function') window.renderDraw(room);
                         } else {
                             show('lobbyScreen');
                         }
-                    } else if (room.phase === 'playing') {
+                    } else if (room.phase === 'playing' && room.gameMode !== 'draw') {
                         enterOnlineGame(room);
+                    } else if (room.gameMode === 'draw') {
+                        show('lobbyScreen');
                     }
                 } else {
                     var gameScreen = document.getElementById('gameScreen');
@@ -5325,7 +5346,7 @@ function setConnDot(ok) {
         const all=[]; ['red','blue'].forEach(t => (room?.teams?.[t]||[]).forEach(p=>{if(p&&p.bot)all.push({...p,team:t})})); return all;
     }
     function ensureDraw(room){
-        if(!room.draw || typeof room.draw!=='object') room.draw={phase:'idle',round:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0,rounds:1};
+        if(!room.draw || typeof room.draw!=='object') room.draw={phase:'idle',round:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0,rounds:1,mode:'prompt',timeLimit:0};
         if(!Array.isArray(room.draw.artists)) room.draw.artists=[];
         if(!Array.isArray(room.draw.submissions)) room.draw.submissions=[];
         if(!Array.isArray(room.draw.guesses)) room.draw.guesses=[];
@@ -5348,12 +5369,19 @@ function setConnDot(ok) {
             room.chat.push({name:actor||'لاعب',text,at:Date.now()}); if(room.chat.length>80)room.chat=room.chat.slice(-80);
             localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); return;
         }
+        if(e.type==='setDrawMode'){
+            if(room.gameMode!=='draw' || room.leader!==actor || room.phase!=='lobby')return;
+            const allowed=['prompt','free','speed'];
+            const selected=allowed.includes(e.mode)?e.mode:'prompt';
+            d.mode=selected; d.timeLimit=selected==='speed'?30:0;
+            room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); if(typeof window.renderDraw==='function')window.renderDraw(room); return;
+        }
         if(e.type==='startDraw'){
             const total=(room.teams?.red||[]).length+(room.teams?.blue||[]).length;
-            if(room.gameMode!=='draw' || room.leader!==actor || total<2 || total>3)return;
-            const humans=drawHumans(room); if(humans.length<2)return;
-            d.phase='drawing'; d.round=1; d.rounds=humans.length; d.artists=humans.map(x=>x.name); d.artistIndex=0; d.prompt=pickPrompt(); d.submissions=[]; d.guesses=[]; d.gallery=[]; d.startedAt=Date.now();
-            room.phase='drawing'; room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); return;
+            if(room.gameMode!=='draw' || room.leader!==actor || total<3)return;
+            const humans=drawHumans(room); if(humans.length<3)return;
+            d.phase='drawing'; d.round=1; d.rounds=humans.length; d.artists=humans.map(x=>x.name); d.artistIndex=0; d.prompt=d.mode==='free'?'ارسم أي شيء تريده':pickPrompt(); d.submissions=[]; d.guesses=[]; d.gallery=[]; d.startedAt=Date.now(); d.timeLimit=d.mode==='speed'?30:0; d.deadline=d.timeLimit?Date.now()+d.timeLimit*1000:0;
+            room.phase='drawing'; room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); if(typeof window.renderDraw==='function') window.renderDraw(room); if(d.timeLimit){ setTimeout(()=>{ const latest=normalizeRoom(localRoomCache,roomCode); const ld=ensureDraw(latest); if(ld.phase==='drawing' && ld.deadline && Date.now()>=ld.deadline){ const a=ld.artists[ld.artistIndex]; ld.submissions.push({artist:a,image:'',prompt:ld.prompt,skipped:true,timeout:true,at:Date.now()}); ld.phase='reveal'; latest.draw=ld; localRoomCache=latest; broadcastState(); if(roomListenerCallback)roomListenerCallback(latest); } },d.timeLimit*1000+100); } return;
         }
         if(e.type==='submitDrawing'){
             if(d.phase!=='drawing')return;
@@ -5388,7 +5416,7 @@ function setConnDot(ok) {
             if(d.artistIndex>=d.artists.length){
                 d.phase='finished'; room.phase='drawing-finished';
             }else{
-                d.phase='drawing'; d.prompt=pickPrompt(); d.submissions=[]; d.guesses=[]; d.round++;
+                d.phase='drawing'; d.prompt=d.mode==='free'?'ارسم أي شيء تريده':pickPrompt(); d.submissions=[]; d.guesses=[]; d.round++; d.timeLimit=d.mode==='speed'?30:0; d.deadline=d.timeLimit?Date.now()+d.timeLimit*1000:0;
             }
             room.draw=d; localRoomCache=room; broadcastState(); if(roomListenerCallback)roomListenerCallback(room); return;
         }
@@ -5432,10 +5460,9 @@ function setConnDot(ok) {
         const total=(room.teams?.red||[]).length+(room.teams?.blue||[]).length;
         if(room.gameMode!=='draw'){alert('هذه ليست غرفة Draw & Guess.');return;}
         if(!isDrawLeader(room)){alert('فقط قائد الغرفة يستطيع بدء وضع الرسم.');return;}
-        if(total<2){alert('يحتاج Draw & Guess إلى لاعبين بشريين على الأقل.');return;}
-        if(total>3){alert('Draw & Guess محدود بـ 3 لاعبين فقط.');return;}
+        if(total<3){alert('يحتاج Draw & Guess إلى 3 لاعبين على الأقل.');return;}
         const humans=drawHumans(room);
-        if(humans.length<2){alert('يحتاج وضع الرسم إلى لاعبين بشريين على الأقل.');return;}
+        if(humans.length<3){alert('يحتاج Draw & Guess إلى 3 لاعبين بشريين على الأقل. يمكن إضافة بوتات، لكنها لا ترسم.');return;}
         sendDrawEvent({type:'startDraw',actor:safeMeName()});
     };
 
@@ -5445,11 +5472,12 @@ function setConnDot(ok) {
         document.getElementById('drawRoomCode').textContent=room.code||roomCode||'-----';
         document.getElementById('drawRoundLabel').textContent=d.phase==='finished'?'انتهت الجولة':'الجولة '+(d.round||1)+' / '+(d.rounds||d.artists.length||1);
         const prompt=document.getElementById('drawPrompt'); const info=document.getElementById('drawTurnInfo');
+        document.querySelectorAll('.draw-mode-choice').forEach(b=>b.classList.toggle('gold', b.dataset.drawMode===d.mode));
         if(d.phase==='drawing'){
             const artist=d.artists[d.artistIndex]||'';
             if(artist===safeMeName()){
                 prompt.textContent=d.prompt||'ارسم!';
-                info.textContent='🎨 دورك! ارسم ثم اضغط إرسال. اللاعبون الآخرون لا يرون المهمة.';
+                info.textContent='🎨 دورك! ارسم ثم اضغط إرسال.'+(d.mode==='speed'?' لديك 30 ثانية.':'')+' اللاعبون الآخرون لا يرون المهمة.';
             }else{
                 prompt.textContent='🎨 شخص آخر يرسم الآن';
                 info.textContent='⏳ الآن يرسم: '+artist+' — لا يمكنك رؤية المهمة.';
@@ -5467,6 +5495,12 @@ function setConnDot(ok) {
         const myTurn=isMyTurn(room); const canDraw=myTurn && d.phase==='drawing';
         setDrawButton('drawClearBtn',!canDraw); setDrawButton('drawSkipBtn',!canDraw); setDrawButton('drawSubmitBtn',!canDraw);
         document.getElementById('drawCanvas').style.pointerEvents=canDraw?'auto':'none';
+        const preview=document.getElementById('drawSubmittedImage');
+        const sub=d.submissions && d.submissions[d.submissions.length-1];
+        if(preview){
+            if(sub && sub.image && d.phase!=='drawing'){ preview.src=sub.image; preview.classList.remove('hidden'); }
+            else { preview.removeAttribute('src'); preview.classList.add('hidden'); }
+        }
         const ga=document.getElementById('drawGuessArea'); const ra=document.getElementById('drawRevealArea');
         ga.classList.toggle('hidden',d.phase!=='guessing'); ra.classList.toggle('hidden',d.phase!=='reveal');
         if(d.phase==='guessing')renderGuessButtons(room,d);
@@ -5474,6 +5508,7 @@ function setConnDot(ok) {
         if(d.phase==='finished')renderReveal(room,d,true);
         if(d.phase!=='drawing' || !canDraw){ /* keep canvas visible for all */ }
     }
+    window.renderDraw = renderDraw;
     function renderDrawPlayers(room,d){const el=document.getElementById('drawPlayers'); if(!el)return; el.innerHTML=''; drawHumans(room).forEach(p=>{const row=document.createElement('div');row.className='draw-player-row'+(d.artists[d.artistIndex]===p.name&&d.phase==='drawing'?' artist':'');row.innerHTML='<span>👤 '+escapeHtml(p.name)+'</span><span class="draw-player-status">'+(d.artists[d.artistIndex]===p.name&&d.phase==='drawing'?'🎨 يرسم':d.gallery.some(g=>g.artist===p.name)?'✅ رسم':'⏳')+'</span>';el.appendChild(row)});drawBots(room).forEach(p=>{const row=document.createElement('div');row.className='draw-player-row';row.innerHTML='<span>🤖 '+escapeHtml(p.name)+'</span><span class="draw-player-status">يتفرج ويخمن</span>';el.appendChild(row)});}
     function renderGuessButtons(room,d){
         const box=document.getElementById('drawGuessButtons');
@@ -5508,6 +5543,8 @@ function setConnDot(ok) {
         setTimeout(()=>{
             initCanvas();
             const b=document.getElementById('oDrawStart');if(b)b.onclick=startDrawMode;
+            document.querySelectorAll('.draw-mode-choice').forEach(btn=>btn.addEventListener('click',()=>sendDrawEvent({type:'setDrawMode',actor:safeMeName(),mode:btn.dataset.drawMode})));
+            document.querySelectorAll('.draw-lobby-mode').forEach(btn=>btn.addEventListener('click',()=>sendDrawEvent({type:'setDrawMode',actor:safeMeName(),mode:btn.dataset.drawMode})));
             document.getElementById('drawClearBtn')?.addEventListener('click',clearCanvas);
             document.getElementById('drawSkipBtn')?.addEventListener('click',()=>sendDrawEvent({type:'skipDrawing',actor:safeMeName()}));
             document.getElementById('drawSubmitBtn')?.addEventListener('click',()=>{if(isMyTurn(localRoomCache)){const image=drawCanvas.toDataURL('image/png',.82);sendDrawEvent({type:'submitDrawing',actor:safeMeName(),image});}});

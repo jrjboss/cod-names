@@ -5,10 +5,6 @@ const WAIT_MS = 15_000;
 const STALE_MS = 90_000;
 const MATCHED_RETENTION_MS = 10 * 60_000;
 
-/* =========================================================
-   CORS
-========================================================= */
-
 function corsHeaders(origin) {
   const allowed =
     origin === "https://jrjboss.github.io" ||
@@ -19,56 +15,36 @@ function corsHeaders(origin) {
     "Access-Control-Allow-Origin": allowed
       ? origin || "*"
       : "https://jrjboss.github.io",
-
-    "Access-Control-Allow-Methods":
-      "GET,POST,OPTIONS",
-
-    "Access-Control-Allow-Headers":
-      "Content-Type",
-
-    "Cache-Control":
-      "no-store"
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Cache-Control": "no-store"
   };
 }
 
 function json(data, status = 200, origin = "") {
-  return new Response(
-    JSON.stringify(data),
-    {
-      status,
-      headers: {
-        "Content-Type":
-          "application/json; charset=utf-8",
-        ...corsHeaders(origin)
-      }
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      ...corsHeaders(origin)
     }
-  );
+  });
 }
 
-/* =========================================================
-   ROOM CODE
-========================================================= */
-
 function makeRoomCode() {
-  const chars =
-    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
 
   for (let i = 0; i < 5; i++) {
-    out += chars[
-      Math.floor(
-        Math.random() * chars.length
-      )
-    ];
+    out += chars[Math.floor(Math.random() * chars.length)];
   }
 
   return out;
 }
 
 /* =========================================================
-   EXISTING MATCHMAKER
-   DO NOT CHANGE THE MATCHMAKING LOGIC
+   CODENAMES MATCHMAKER
+   KEEPING THE EXISTING MATCHMAKING BEHAVIOR
 ========================================================= */
 
 export class Matchmaker extends DurableObject {
@@ -98,8 +74,7 @@ export class Matchmaker extends DurableObject {
   }
 
   cleanStale() {
-    const cutoff =
-      Date.now() - STALE_MS;
+    const cutoff = Date.now() - STALE_MS;
 
     this.ctx.storage.sql.exec(
       `
@@ -116,101 +91,65 @@ export class Matchmaker extends DurableObject {
       WHERE status = 'matched'
       AND joined_at < ?
       `,
-      Date.now() -
-        MATCHED_RETENTION_MS
+      Date.now() - MATCHED_RETENTION_MS
     );
   }
 
   makeMatch(waitingRows) {
     const now = Date.now();
+    const matchId = crypto.randomUUID();
+    const roomCode = makeRoomCode();
 
-    const matchId =
-      crypto.randomUUID();
+    const selected = waitingRows.slice(0, MATCH_SIZE);
 
-    const roomCode =
-      makeRoomCode();
+    const players = selected.map((row, index) => ({
+      id: row.id,
+      name: row.name,
+      team: index % 2 === 0 ? "red" : "blue",
+      bot: false,
+      host: index === 0
+    }));
 
-    const selected =
-      waitingRows.slice(
-        0,
-        MATCH_SIZE
-      );
-
-    const players =
-      selected.map(
-        (row, index) => ({
-          id: row.id,
-          name: row.name,
-          team:
-            index % 2 === 0
-              ? "red"
-              : "blue",
-          bot: false,
-          host: index === 0
-        })
-      );
-
-    while (
-      players.length <
-      MATCH_SIZE
-    ) {
-      const index =
-        players.length;
+    while (players.length < MATCH_SIZE) {
+      const index = players.length;
 
       players.push({
-        id:
-          `bot-${matchId}-${index}`,
-
-        name:
-          `Codename Bot ${index}`,
-
-        team:
-          index % 2 === 0
-            ? "red"
-            : "blue",
-
+        id: `bot-${matchId}-${index}`,
+        name: `Codename Bot ${index}`,
+        team: index % 2 === 0 ? "red" : "blue",
         bot: true,
         host: false,
-        difficulty:
-          "normal"
+        difficulty: "normal"
       });
     }
 
-    const payload =
-      JSON.stringify({
-        matchId,
-        roomCode,
-        players,
-        createdAt: now
-      });
+    const payload = JSON.stringify({
+      matchId,
+      roomCode,
+      players,
+      createdAt: now
+    });
 
-    this.ctx.storage.transactionSync(
-      () => {
-        for (
-          const player of
-          players.filter(
-            p => !p.bot
-          )
-        ) {
-          this.ctx.storage.sql.exec(
-            `
-            UPDATE queue
-            SET status = 'matched',
-                match_id = ?,
-                host = ?,
-                team = ?,
-                payload = ?
-            WHERE id = ?
-            `,
-            matchId,
-            player.host ? 1 : 0,
-            player.team,
-            payload,
-            player.id
-          );
-        }
+    this.ctx.storage.transactionSync(() => {
+      for (const player of players.filter(p => !p.bot)) {
+        this.ctx.storage.sql.exec(
+          `
+          UPDATE queue
+          SET status = 'matched',
+              match_id = ?,
+              host = ?,
+              team = ?,
+              payload = ?
+          WHERE id = ?
+          `,
+          matchId,
+          player.host ? 1 : 0,
+          player.team,
+          payload,
+          player.id
+        );
       }
-    );
+    });
 
     return {
       matchId,
@@ -222,22 +161,19 @@ export class Matchmaker extends DurableObject {
   async join(player) {
     this.cleanStale();
 
-    const existing =
-      this.ctx.storage.sql
-        .exec(
-          `
-          SELECT *
-          FROM queue
-          WHERE id = ?
-          `,
-          player.id
-        )
-        .toArray();
+    const existing = this.ctx.storage.sql
+      .exec(
+        `
+        SELECT *
+        FROM queue
+        WHERE id = ?
+        `,
+        player.id
+      )
+      .toArray();
 
     if (existing.length) {
-      return this.status(
-        player.id
-      );
+      return this.status(player.id);
     }
 
     this.ctx.storage.sql.exec(
@@ -249,13 +185,7 @@ export class Matchmaker extends DurableObject {
         status,
         payload
       )
-      VALUES (
-        ?,
-        ?,
-        ?,
-        'waiting',
-        ?
-      )
+      VALUES (?, ?, ?, 'waiting', ?)
       `,
       player.id,
       player.name,
@@ -263,25 +193,22 @@ export class Matchmaker extends DurableObject {
       JSON.stringify(player)
     );
 
-    return this.status(
-      player.id
-    );
+    return this.status(player.id);
   }
 
   async status(id) {
     this.cleanStale();
 
-    const row =
-      this.ctx.storage.sql
-        .exec(
-          `
-          SELECT *
-          FROM queue
-          WHERE id = ?
-          `,
-          id
-        )
-        .toArray()[0];
+    const row = this.ctx.storage.sql
+      .exec(
+        `
+        SELECT *
+        FROM queue
+        WHERE id = ?
+        `,
+        id
+      )
+      .toArray()[0];
 
     if (!row) {
       return {
@@ -289,76 +216,56 @@ export class Matchmaker extends DurableObject {
       };
     }
 
-    if (
-      row.status === "matched" &&
-      row.payload
-    ) {
-      const match =
-        JSON.parse(
-          row.payload
-        );
+    if (row.status === "matched" && row.payload) {
+      const match = JSON.parse(row.payload);
 
-      const waiting =
-        this.ctx.storage.sql
-          .exec(
-            `
-            SELECT COUNT(*) AS count
-            FROM queue
-            WHERE status = 'waiting'
-            `
-          )
-          .one();
+      const waiting = this.ctx.storage.sql
+        .exec(
+          `
+          SELECT COUNT(*) AS count
+          FROM queue
+          WHERE status = 'waiting'
+          `
+        )
+        .one();
 
       return {
         status: "matched",
         ...match,
         host: !!row.host,
         team: row.team,
-        queueCount:
-          Number(
-            waiting.count || 0
-          )
+        queueCount: Number(waiting.count || 0)
       };
     }
 
-    const waitingRows =
-      this.ctx.storage.sql
-        .exec(
-          `
-          SELECT *
-          FROM queue
-          WHERE status = 'waiting'
-          ORDER BY joined_at ASC
-          LIMIT 4
-          `
-        )
-        .toArray();
+    const waitingRows = this.ctx.storage.sql
+      .exec(
+        `
+        SELECT *
+        FROM queue
+        WHERE status = 'waiting'
+        ORDER BY joined_at ASC
+        LIMIT 4
+        `
+      )
+      .toArray();
 
     const oldest =
-      waitingRows[0]?.joined_at ||
-      Date.now();
+      waitingRows[0]?.joined_at || Date.now();
 
     const shouldMatch =
-      waitingRows.length >=
-        MATCH_SIZE ||
+      waitingRows.length >= MATCH_SIZE ||
       (
         waitingRows.length > 0 &&
-        Date.now() -
-          oldest >=
-          WAIT_MS
+        Date.now() - oldest >= WAIT_MS
       );
 
     if (shouldMatch) {
-      const match =
-        this.makeMatch(
-          waitingRows
-        );
+      const match = this.makeMatch(waitingRows);
 
-      const matched =
-        match.players.find(
-          player =>
-            player.id === id
-        );
+      const matched = match.players.find(
+        player => player.id === id
+      );
 
       if (matched) {
         return {
@@ -371,23 +278,15 @@ export class Matchmaker extends DurableObject {
       }
     }
 
-    const position =
-      waitingRows.findIndex(
-        player =>
-          player.id === id
-      );
+    const position = waitingRows.findIndex(
+      player => player.id === id
+    );
 
     return {
       status: "waiting",
-      position:
-        position >= 0
-          ? position + 1
-          : 1,
-      queueCount:
-        waitingRows.length,
-      waitedMs:
-        Date.now() -
-        Number(row.joined_at)
+      position: position >= 0 ? position + 1 : 1,
+      queueCount: waitingRows.length,
+      waitedMs: Date.now() - Number(row.joined_at)
     };
   }
 
@@ -407,7 +306,8 @@ export class Matchmaker extends DurableObject {
 }
 
 /* =========================================================
-   DRAWING ROOM
+   DRAW IT / GUESS IT
+   DRAWING ROOM DURABLE OBJECT
 ========================================================= */
 
 export class DrawingRoom extends DurableObject {
@@ -417,51 +317,61 @@ export class DrawingRoom extends DurableObject {
     this.ctx = ctx;
     this.connections = new Set();
 
-    this.ctx.blockConcurrencyWhile(
-      async () => {
-        const existing =
-          await this.ctx.storage.get(
-            "drawingState"
-          );
+    ctx.blockConcurrencyWhile(async () => {
+      const existing =
+        await this.ctx.storage.get("drawingState");
 
-        if (!existing) {
-          await this.ctx.storage.put(
-            "drawingState",
-            this.defaultState()
-          );
-        }
+      if (!existing) {
+        await this.ctx.storage.put(
+          "drawingState",
+          this.defaultState()
+        );
       }
-    );
+    });
   }
 
   defaultState() {
     return {
+      roomCode: null,
+
+      mode: "duel",
+
       round: 0,
-      totalRounds: 0,
+      totalRounds: 4,
 
       drawerId: null,
       drawerName: null,
 
+      word: null,
+      wordCategory: null,
+
       strokes: [],
 
-      version: 0,
+      guesses: [],
+
+      scores: {},
+
+      players: [],
 
       started: false,
-      finished: false
+      finished: false,
+
+      timeLimit: 60,
+      startedAt: null,
+      endsAt: null,
+
+      version: 0
     };
   }
 
   async getState() {
     return (
-      await this.ctx.storage.get(
-        "drawingState"
-      )
+      await this.ctx.storage.get("drawingState")
     ) || this.defaultState();
   }
 
   async saveState(state) {
-    state.version =
-      Date.now();
+    state.version = Date.now();
 
     await this.ctx.storage.put(
       "drawingState",
@@ -470,64 +380,43 @@ export class DrawingRoom extends DurableObject {
   }
 
   broadcast(message) {
-    const encoded =
-      JSON.stringify(message);
+    const encoded = JSON.stringify(message);
 
-    for (
-      const socket of
-      this.connections
-    ) {
+    for (const socket of this.connections) {
       try {
         socket.send(encoded);
       } catch {
-        this.connections.delete(
-          socket
-        );
+        this.connections.delete(socket);
       }
     }
   }
 
   async fetch(request) {
     const origin =
-      request.headers.get(
-        "Origin"
-      ) || "";
+      request.headers.get("Origin") || "";
 
-    const url =
-      new URL(request.url);
+    const url = new URL(request.url);
 
-    /* -------------------------
-       CORS
-    ------------------------- */
+    /* -------------------------------------------------------
+       OPTIONS
+    ------------------------------------------------------- */
 
-    if (
-      request.method ===
-      "OPTIONS"
-    ) {
-      return new Response(
-        null,
-        {
-          status: 204,
-          headers:
-            corsHeaders(
-              origin
-            )
-        }
-      );
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders(origin)
+      });
     }
 
-    /* -------------------------
+    /* -------------------------------------------------------
        GET STATE
-    ------------------------- */
+    ------------------------------------------------------- */
 
     if (
-      url.pathname.endsWith(
-        "/state"
-      ) &&
+      url.pathname.endsWith("/state") &&
       request.method === "GET"
     ) {
-      const state =
-        await this.getState();
+      const state = await this.getState();
 
       return json(
         {
@@ -539,75 +428,87 @@ export class DrawingRoom extends DurableObject {
       );
     }
 
-    /* -------------------------
-       START / UPDATE ROUND
-    ------------------------- */
+    /* -------------------------------------------------------
+       SETUP ROOM
+    ------------------------------------------------------- */
 
     if (
-      url.pathname.endsWith(
-        "/round"
-      ) &&
+      url.pathname.endsWith("/setup") &&
       request.method === "POST"
     ) {
       let body = {};
 
       try {
-        body =
-          await request.json();
+        body = await request.json();
       } catch {
         body = {};
       }
 
-      const state =
-        await this.getState();
+      const state = await this.getState();
 
-      if (
-        body.round !==
-        undefined
-      ) {
-        state.round =
-          Number(
-            body.round
-          );
+      if (body.roomCode !== undefined) {
+        state.roomCode =
+          String(body.roomCode || "")
+            .trim()
+            .slice(0, 12);
       }
 
-      if (
-        body.totalRounds !==
-        undefined
-      ) {
-        state.totalRounds =
-          Number(
-            body.totalRounds
-          );
+      if (body.mode !== undefined) {
+        state.mode =
+          body.mode === "teams"
+            ? "teams"
+            : "duel";
       }
 
-      if (
-        body.drawerId !==
-        undefined
-      ) {
-        state.drawerId =
-          body.drawerId;
+      if (body.totalRounds !== undefined) {
+        const rounds =
+          Number(body.totalRounds);
+
+        if (
+          Number.isFinite(rounds) &&
+          rounds >= 1 &&
+          rounds <= 20
+        ) {
+          state.totalRounds = rounds;
+        }
       }
 
-      if (
-        body.drawerName !==
-        undefined
-      ) {
-        state.drawerName =
-          body.drawerName;
+      if (body.timeLimit !== undefined) {
+        const seconds =
+          Number(body.timeLimit);
+
+        if (
+          Number.isFinite(seconds) &&
+          seconds >= 15 &&
+          seconds <= 180
+        ) {
+          state.timeLimit = seconds;
+        }
       }
 
-      state.strokes = [];
-      state.started = true;
-      state.finished = false;
+      if (Array.isArray(body.players)) {
+        state.players =
+          body.players
+            .slice(0, 20)
+            .map(player => ({
+              id: String(player.id || ""),
+              name: String(player.name || "Player")
+                .slice(0, 24),
+              team:
+                player.team === "blue"
+                  ? "blue"
+                  : "red",
+              score: Number(player.score || 0)
+            }))
+            .filter(player => player.id);
+      }
 
-      await this.saveState(
-        state
-      );
+      state.version = Date.now();
+
+      await this.saveState(state);
 
       this.broadcast({
-        type:
-          "round",
+        type: "setup",
         state
       });
 
@@ -621,14 +522,100 @@ export class DrawingRoom extends DurableObject {
       );
     }
 
-    /* -------------------------
-       ADD STROKE
-    ------------------------- */
+    /* -------------------------------------------------------
+       START / ROUND
+    ------------------------------------------------------- */
 
     if (
-      url.pathname.endsWith(
-        "/stroke"
-      ) &&
+      url.pathname.endsWith("/round") &&
+      request.method === "POST"
+    ) {
+      let body = {};
+
+      try {
+        body = await request.json();
+      } catch {
+        body = {};
+      }
+
+      const state = await this.getState();
+
+      if (body.round !== undefined) {
+        state.round =
+          Number(body.round);
+      }
+
+      if (body.totalRounds !== undefined) {
+        state.totalRounds =
+          Number(body.totalRounds);
+      }
+
+      if (body.drawerId !== undefined) {
+        state.drawerId =
+          body.drawerId;
+      }
+
+      if (body.drawerName !== undefined) {
+        state.drawerName =
+          String(body.drawerName || "")
+            .slice(0, 24);
+      }
+
+      if (body.word !== undefined) {
+        state.word =
+          String(body.word || "")
+            .slice(0, 80);
+      }
+
+      if (body.wordCategory !== undefined) {
+        state.wordCategory =
+          String(body.wordCategory || "")
+            .slice(0, 40);
+      }
+
+      if (body.timeLimit !== undefined) {
+        state.timeLimit =
+          Number(body.timeLimit);
+      }
+
+      state.strokes = [];
+      state.guesses = [];
+
+      state.started = true;
+      state.finished = false;
+
+      state.startedAt = Date.now();
+
+      state.endsAt =
+        state.startedAt +
+        Math.max(
+          15,
+          Number(state.timeLimit || 60)
+        ) * 1000;
+
+      await this.saveState(state);
+
+      this.broadcast({
+        type: "round",
+        state
+      });
+
+      return json(
+        {
+          ok: true,
+          state
+        },
+        200,
+        origin
+      );
+    }
+
+    /* -------------------------------------------------------
+       STROKE
+    ------------------------------------------------------- */
+
+    if (
+      url.pathname.endsWith("/stroke") &&
       request.method === "POST"
     ) {
       let stroke;
@@ -639,8 +626,7 @@ export class DrawingRoom extends DurableObject {
       } catch {
         return json(
           {
-            error:
-              "Invalid stroke"
+            error: "Invalid stroke"
           },
           400,
           origin
@@ -650,73 +636,101 @@ export class DrawingRoom extends DurableObject {
       const state =
         await this.getState();
 
-      /*
-       IMPORTANT:
-
-       Strokes are stored separately
-       from matchmaking.
-
-       The Matchmaker JSON is never
-       touched by drawing data.
-      */
-
-      state.strokes.push(
-        stroke
-      );
-
-      /*
-       Prevent a broken client from
-       accidentally filling the DO
-       forever.
-      */
-
-      if (
-        state.strokes.length >
-        10000
-      ) {
-        state.strokes =
-          state.strokes.slice(
-            -10000
-          );
+      if (state.finished) {
+        return json(
+          {
+            error: "Round already finished"
+          },
+          409,
+          origin
+        );
       }
 
-      await this.saveState(
-        state
-      );
+      if (
+        state.endsAt &&
+        Date.now() >= state.endsAt
+      ) {
+        state.finished = true;
 
-      /*
-       Send ONLY the new stroke
-       to connected players.
+        await this.saveState(state);
 
-       We do NOT send the entire
-       drawing state every time.
-      */
+        this.broadcast({
+          type: "round_finished",
+          round: state.round,
+          version: state.version
+        });
+
+        return json(
+          {
+            error: "Time is up"
+          },
+          409,
+          origin
+        );
+      }
+
+      state.strokes.push(stroke);
+
+      if (state.strokes.length > 10000) {
+        state.strokes =
+          state.strokes.slice(-10000);
+      }
+
+      await this.saveState(state);
 
       this.broadcast({
-        type:
-          "stroke",
+        type: "stroke",
         stroke
       });
 
       return json(
         {
           ok: true,
-          version:
-            state.version
+          version: state.version
         },
         200,
         origin
       );
     }
 
-    /* -------------------------
-       CLEAR CANVAS
-    ------------------------- */
+    /* -------------------------------------------------------
+       UNDO
+    ------------------------------------------------------- */
 
     if (
-      url.pathname.endsWith(
-        "/clear"
-      ) &&
+      url.pathname.endsWith("/undo") &&
+      request.method === "POST"
+    ) {
+      const state =
+        await this.getState();
+
+      if (state.strokes.length > 0) {
+        state.strokes.pop();
+      }
+
+      await this.saveState(state);
+
+      this.broadcast({
+        type: "state",
+        state
+      });
+
+      return json(
+        {
+          ok: true,
+          state
+        },
+        200,
+        origin
+      );
+    }
+
+    /* -------------------------------------------------------
+       CLEAR
+    ------------------------------------------------------- */
+
+    if (
+      url.pathname.endsWith("/clear") &&
       request.method === "POST"
     ) {
       const state =
@@ -724,15 +738,11 @@ export class DrawingRoom extends DurableObject {
 
       state.strokes = [];
 
-      await this.saveState(
-        state
-      );
+      await this.saveState(state);
 
       this.broadcast({
-        type:
-          "clear",
-        version:
-          state.version
+        type: "clear",
+        version: state.version
       });
 
       return json(
@@ -744,79 +754,230 @@ export class DrawingRoom extends DurableObject {
       );
     }
 
-    /* -------------------------
-       FINISH ROUND
-    ------------------------- */
+    /* -------------------------------------------------------
+       GUESS
+    ------------------------------------------------------- */
 
     if (
-      url.pathname.endsWith(
-        "/finish"
-      ) &&
+      url.pathname.endsWith("/guess") &&
       request.method === "POST"
     ) {
+      let body = {};
+
+      try {
+        body = await request.json();
+      } catch {
+        body = {};
+      }
+
       const state =
         await this.getState();
 
-      state.finished =
-        true;
+      const playerId =
+        String(body.playerId || "")
+          .trim();
 
-      await this.saveState(
-        state
+      const playerName =
+        String(body.playerName || "Player")
+          .trim()
+          .slice(0, 24);
+
+      const guess =
+        String(body.guess || "")
+          .trim()
+          .slice(0, 100);
+
+      if (!playerId || !guess) {
+        return json(
+          {
+            error:
+              "playerId and guess are required"
+          },
+          400,
+          origin
+        );
+      }
+
+      const correct =
+        state.word &&
+        guess.toLowerCase() ===
+          state.word.toLowerCase();
+
+      state.guesses.push({
+        playerId,
+        playerName,
+        guess,
+        correct,
+        at: Date.now()
+      });
+
+      if (correct) {
+        state.scores[playerId] =
+          Number(state.scores[playerId] || 0) +
+          100;
+
+        state.finished = true;
+
+        await this.saveState(state);
+
+        this.broadcast({
+          type: "correct_guess",
+          playerId,
+          playerName,
+          guess,
+          scores: state.scores,
+          state
+        });
+      } else {
+        await this.saveState(state);
+
+        this.broadcast({
+          type: "guess",
+          playerId,
+          playerName,
+          guess
+        });
+      }
+
+      return json(
+        {
+          ok: true,
+          correct,
+          scores: state.scores
+        },
+        200,
+        origin
       );
+    }
 
-      /*
-       We intentionally do NOT
-       broadcast the result here.
+    /* -------------------------------------------------------
+       SCORE
+    ------------------------------------------------------- */
 
-       The client can show the
-       final result only when the
-       game itself says the round
-       is finished.
-      */
+    if (
+      url.pathname.endsWith("/score") &&
+      request.method === "POST"
+    ) {
+      let body = {};
+
+      try {
+        body = await request.json();
+      } catch {
+        body = {};
+      }
+
+      const state =
+        await this.getState();
+
+      const playerId =
+        String(body.playerId || "")
+          .trim();
+
+      const amount =
+        Number(body.amount || 0);
+
+      if (playerId && Number.isFinite(amount)) {
+        state.scores[playerId] =
+          Number(state.scores[playerId] || 0) +
+          amount;
+      }
+
+      await this.saveState(state);
 
       this.broadcast({
-        type:
-          "round_finished",
-        round:
-          state.round,
-        version:
-          state.version
+        type: "score",
+        scores: state.scores
       });
 
       return json(
         {
           ok: true,
-          round:
-            state.round
+          scores: state.scores
         },
         200,
         origin
       );
     }
 
-    /* -------------------------
-       DELETE ROOM / GAME END
-    ------------------------- */
+    /* -------------------------------------------------------
+       FINISH
+    ------------------------------------------------------- */
 
     if (
-      url.pathname.endsWith(
-        "/delete"
-      ) &&
+      url.pathname.endsWith("/finish") &&
       request.method === "POST"
     ) {
-      /*
-       This deletes the stored
-       drawing data after the game.
+      const state =
+        await this.getState();
 
-       It does NOT delete or touch
-       MATCHMAKER.
-      */
+      state.finished = true;
 
-      await this.ctx.storage.deleteAll();
+      await this.saveState(state);
 
       this.broadcast({
-        type:
-          "room_deleted"
+        type: "round_finished",
+        round: state.round,
+        scores: state.scores,
+        version: state.version
+      });
+
+      return json(
+        {
+          ok: true,
+          round: state.round,
+          scores: state.scores
+        },
+        200,
+        origin
+      );
+    }
+
+    /* -------------------------------------------------------
+       CHAT
+    ------------------------------------------------------- */
+
+    if (
+      url.pathname.endsWith("/chat") &&
+      request.method === "POST"
+    ) {
+      let body = {};
+
+      try {
+        body = await request.json();
+      } catch {
+        body = {};
+      }
+
+      const playerId =
+        String(body.playerId || "")
+          .trim();
+
+      const playerName =
+        String(body.playerName || "Player")
+          .trim()
+          .slice(0, 24);
+
+      const message =
+        String(body.message || "")
+          .trim()
+          .slice(0, 300);
+
+      if (!message) {
+        return json(
+          {
+            error: "Message is required"
+          },
+          400,
+          origin
+        );
+      }
+
+      this.broadcast({
+        type: "chat",
+        playerId,
+        playerName,
+        message,
+        at: Date.now()
       });
 
       return json(
@@ -828,37 +989,50 @@ export class DrawingRoom extends DurableObject {
       );
     }
 
-    /* -------------------------
-       WEBSOCKET
-    ------------------------- */
+    /* -------------------------------------------------------
+       DELETE ROOM
+    ------------------------------------------------------- */
 
     if (
-      request.headers.get(
-        "Upgrade"
-      )?.toLowerCase() ===
+      url.pathname.endsWith("/delete") &&
+      request.method === "POST"
+    ) {
+      await this.ctx.storage.deleteAll();
+
+      this.broadcast({
+        type: "room_deleted"
+      });
+
+      return json(
+        {
+          ok: true
+        },
+        200,
+        origin
+      );
+    }
+
+    /* -------------------------------------------------------
+       WEBSOCKET
+    ------------------------------------------------------- */
+
+    if (
+      request.headers.get("Upgrade")?.toLowerCase() ===
       "websocket"
     ) {
       const pair =
         new WebSocketPair();
 
-      const client =
-        pair[0];
-
-      const server =
-        pair[1];
+      const client = pair[0];
+      const server = pair[1];
 
       server.accept();
 
-      this.connections.add(
-        server
-      );
+      this.connections.add(server);
 
-      const remove =
-        () => {
-          this.connections.delete(
-            server
-          );
-        };
+      const remove = () => {
+        this.connections.delete(server);
+      };
 
       server.addEventListener(
         "close",
@@ -870,22 +1044,13 @@ export class DrawingRoom extends DurableObject {
         remove
       );
 
-      /*
-       Send the current drawing
-       ONCE when the player joins.
-
-       After that, only new
-       strokes are broadcast.
-      */
-
       const state =
         await this.getState();
 
       try {
         server.send(
           JSON.stringify({
-            type:
-              "state",
+            type: "state",
             state
           })
         );
@@ -893,25 +1058,20 @@ export class DrawingRoom extends DurableObject {
         remove();
       }
 
-      return new Response(
-        null,
-        {
-          status: 101,
-          webSocket:
-            client
-        }
-      );
+      return new Response(null, {
+        status: 101,
+        webSocket: client
+      });
     }
 
-    /* -------------------------
+    /* -------------------------------------------------------
        HEALTH
-    ------------------------- */
+    ------------------------------------------------------- */
 
     return json(
       {
         ok: true,
-        service:
-          "drawing-room"
+        service: "drawing-room"
       },
       200,
       origin
@@ -924,60 +1084,49 @@ export class DrawingRoom extends DurableObject {
 ========================================================= */
 
 export default {
-  async fetch(
-    request,
-    env
-  ) {
+  async fetch(request, env) {
     const origin =
-      request.headers.get(
-        "Origin"
-      ) || "";
+      request.headers.get("Origin") || "";
 
-    /* -------------------------
-       CORS PREFLIGHT
-    ------------------------- */
+    /* -------------------------------------------------------
+       CORS
+    ------------------------------------------------------- */
 
-    if (
-      request.method ===
-      "OPTIONS"
-    ) {
-      return new Response(
-        null,
-        {
-          status: 204,
-          headers:
-            corsHeaders(
-              origin
-            )
-        }
-      );
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders(origin)
+      });
     }
 
-    const url =
-      new URL(request.url);
+    const url = new URL(request.url);
 
-    /* =====================================================
+    /* =======================================================
        DRAWING ROOMS
 
-       /draw/ROOMCODE/state
-       /draw/ROOMCODE/round
-       /draw/ROOMCODE/stroke
-       /draw/ROOMCODE/clear
-       /draw/ROOMCODE/finish
-       /draw/ROOMCODE/delete
-       /draw/ROOMCODE  (WebSocket)
-    ===================================================== */
+       /draw/ROOM/state
+       /draw/ROOM/setup
+       /draw/ROOM/round
+       /draw/ROOM/stroke
+       /draw/ROOM/undo
+       /draw/ROOM/clear
+       /draw/ROOM/guess
+       /draw/ROOM/score
+       /draw/ROOM/finish
+       /draw/ROOM/chat
+       /draw/ROOM/delete
+       /draw/ROOM
+
+       WebSocket is:
+       /draw/ROOM
+    ======================================================= */
 
     if (
-      url.pathname.startsWith(
-        "/draw/"
-      )
+      url.pathname.startsWith("/draw/")
     ) {
       const roomName =
         url.pathname
-          .slice(
-            "/draw/".length
-          )
+          .slice("/draw/".length)
           .split("/")[0]
           .trim();
 
@@ -998,21 +1147,16 @@ export default {
         );
 
       const room =
-        env.DRAWING_ROOMS.get(
-          id
-        );
+        env.DRAWING_ROOMS.get(id);
 
-      return room.fetch(
-        request
-      );
+      return room.fetch(request);
     }
 
-    /* =====================================================
-       EXISTING MATCHMAKING
+    /* =======================================================
+       EXISTING CODENAMES MATCHMAKING
 
-       THIS SECTION REMAINS SEPARATE
-       FROM DRAWING.
-    ===================================================== */
+       THIS IS KEPT SEPARATE FROM DRAWING.
+    ======================================================= */
 
     if (
       !url.pathname.startsWith(
@@ -1036,44 +1180,32 @@ export default {
       );
 
     const stub =
-      env.MATCHMAKER.get(
-        id
-      );
+      env.MATCHMAKER.get(id);
 
     try {
-      /* -------------------------
+      /* -----------------------------------------------------
          JOIN
-      ------------------------- */
+      ----------------------------------------------------- */
 
       if (
         url.pathname ===
           "/matchmaking/join" &&
-        request.method ===
-          "POST"
+        request.method === "POST"
       ) {
         const body =
           await request.json();
 
         const name =
-          String(
-            body?.name || ""
-          )
+          String(body?.name || "")
             .trim()
-            .slice(
-              0,
-              18
-            );
+            .slice(0, 18);
 
         const playerId =
           String(
-            body?.playerId ||
-              ""
+            body?.playerId || ""
           ).trim();
 
-        if (
-          !name ||
-          !playerId
-        ) {
+        if (!name || !playerId) {
           return json(
             {
               error:
@@ -1086,8 +1218,7 @@ export default {
 
         return json(
           await stub.join({
-            id:
-              playerId,
+            id: playerId,
             name
           }),
           200,
@@ -1095,15 +1226,14 @@ export default {
         );
       }
 
-      /* -------------------------
+      /* -----------------------------------------------------
          STATUS
-      ------------------------- */
+      ----------------------------------------------------- */
 
       if (
         url.pathname ===
           "/matchmaking/status" &&
-        request.method ===
-          "GET"
+        request.method === "GET"
       ) {
         const playerId =
           String(
@@ -1124,31 +1254,27 @@ export default {
         }
 
         return json(
-          await stub.status(
-            playerId
-          ),
+          await stub.status(playerId),
           200,
           origin
         );
       }
 
-      /* -------------------------
+      /* -----------------------------------------------------
          LEAVE
-      ------------------------- */
+      ----------------------------------------------------- */
 
       if (
         url.pathname ===
           "/matchmaking/leave" &&
-        request.method ===
-          "POST"
+        request.method === "POST"
       ) {
         const body =
           await request.json();
 
         const playerId =
           String(
-            body?.playerId ||
-              ""
+            body?.playerId || ""
           ).trim();
 
         if (!playerId) {
@@ -1163,9 +1289,7 @@ export default {
         }
 
         return json(
-          await stub.leave(
-            playerId
-          ),
+          await stub.leave(playerId),
           200,
           origin
         );

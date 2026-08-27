@@ -6133,7 +6133,7 @@ function setConnDot(ok) {
   async function joinRoom(){const n=String($('pfName')?.value||'').trim().replace(/\s+/g,' ').slice(0,18),c=String($('pfCodeInput')?.value||'').trim().toUpperCase();if(!n)return msg('✏️ اكتب اسمك أولاً.');if(c.length<4)return msg('🔑 اكتب رمز الغرفة.');msg('⏳ اتصال سريع بـ '+c+'...');try{const r=await connectAsGuest(c);if(!r||r.gameMode!=='draw')throw new Error('هذه ليست غرفة Painting');me={name:n,team:'red'};roomCode=c;roomState=ensure(r);localRoomCache=roomState;if(guestConn?.open)guestConn.send({type:'join',name:n,team:'red'});if(typeof startListening==='function')startListening();route();msg('✅ متصل — تم إرسال طلب الانضمام.')}catch(e){console.error(e);msg('❌ تعذر الدخول: '+(e?.message||'تأكد من الرمز'))}}
   function leave(){try{if(typeof roomListener==='function')roomListener()}catch(e){}try{if(peer)peer.destroy()}catch(e){}peer=null;guestConn=null;hostConns=[];localRoomCache=null;roomState=null;roomCode=null;me={name:'',team:'red'};secret='';window.__paintingPrivatePrompt='';show('modeScreen')}
   function bindScreen(id,html){const e=$(id);if(e)e.innerHTML=html}
-  function hook(){window.renderDraw=renderGame;window.renderDrawLobby=renderLobby;window.sendDrawEvent=send;window.startDrawMode=startGame;window.__paintingCreateRoom=createRoom;window.__paintingJoinRoom=joinRoom;window.__paintingLeave=leave;window.handleDrawEventOnHost=function(msg){const ev=msg?.event||msg;if(ev?.type){handle(ev);if(typeof roomListenerCallback==='function')roomListenerCallback(ensure(R()));}};const b=$('pickDraw');if(b){const nb=b.cloneNode(true);b.replaceWith(nb);nb.onclick=()=>{show('drawLobbyScreen');if(!$('pfName'))lobbyScreen()}}const originalShow=window.show;window.show=function(id){originalShow(id);if(id==='paintingConnectScreen'){show('drawLobbyScreen');if(!$('pfName'))lobbyScreen()}if(id==='drawLobbyScreen'&&!$('pfPlayers'))lobbyScreen();if(id==='drawScreen'&&!$('pfCanvas'))gameScreen()}}
+  function hook(){window.renderDraw=renderGame;window.renderDrawLobby=renderLobby;window.sendDrawEvent=send;window.startDrawMode=startGame;window.handleDrawEventOnHost=function(msg){const ev=msg?.event||msg;if(ev?.type){handle(ev);if(typeof roomListenerCallback==='function')roomListenerCallback(ensure(R()));}};const b=$('pickDraw');if(b){const nb=b.cloneNode(true);b.replaceWith(nb);nb.onclick=()=>{show('paintingConnectScreen');connectScreen()}}const originalShow=window.show;window.show=function(id){originalShow(id);if(id==='paintingConnectScreen'&&!$('pfName'))connectScreen();if(id==='drawLobbyScreen'&&!$('pfPlayers'))lobbyScreen();if(id==='drawScreen'&&!$('pfCanvas'))gameScreen()}}
   window.addEventListener('load',()=>{hook();connectScreen();setInterval(()=>{const r=R();if(!r||r.gameMode!=='draw')return;if((r.draw?.phase==='drawing'||r.draw?.phase==='guessing')&&r.draw.deadline&&Date.now()>=r.draw.deadline&&typeof isHost!=='undefined'&&isHost){if(r.draw.phase==='drawing'){r.draw.submissions=[{artist:artist(r),image:drawCanvas()?.toDataURL('image/jpeg',.72)||'',prompt:secretFor(r),timeout:true}];r.draw.phase='reveal';r.draw.deadline=0;persist();route()}else{r.draw.phase='reveal';r.draw.deadline=0;persist();route()}}if(r.phase==='lobby'&&$('pfPlayers'))renderLobby(r);else if(r.phase!=='lobby'&&$('pfCanvas'))renderGame(r)},500)})
 })();
 </script>
@@ -6254,286 +6254,471 @@ function setConnDot(ok) {
 </script>
 
 
-<script id="final-targeted-fixes">
+
+
+<script id="stable-final-fixes-v4">
 (function(){
   'use strict';
 
-  // ------------------------------------------------------------
-  // PAINTING: use the existing Painting lobby/game implementation.
-  // Never send the user to the old standalone "Painting Connect" page.
-  // ------------------------------------------------------------
-  function openPaintingLobby(){
-    try {
-      if (typeof mode !== 'undefined') mode = 'online';
-      if (typeof teams !== 'undefined') teams = {red:[], blue:[]};
-      if (typeof window.show === 'function') window.show('drawLobbyScreen');
-      // The existing final Painting implementation creates its own lobby UI.
-      setTimeout(function(){
-        try {
-          if (!document.getElementById('pfPlayers') &&
-              typeof window.renderDrawLobby === 'function' &&
-              typeof window.show === 'function') {
-            window.show('drawLobbyScreen');
-          }
-        } catch(e){}
-      }, 0);
-    } catch(e){ console.error('Painting lobby:', e); }
+  /* ============================================================
+     FINAL STABILITY FIX
+     - Keeps the existing PeerJS/server transport unchanged.
+     - Keeps the existing Codenames + Painting UI unchanged.
+     - Fixes bot-filled 1v1/2v2 starts.
+     - Fixes bot spymaster/AI turns.
+     - Fixes picture/visual categories and board locking.
+     - Keeps Painting on its own lobby/game screens.
+     ============================================================ */
+
+  const VISUAL = {
+    pictures: {
+      label:'📸 صور حقيقية',
+      option:'📸 صور حقيقية — Picture Cards',
+      query:'photo',
+      words:['قطة','كلب','أسد','فيل','حصان','نسر','سمكة','فراشة','تفاحة','بيتزا','برغر','قهوة','طائرة','سيارة','دراجة','قطار','قلعة','شاطئ','جبل','غابة','صاروخ','غيتار','كاميرا','روبوت','بركان']
+    },
+    anime_images: {
+      label:'🍥 أنمي بالصور',
+      option:'🍥 أنمي بالصور — Anime Images',
+      query:'anime',
+      words:['ناروتو','غوكو','لوفي','سايتاما','إيتاتشي','ساسكي','إيتشيغو','إيرين','ليفاي','غوجو','سوكونا','تانجيرو','نيزوكو','زينيتسو','زورو','سانجي','شانكس','ميدوريا','باكوغو','تودوروكي','غون','كيلوا','هيسوكا','إدوارد','ريم']
+    },
+    cartoons: {
+      label:'🎨 كرتون بالصور',
+      option:'🎨 كرتون بالصور — Cartoon Images',
+      query:'cartoon',
+      words:['سبونج بوب','توم وجيري','ميكي ماوس','دونالد داك','سكوبي دو','بن 10','بوكيمون','فتيات القوة','وقت المغامرة','غارفيلد','كونغ فو باندا','شريك','مدغشقر','نيمو','مولان','علاء الدين','الأسد الملك','فروزن','توي ستوري','كوكو','راتاتوي','موانا','السنافر','تشارلي براون','هيلو كيتي']
+    },
+    movies_images: {
+      label:'🎬 أفلام بالصور',
+      option:'🎬 أفلام بالصور — Movie Images',
+      query:'movie',
+      words:['تايتانيك','أفاتار','إنسبشن','ماتريكس','غلادياتور','فورست غامب','بالب فيكشن','إنترستيلار','جوراسيك بارك','العراب','روكي','جوكر','أوبنهايمر','باربي','شريك','كوكو','فوق','وال إي','راتاتوي','مولان','جون ويك','سيد الخواتم','الهوبيت','المهمة المستحيلة','باتمان']
+    },
+    games_images: {
+      label:'🎮 ألعاب بالصور',
+      option:'🎮 ألعاب بالصور — Game Images',
+      query:'video-game',
+      words:['ماينكرافت','فورتنايت','كول أوف ديوتي','جتا','ريد ديد','أساسنز كريد','غود أوف وور','ذا لاست أوف أس','فالوت','سكايرم','ويتشر','سايبر بانك','إيلدن رينغ','سوبر ماريو','زيلدا','بوكيمون','روبلوكس','فالورانت','ببجي','فري فاير','أمونغ أس','تيراريا','هالو','دوم','روكيت ليغ']
+    },
+    sports_images: {
+      label:'⚽ رياضة بالصور',
+      option:'⚽ رياضة بالصور — Sports Images',
+      query:'sports',
+      words:['كرة القدم','كرة السلة','التنس','السباحة','الملاكمة','الجودو','الكاراتيه','التايكواندو','الجمباز','كرة الطائرة','كرة اليد','الفروسية','التزلج','ركوب الأمواج','الجولف','البيسبول','الكريكت','الرغبي','فورمولا 1','الماراثون','ركوب الدراجات','المصارعة','الهوكي','بلياردو','بادل']
+    }
+  };
+
+  const LABELS = Object.fromEntries(Object.entries(VISUAL).map(([k,v])=>[k,v.label]));
+  const isVisual = cat => !!VISUAL[cat];
+
+  function imageUrl(cat, index){
+    const q = VISUAL[cat] ? VISUAL[cat].query : 'photo';
+    /* Different numeric locks prevent every card from receiving the same image. */
+    const lock = 7000 + (Object.keys(VISUAL).indexOf(cat)+1)*100 + Number(index||0);
+    return 'https://loremflickr.com/520/360/' + encodeURIComponent(q) + '?lock=' + lock;
   }
 
-  // Capture before all legacy click handlers so the bad connect screen cannot win.
-  document.addEventListener('click', function(e){
-    var b = e.target && e.target.closest ? e.target.closest('#pickDraw') : null;
-    if(!b) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    openPaintingLobby();
-  }, true);
-
-  // Keep the obsolete standalone connect screen inaccessible.
-  function hideOldPaintingConnect(){
-    var el=document.getElementById('paintingConnectScreen');
-    if(el) el.classList.add('hidden');
-  }
-  hideOldPaintingConnect();
-
-  // ------------------------------------------------------------
-  // CODENAMES: picture cards are public to players.
-  // If a room contains image cards, treat it as Picture Cards even
-  // when an older room forgot to persist room.category.
-  // ------------------------------------------------------------
-  function repairPictureState(){
+  function installCategoryPools(){
     try{
-      if(typeof state === 'undefined' || !state || !Array.isArray(state.cards)) return;
-      var hasImages=state.cards.some(function(c){return !!(c && c.image);});
-      if(hasImages) state.category='pictures';
-    }catch(e){}
-  }
-
-  // Patch the global render call without changing its UI.
-  var oldEnter = window.enterOnlineGame;
-  if(typeof oldEnter === 'function'){
-    window.enterOnlineGame = function(room){
-      try{
-        if(room && Array.isArray(room.cards) && room.cards.some(function(c){return c&&c.image;})){
-          room.category='pictures';
-          room.settings=room.settings||{};
-          room.settings.category='pictures';
-        }
-      }catch(e){}
-      return oldEnter.apply(this, arguments);
-    };
-  }
-
-  // ------------------------------------------------------------
-  // 1v1 / 2v2: keep start button correct after team edits.
-  // This only updates the existing button state/text.
-  // ------------------------------------------------------------
-  function refreshSmallGameStart(){
-    try{
-      var room=(typeof localRoomCache!=='undefined'&&localRoomCache)||null;
-      var btn=document.getElementById('oStart');
-      if(!room || !btn || room.gameMode==='draw' || room.phase!=='lobby') return;
-      var red=(room.teams&&room.teams.red||[]).filter(function(p){return p&&!p.bot;}).length;
-      var blue=(room.teams&&room.teams.blue||[]).filter(function(p){return p&&!p.bot;}).length;
-      var total=red+blue;
-      var leader=room.leader===((typeof me!=='undefined'&&me&&me.name)||'');
-      var valid=(total===2&&red===1&&blue===1)||(total===4&&red===2&&blue===2);
-      btn.disabled=!(leader&&valid);
-      btn.textContent=valid?'⚔️ ابدأ المهمة':
-        (total<2?'⚔️ يحتاج لاعبين — 1 ضد 1':
-        (total<4?'⚔️ أكمل إلى 2 ضد 2':'⚔️ اختر 1 ضد 1 أو 2 ضد 2'));
-    }catch(e){}
-  }
-
-  // Re-run after any room render/team update without touching the transport.
-  setInterval(function(){
-    try{
-      repairPictureState();
-      refreshSmallGameStart();
-      hideOldPaintingConnect();
-    }catch(e){}
-  }, 500);
-
-  // ------------------------------------------------------------
-  // REFRESH RECOVERY: do not force the homepage if a recoverable
-  // room session exists. The existing session-recovery code handles
-  // the actual PeerJS reconnection.
-  // ------------------------------------------------------------
-  window.addEventListener('load', function(){
-    setTimeout(function(){
-      try{
-        hideOldPaintingConnect();
-        var s=null;
-        try{s=JSON.parse(localStorage.getItem('codenames_painting_session_v3')||'null');}catch(e){}
-        if(!s || !s.roomCode || !s.name) return;
-        // If the previous page has already restored the room, do nothing.
-        if(typeof roomCode!=='undefined' && roomCode) return;
-        if(typeof window.__saveGameSession==='function') {
-          // Let the existing restore routine own the actual reconnect.
-          return;
-        }
-      }catch(e){}
-    }, 1200);
-  });
-
-  // ------------------------------------------------------------
-  // TURN REMINDER: visible title + sound/notification through the
-  // existing reminder helper. Only fires once per turn.
-  // ------------------------------------------------------------
-  setInterval(function(){
-    try{
-      if(typeof localRoomCache==='undefined' || !localRoomCache) return;
-      var r=localRoomCache;
-      if(r.gameMode==='draw'){
-        var d=r.draw||{};
-        var mine=(typeof me!=='undefined'&&me&&me.name);
-        if(d.phase==='drawing' && mine && d.artists && d.artists[d.artistIndex]===me.name &&
-           window.__turnReminder && typeof window.__turnReminder.remind==='function'){
-          window.__turnReminder.remind('🎨 دورك الآن — ابدأ الرسم!', 'paint-final|'+(r.code||'')+'|'+(d.round||1)+'|'+(d.artistIndex||0));
-        }
+      if(typeof CATEGORIES !== 'undefined'){
+        Object.keys(VISUAL).forEach(cat=>{
+          CATEGORIES[cat] = VISUAL[cat].words.slice();
+        });
       }
-    }catch(e){}
-  }, 800);
-})();
-</script>
-
-<style id="final-user-fixes-v3">
-/* Keep the existing Codenames UI and transport. Only fix routing/visual modes/drawing controls. */
-#paintingConnectScreen{display:none!important}
-#drawScreen{min-height:100vh!important}
-#drawScreen .pf-canvas-wrap,#drawScreen .du-board canvas{box-shadow:0 0 0 2px rgba(232,200,74,.08),0 16px 45px rgba(0,0,0,.28)}
-#drawScreen canvas{image-rendering:auto}
-.pf-canvas{cursor:crosshair!important}
-#pictureModeHint{margin-top:8px;padding:8px 12px;border-radius:10px;background:rgba(232,200,74,.06);border:1px solid rgba(232,200,74,.12);color:var(--text-secondary);font-size:12px;text-align:center}
-.visual-mode-option{font-weight:800}
-#onlinePlayerModeWrap{min-width:180px}
-@media(max-width:760px){#onlinePlayerModeWrap{width:100%}}
-</style>
-<script id="final-user-fixes-v3-script">
-(function(){
-  'use strict';
-  const VISUAL_CATS={
-    pictures:{name:'📸 صور حقيقية',query:'photo'},
-    anime_images:{name:'🍥 أنمي بالصور',query:'anime'},
-    cartoons:{name:'🎨 كرتون بالصور',query:'cartoon'},
-    movies_images:{name:'🎬 أفلام بالصور',query:'movie'},
-    games_images:{name:'🎮 ألعاب بالصور',query:'video game'},
-    sports_images:{name:'⚽ رياضة بالصور',query:'sports'}
-  };
-  const VISUAL_WORDS={
-    anime_images:['ناروتو','غوكو','لوفي','سايتاما','إيتاتشي','ساسكي','إيتشيغو','إيرين','ليفاي','غوجو','سوكونا','تانجيرو','نيزوكو','زينيتسو','زورو','سانجي','شانكس','ميدوريا','باكوغو','تودوروكي','غون','كيلوا','هيسوكا','إدوارد','ريم'],
-    cartoons:['سبونج بوب','توم وجيري','ميكي ماوس','دونالد داك','سكوبي دو','بن 10','بوكيمون','فتيات القوة','وقت المغامرة','غارفيلد','كونغ فو باندا','شريك','مدغشقر','البحث عن نيمو','مولان','علاء الدين','الأسد الملك','فروزن','توي ستوري','كوكو','راتاتوي','موانا','ترانسفورمرز','السنافر','تشارلي براون'],
-    movies_images:['تايتانيك','أفاتار','إنسبشن','ماتريكس','غلادياتور','فورست غامب','فايت كلوب','بالب فيكشن','إنترستيلار','جوراسيك بارك','العراب','روكي','جوكر','أوبنهايمر','باربي','شريك','كوكو','فوق','وال إي','راتاتوي','مولان','المهمة المستحيلة','جون ويك','سيد الخواتم','الهوبيت'],
-    games_images:['ماينكرافت','فورتنايت','كول أوف ديوتي','جتا','ريد ديد','أساسنز كريد','غود أوف وور','ذا لاست أوف أس','فالوت','سكايرم','ويتشر','سايبر بانك','إيلدن رينغ','سوبر ماريو','زيلدا','بوكيمون','روبلوكس','فالورانت','ببجي','فري فاير','أمونغ أس','تيراريا','هالو','دوم','روكيت ليغ'],
-    sports_images:['كرة القدم','كرة السلة','التنس','السباحة','الملاكمة','الجودو','الكاراتيه','التايكواندو','الجمباز','كرة الطائرة','كرة اليد','الفروسية','التزلج','ركوب الأمواج','الجولف','البيسبول','الكريكت','الرغبي','فورمولا 1','الماراثون','ركوب الدراجات','المصارعة','هوكي','بلياردو','بادل']
-  };
-  function visual(cat){return !!VISUAL_CATS[cat]}
-  function imgUrl(word,index,cat){
-    const q=VISUAL_CATS[cat]?.query||'photo';
-    const text=String(word||'').toLowerCase();
-    return 'https://loremflickr.com/520/360/'+encodeURIComponent(q+','+text)+'?lock='+(cat+'-'+index).replace(/[^a-z0-9_-]/gi,'');
+    }catch(e){ console.warn('category pools:',e); }
   }
-  function patchCategorySelects(){
+
+  function installCategoryOptions(){
     ['localCategory','onlineCategory'].forEach(id=>{
-      const s=document.getElementById(id); if(!s)return;
-      if(!s.querySelector('option[value="anime_images"]')){
-        const opts=[['anime_images','🍥 أنمي بالصور — Anime Images'],['cartoons','🎨 كرتون بالصور — Cartoon Images'],['movies_images','🎬 أفلام بالصور — Movie Images'],['games_images','🎮 ألعاب بالصور — Game Images'],['sports_images','⚽ رياضة بالصور — Sports Images']];
-        const anchor=s.querySelector('option[value="pictures"]');
-        opts.reverse().forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(anchor)anchor.after(o);else s.appendChild(o);});
+      const select=document.getElementById(id);
+      if(!select)return;
+      Object.keys(VISUAL).forEach(cat=>{
+        if(select.querySelector('option[value="'+cat+'"]'))return;
+        const opt=document.createElement('option');
+        opt.value=cat;
+        opt.textContent=VISUAL[cat].option;
+        select.appendChild(opt);
+      });
+    });
+  }
+
+  function patchVisualCards(cards, cat){
+    if(!isVisual(cat) || !Array.isArray(cards))return cards;
+    return cards.map((card,i)=>{
+      const c=card||{};
+      c.image=c.image||imageUrl(cat,i);
+      return c;
+    });
+  }
+
+  function syncVisualBoard(){
+    try{
+      if(typeof state==='undefined'||!state)return;
+      const cat=state.category;
+      if(!isVisual(cat))return;
+      state.cards=patchVisualCards(state.cards,cat);
+      const boardLock=document.getElementById('boardLock');
+      if(boardLock)boardLock.classList.add('hidden');
+      const board=document.getElementById('board');
+      if(board)board.querySelectorAll('.card').forEach(el=>{
+        el.classList.remove('disabled');
+        el.style.cursor='pointer';
+      });
+      const label=document.getElementById('categoryDisplay');
+      if(label)label.textContent='📂 '+LABELS[cat];
+    }catch(e){ console.warn('visual board:',e); }
+  }
+
+  function addPlayerModeSelector(){
+    try{
+      const lobby=document.getElementById('lobbyScreen');
+      if(!lobby || document.getElementById('onlinePlayerModeWrap'))return;
+      const row=lobby.querySelector('.settings-row');
+      if(!row)return;
+      const wrap=document.createElement('label');
+      wrap.id='onlinePlayerModeWrap';
+      wrap.innerHTML='<span class="setting-label">👥 نمط المباراة:</span><select id="onlinePlayerMode"><option value="1v1">⚔️ 1 ضد 1 — لاعبان</option><option value="2v2">⚔️ 2 ضد 2 — أربعة لاعبين</option></select>';
+      row.appendChild(wrap);
+      const select=wrap.querySelector('select');
+      select.addEventListener('change',function(){
+        try{
+          const room=localRoomCache;
+          if(!room || room.gameMode==='draw' || room.phase!=='lobby' || room.leader!==me.name)return;
+          room.settings=room.settings||{};
+          room.settings.playerMode=select.value;
+          room.playerMode=select.value;
+          writeRoom(roomCode,room);
+          if(typeof renderLobbyFromRoom==='function')renderLobbyFromRoom(room);
+        }catch(e){}
+      });
+    }catch(e){}
+  }
+
+  function refreshPlayerMode(){
+    try{
+      const room=(typeof localRoomCache!=='undefined'&&localRoomCache)||null;
+      const btn=document.getElementById('oStart');
+      const select=document.getElementById('onlinePlayerMode');
+      if(!room||!btn||room.gameMode==='draw'||room.phase!=='lobby')return;
+      addPlayerModeSelector();
+      const modeValue=(room.settings&&room.settings.playerMode)||room.playerMode||'2v2';
+      if(select){
+        select.value=modeValue;
+        select.disabled=room.leader!==(typeof me!=='undefined'&&me&&me.name);
+      }
+      const red=(room.teams&&room.teams.red||[]).filter(Boolean);
+      const blue=(room.teams&&room.teams.blue||[]).filter(Boolean);
+      const total=red.length+blue.length;
+      const valid=modeValue==='1v1' ? (red.length===1&&blue.length===1) : (red.length===2&&blue.length===2);
+      const leaderNow=room.leader===(typeof me!=='undefined'&&me&&me.name);
+      btn.disabled=!(leaderNow&&valid);
+      btn.textContent=valid?'⚔️ ابدأ المهمة':('⚔️ '+(modeValue==='1v1'?'1 ضد 1':'2 ضد 2')+' — '+total+'/'+(modeValue==='1v1'?2:4));
+    }catch(e){}
+  }
+
+  function chooseSpymasters(room){
+    ['red','blue'].forEach(team=>{
+      const list=(room.teams&&room.teams[team])||[];
+      if(list.length && !list.some(p=>p&&p.spymaster)){
+        list[0].spymaster=true;
       }
     });
   }
-  function patchVisualBoard(){
-    try{
-      if(typeof state==='undefined'||!state||!Array.isArray(state.cards))return;
-      const cat=state.category;
-      if(!visual(cat))return;
-      state.cards.forEach((c,i)=>{c.image=c.image||imgUrl(c.word,i,cat);});
-      try{const r=window.localRoomCache;if(r&&r.gameMode!=='draw'&&Array.isArray(r.cards)&&r.category===cat)r.cards=r.cards.map((c,i)=>({...c,image:c.image||imgUrl(c.word,i,cat)}));}catch(_){}
-      const board=document.getElementById('board'); if(!board)return;
-      board.querySelectorAll('.board-lock').forEach(x=>x.classList.add('hidden'));
-      board.querySelectorAll('.card').forEach(el=>el.classList.remove('disabled'));
-    }catch(e){console.warn('visual board patch',e)}
-  }
-  function patchRender(){
-    if(typeof window.render==='function' && !window.__visualRenderPatched){
-      const original=window.render;
-      window.render=function(){const out=original.apply(this,arguments);setTimeout(patchVisualBoard,0);return out};
-      window.__visualRenderPatched=true;
+
+  function startCodenamesWithBots(){
+    const room=(typeof localRoomCache!=='undefined'&&localRoomCache)||null;
+    const err=document.getElementById('oErr');
+    if(!room){if(err)err.textContent='❌ تعذّر الوصول إلى الغرفة.';return true;}
+    if(room.gameMode==='draw'){if(err)err.textContent='🎨 هذه غرفة Painting. استخدم زر بدء Painting.';return true;}
+    if(room.leader!==(typeof me!=='undefined'&&me&&me.name)){if(err)err.textContent='⚠️ فقط قائد الغرفة يمكنه بدء المهمة.';return true;}
+    const modeValue=(room.settings&&room.settings.playerMode)||room.playerMode||'2v2';
+    const red=(room.teams&&room.teams.red||[]).filter(Boolean);
+    const blue=(room.teams&&room.teams.blue||[]).filter(Boolean);
+    const valid=modeValue==='1v1' ? (red.length===1&&blue.length===1) : (red.length===2&&blue.length===2);
+    if(!valid){
+      if(err)err.textContent='⚠️ '+(modeValue==='1v1'?'1 ضد 1 يحتاج لاعباً واحداً في كل فريق.':'2 ضد 2 يحتاج لاعبين في كل فريق.');
+      return true;
     }
+    chooseSpymasters(room);
+    room.settings=room.settings||{};
+    room.settings.playerMode=modeValue;
+    room.playerMode=modeValue;
+    const assassinCount=+room.settings.assassinCount||1;
+    const difficulty=room.settings.difficulty||'normal';
+    const timer=+room.settings.timer||0;
+    const category=room.settings.category||'all';
+    const customWords=(room.customWords||room.settings.customWords||[]).slice();
+    let built=buildBoard(assassinCount,difficulty,category,customWords);
+    if(isVisual(category))built.cards=patchVisualCards(built.cards,category);
+    room.phase='playing';
+    room.cards=built.cards;
+    room.turn=built.turn;
+    room.clue=null;
+    room.gameOver=false;
+    room.winner=null;
+    room.reason='';
+    room.assassinCount=built.assassinCount;
+    room.assassinRevealed=0;
+    room.timer=timer;
+    room.category=category;
+    room.customWords=customWords;
+    room.settings.customWords=customWords.slice();
+    room.turnDeadline=timer>0?Date.now()+timer*1000:null;
+    /* Bots must be enabled for the existing host-authoritative AI controller. */
+    room.matchmaking=red.concat(blue).some(p=>p&&p.bot) ? true : !!room.matchmaking;
+    localRoomCache=room;
+    writeRoom(roomCode,room);
+    enterOnlineGame(room);
+    setTimeout(syncVisualBoard,0);
+    setTimeout(runAIMoveIfNeeded,150);
+    return true;
   }
-  function patchOnlineMode(){
-    const lobby=document.getElementById('lobbyScreen'); if(!lobby)return;
-    const settings=lobby.querySelector('.settings-row'); if(!settings||document.getElementById('onlinePlayerModeWrap'))return;
-    const wrap=document.createElement('label');wrap.id='onlinePlayerModeWrap';
-    wrap.innerHTML='<span class="setting-label">👥 نمط المباراة:</span><select id="onlinePlayerMode"><option value="1v1">⚔️ 1 ضد 1 — لاعبان</option><option value="2v2">⚔️ 2 ضد 2 — أربعة لاعبين</option></select>';
-    settings.appendChild(wrap);
-    const sel=wrap.querySelector('select');
-    function save(){
-      try{const r=window.localRoomCache;if(!r||r.gameMode==='draw'||r.phase!=='lobby'||r.leader!==window.me.name)return;r.settings=r.settings||{};r.settings.playerMode=sel.value;r.playerMode=sel.value;window.writeRoom(window.roomCode,r);if(typeof window.renderLobbyFromRoom==='function')window.renderLobbyFromRoom(r)}catch(e){}
-    }
-    sel.addEventListener('change',save);
-    const r=window.localRoomCache;sel.value=r?.settings?.playerMode||r?.playerMode||'2v2';
+
+  function interceptStart(){
+    const btn=document.getElementById('oStart');
+    if(!btn||btn.__stableV4)return;
+    btn.__stableV4=true;
+    btn.addEventListener('click',function(e){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      startCodenamesWithBots();
+    },true);
   }
-  function refreshModeStart(){
+
+  function keepPaintingSeparate(){
     try{
-      const r=window.localRoomCache,b=document.getElementById('oStart');if(!r||!b||r.gameMode==='draw'||r.phase!=='lobby')return;
-      patchOnlineMode();
-      const mode=(r.settings&&r.settings.playerMode)||r.playerMode||'2v2';
-      const red=(r.teams?.red||[]).filter(p=>p&&!p.bot).length,blue=(r.teams?.blue||[]).filter(p=>p&&!p.bot).length,total=red+blue;
-      const need=mode==='1v1'?2:4,valid=mode==='1v1'?(red===1&&blue===1):(red===2&&blue===2);
-      const leader=r.leader===window.me?.name;
-      b.disabled=!(leader&&valid);b.textContent=valid?'⚔️ ابدأ المهمة':('⚔️ '+(mode==='1v1'?'1 ضد 1':'2 ضد 2')+' — '+total+'/'+need);
+      /* Painting owns its own entry/lobby/game screens. Do not hide or rewrite them. */
+      const draw=document.getElementById('drawLobbyScreen');
+      if(draw && typeof window.renderDrawLobby==='function' && !draw.__stableV4Bound){
+        draw.__stableV4Bound=true;
+      }
     }catch(e){}
   }
-  function startOnline(){
-    const r=window.localRoomCache;if(!r||r.gameMode==='draw'||r.phase!=='lobby')return false;
-    const mode=(r.settings&&r.settings.playerMode)||r.playerMode||'2v2';
-    const red=(r.teams?.red||[]).filter(p=>p&&!p.bot),blue=(r.teams?.blue||[]).filter(p=>p&&!p.bot);
-    const valid=mode==='1v1'?(red.length===1&&blue.length===1):(red.length===2&&blue.length===2);
-    const err=document.getElementById('oErr');if(!valid){if(err)err.textContent='⚠️ '+(mode==='1v1'?'لـ 1 ضد 1: لاعب واحد في كل فريق.':'لـ 2 ضد 2: لاعبان في كل فريق.');return true}
-    if(r.leader!==window.me?.name){if(err)err.textContent='⚠️ فقط قائد الغرفة يستطيع البدء.';return true}
-    r.settings=r.settings||{};r.playerMode=mode;
-    if(!red.some(p=>p.spymaster))red[0].spymaster=true;if(!blue.some(p=>p.spymaster))blue[0].spymaster=true;
-    const ac=+r.settings.assassinCount||1,diff=r.settings.difficulty||'normal',timer=+r.settings.timer||0,cat=r.settings.category||'all',custom=(r.customWords||r.settings.customWords||[]).slice();
-    const built=window.buildBoard(ac,diff,cat,custom);r.phase='playing';r.cards=built.cards;r.turn=built.turn;r.clue=null;r.gameOver=false;r.winner=null;r.reason='';r.assassinCount=built.assassinCount;r.assassinRevealed=0;r.timer=timer;r.category=cat;r.customWords=custom;r.settings.customWords=custom.slice();r.settings.playerMode=mode;r.playerMode=mode;r.turnDeadline=timer?Date.now()+timer*1000:null;if(visual(cat)){r.cards=r.cards.map((c,i)=>({...c,image:c.image||imgUrl(c.word,i,cat)}));}
-    window.localRoomCache=r;window.writeRoom(window.roomCode,r);window.enterOnlineGame(r);return true;
-  }
-  function interceptStart(){const b=document.getElementById('oStart');if(!b||b.__fixed)return;b.__fixed=true;b.addEventListener('click',function(e){e.preventDefault();e.stopImmediatePropagation();startOnline()},true)}
-  function patchPictureRenderDirect(){
+
+  function fixVisualRoom(room){
     try{
-      const orig=window.enterOnlineGame;if(typeof orig==='function'&&!window.__pictureEnterPatched){window.enterOnlineGame=function(r){if(r&&visual(r.category||r.settings?.category)){r.category=r.category||r.settings.category;r.cards=(r.cards||[]).map((c,i)=>({...c,image:c.image||imgUrl(c.word,i,r.category)}))}return orig.apply(this,arguments)};window.__pictureEnterPatched=true;}
+      if(!room || !isVisual(room.category||room.settings?.category))return;
+      const cat=room.category||room.settings.category;
+      room.category=cat;
+      room.settings=room.settings||{};
+      room.settings.category=cat;
+      room.cards=patchVisualCards(room.cards||[],cat);
     }catch(e){}
   }
-  function paintingEntry(){
-    const s=document.getElementById('drawLobbyScreen');if(!s)return;
-    s.innerHTML=`<div class="pf-shell"><div class="pf-card"><div class="pf-head"><div><div class="pf-title">🎨 Painting</div><div class="pf-sub">غرفة رسم مستقلة — شارك رمز الغرفة مع أصدقائك.</div></div><button class="pf-btn danger" id="paintEntryBack">↩ رجوع</button></div><div class="pf-grid"><div class="pf-panel"><h3>👤 اسمك</h3><input id="pfName" class="pf-input" maxlength="18" autocomplete="off" placeholder="اكتب اسمك"></div><div class="pf-panel"><h3>🔑 الغرفة</h3><input id="pfCodeInput" class="pf-input" maxlength="6" autocomplete="off" spellcheck="false" placeholder="رمز الغرفة"><div class="pf-row" style="margin-top:9px"><button class="pf-btn primary" id="paintCreate">🚀 إنشاء غرفة</button><button class="pf-btn" id="paintJoin">🔗 دخول</button></div><div id="paintEntryMsg" class="pf-note">أنشئ غرفة أو أدخل رمز غرفة موجودة.</div></div></div></div></div>`;
-    const msg=t=>{const x=document.getElementById('paintEntryMsg');if(x)x.textContent=t||''};
-    document.getElementById('paintEntryBack').onclick=()=>window.show('modeScreen');
-    document.getElementById('paintCreate').onclick=()=>{const n=document.getElementById('pfName').value.trim();if(!n){msg('✏️ اكتب اسمك أولاً.');return}window.__paintingCreateRoom?.();};
-    document.getElementById('paintJoin').onclick=()=>{const n=document.getElementById('pfName').value.trim(),c=document.getElementById('pfCodeInput').value.trim().toUpperCase();if(!n){msg('✏️ اكتب اسمك أولاً.');return}if(!c){msg('🔑 اكتب رمز الغرفة.');return}window.__paintingJoinRoom?.();};
-    window.__paintingEntryReady=true;
+
+  function patchRoomWriteForVisual(){
+    /* No transport changes: only normalize visual cards before existing writes. */
+    if(typeof window.writeRoom==='function' && !window.__visualWritePatched){
+      const original=window.writeRoom;
+      window.writeRoom=function(code,room){
+        fixVisualRoom(room);
+        return original.apply(this,arguments);
+      };
+      window.__visualWritePatched=true;
+    }
   }
-  function patchPaintingClick(){
-    const b=document.getElementById('pickDraw');if(!b||b.__v3)return;b.__v3=true;
-    const nb=b.cloneNode(true);b.replaceWith(nb);nb.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();window.show('drawLobbyScreen');paintingEntry()},true);
-  }
-  function patchShow(){
-    if(typeof window.show!=='function'||window.__showV3)return;
-    const orig=window.show;window.show=function(id){if(id==='paintingConnectScreen'){id='drawLobbyScreen';setTimeout(paintingEntry,0)}orig(id);if(id==='drawLobbyScreen'&&!window.__paintingEntryReady&&!document.getElementById('pfPlayers'))setTimeout(paintingEntry,0)};window.__showV3=true;
-  }
-  function patchSession(){
-    // Never clear a recoverable room on refresh. Only explicit leave should clear it.
-    try{const key='codenames_painting_session_v3';const s=JSON.parse(localStorage.getItem(key)||'null');if(s&&s.roomCode&&s.name&&typeof window.__saveGameSession==='function')window.__saveGameSession()}catch(e){}
-  }
+
   function install(){
-    patchCategorySelects();patchRender();patchPictureRenderDirect();patchOnlineMode();interceptStart();refreshModeStart();patchPaintingClick();patchShow();patchSession();
-    // Repaint picture boards after legacy renderers and keep lobby/start state synchronized.
-    if(typeof window.render==='function')patchRender();
+    installCategoryPools();
+    installCategoryOptions();
+    addPlayerModeSelector();
+    interceptStart();
+    refreshPlayerMode();
+    patchRoomWriteForVisual();
+    keepPaintingSeparate();
+    syncVisualBoard();
+    try{
+      const room=(typeof localRoomCache!=='undefined'&&localRoomCache)||null;
+      if(room)fixVisualRoom(room);
+    }catch(e){}
   }
-  window.addEventListener('load',()=>setTimeout(install,80));
-  setInterval(()=>{install();try{if(typeof state!=='undefined'&&state?.category&&visual(state.category))patchVisualBoard()}catch(e){}},700);
+
+  window.addEventListener('load',()=>setTimeout(install,100));
+  setInterval(install,700);
 })();
 </script>
 </body>
 </html>
+
+<script id="FINAL-ROOM-AND-CATEGORY-REPAIR">
+(function(){
+'use strict';
+
+/* FINAL REPAIR: do not change the existing network/server layer. */
+const VISUAL_CATS={
+  pictures:{label:'📸 صور حقيقية — Picture Cards',query:'photo'},
+  anime_images:{label:'🍥 أنمي بالصور — Anime Images',query:'anime'},
+  cartoons:{label:'🎨 كرتون بالصور — Cartoon Images',query:'cartoon'},
+  movies_images:{label:'🎬 أفلام بالصور — Movie Images',query:'movie'},
+  games_images:{label:'🎮 ألعاب بالصور — Game Images',query:'video-game'},
+  sports_images:{label:'⚽ رياضة بالصور — Sports Images',query:'sports'}
+};
+function visual(cat){return !!VISUAL_CATS[cat];}
+function visualImage(cat,i){
+  const q=VISUAL_CATS[cat]?.query||'photo';
+  const lock=93000+(Object.keys(VISUAL_CATS).indexOf(cat)+1)*1000+(Number(i)||0);
+  return 'https://loremflickr.com/520/360/'+encodeURIComponent(q)+'?lock='+lock;
+}
+function patchCards(cards,cat){
+  if(!visual(cat)||!Array.isArray(cards))return cards;
+  return cards.map((c,i)=>{c=c||{}; c.image=visualImage(cat,i); return c;});
+}
+
+/* Existing board builder: keep all its game logic, only attach the correct images. */
+function patchBuilder(){
+  try{
+    if(typeof window.buildBoard!=='function'||window.__finalRepairBuilder)return;
+    const old=window.buildBoard;
+    window.buildBoard=function(a,d,c,w){const out=old.apply(this,arguments);if(out&&visual(c))out.cards=patchCards(out.cards,c);return out;};
+    window.__finalRepairBuilder=true;
+  }catch(e){console.warn('builder repair',e)}
+}
+
+/* Existing room writes remain untouched; visual cards are corrected before saving. */
+function patchWriter(){
+  try{
+    if(typeof window.writeRoom!=='function'||window.__finalRepairWriter)return;
+    const old=window.writeRoom;
+    window.writeRoom=function(code,room){
+      try{const cat=room?.category||room?.settings?.category;if(visual(cat))room.cards=patchCards(room.cards||[],cat);}catch(e){}
+      return old.apply(this,arguments);
+    };
+    window.__finalRepairWriter=true;
+  }catch(e){console.warn('writer repair',e)}
+}
+
+/* If an image host fails, never leave a blank card. */
+function repairRenderedVisualCards(){
+  const board=document.getElementById('board');if(!board)return;
+  board.querySelectorAll('.picture-card').forEach(card=>{
+    if(!card.querySelector('.picture-word')){
+      const img=card.querySelector('img');
+      const word=(typeof state!=='undefined'&&state.cards)?state.cards[[...board.children].indexOf(card)]?.word:'';
+      const w=document.createElement('div');w.className='picture-word';w.textContent=word||'';
+      w.style.cssText='display:block!important;padding:8px 5px;text-align:center;font-weight:900;color:#111;background:#eee8da;min-height:34px;box-sizing:border-box;';
+      card.appendChild(w);
+      if(img)img.addEventListener('error',function(){this.style.display='none';card.classList.add('image-failed');},{once:true});
+    }
+  });
+}
+
+/* Fix category choices without deleting the original popular categories. */
+function repairCategoryOptions(){
+  ['localCategory','onlineCategory'].forEach(id=>{
+    const s=document.getElementById(id);if(!s)return;
+    Object.entries(VISUAL_CATS).forEach(([value,v])=>{
+      let o=s.querySelector('option[value="'+value+'"]');
+      if(!o){o=document.createElement('option');o.value=value;s.appendChild(o)}
+      o.textContent=v.label;
+    });
+  });
+  try{
+    if(typeof CATEGORIES!=='undefined'){
+      /* These pools are intentionally simple and distinct; no server data is changed. */
+      if(!CATEGORIES.anime_images)CATEGORIES.anime_images=['ناروتو','غوكو','لوفي','غوجو','إيتاتشي','ساسكي','إيرين','ليفاي','تانجيرو','نيزوكو','زورو','سانجي','ميدوريا','باكوغو','تودوروكي','غون','كيلوا','إدوارد','ريم','سوكونا','شانكس','سايتاما','إيتشيغو','زيرك','شينرا'];
+      if(!CATEGORIES.cartoons)CATEGORIES.cartoons=['سبونج بوب','توم وجيري','ميكي ماوس','دونالد داك','سكوبي دو','بن 10','بوكيمون','فتيات القوة','غارفيلد','شريك','مدغشقر','نيمو','مولان','علاء الدين','الأسد الملك','فروزن','توي ستوري','كوكو','راتاتوي','موانا','السنافر','هيلو كيتي','وقت المغامرة','كونغ فو باندا','تشارلي براون'];
+      if(!CATEGORIES.movies_images)CATEGORIES.movies_images=['تايتانيك','أفاتار','إنسبشن','ماتريكس','غلادياتور','فورست غامب','بالب فيكشن','إنترستيلار','جوراسيك بارك','العراب','روكي','جوكر','أوبنهايمر','باربي','جون ويك','سيد الخواتم','الهوبيت','باتمان','سبايدرمان','توب غان','كوكو','موانا','شريك','مولان','راتاتوي'];
+      if(!CATEGORIES.games_images)CATEGORIES.games_images=['ماينكرافت','فورتنايت','كول أوف ديوتي','جتا','ريد ديد','أساسنز كريد','غود أوف وور','ذا لاست أوف أس','فالوت','سكايرم','ويتشر','سايبر بانك','إيلدن رينغ','سوبر ماريو','زيلدا','بوكيمون','روبلوكس','فالورانت','ببجي','فري فاير','أمونغ أس','تيراريا','هالو','دوم','روكيت ليغ'];
+      if(!CATEGORIES.sports_images)CATEGORIES.sports_images=['كرة القدم','كرة السلة','التنس','السباحة','الملاكمة','الجودو','الكاراتيه','التايكواندو','الجمباز','كرة الطائرة','كرة اليد','الفروسية','التزلج','ركوب الأمواج','الجولف','البيسبول','الكريكت','الرغبي','فورمولا 1','الماراثون','ركوب الدراجات','المصارعة','الهوكي','بلياردو','بادل','سباق السيارات'];
+      if(!CATEGORIES.pictures)CATEGORIES.pictures=['قطة','كلب','أسد','فيل','حصان','نسر','سمكة','فراشة','تفاحة','بيتزا','برغر','قهوة','طائرة','سيارة','دراجة','قطار','قلعة','شاطئ','جبل','غابة','صاروخ','غيتار','كاميرا','روبوت','بركان'];
+    }
+  }catch(e){}
+}
+
+/* ---- Painting entry: the old visible entry is kept, but its buttons are finally wired. ---- */
+function paintingRoomObject(code,name){
+  return {
+    code:code,phase:'lobby',gameMode:'draw',leader:name,
+    teams:{red:[{name:name,team:'red',bot:false,spymaster:false}],blue:[]},
+    bots:[],cards:[],chat:[],
+    draw:{phase:'lobby',round:1,rounds:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0,mode:'prompt',timeLimit:0,strokeUsed:false,strokes:[],scores:{},hints:[],secretHint:'',deadline:0}
+  };
+}
+function openPaintingEntry(){
+  try{if(typeof mode!=='undefined')mode='online';if(typeof teams!=='undefined')teams={red:[],blue:[]};}catch(e){}
+  if(typeof show==='function')show('paintingConnectScreen');
+  const oldName=document.getElementById('paintingConnectName');
+  if(oldName){setTimeout(()=>oldName.focus(),50);return;}
+  const pf=document.getElementById('pfName');if(pf)setTimeout(()=>pf.focus(),50);
+}
+function bindPaintingEntry(){
+  const create=document.getElementById('paintingCreateRoom');
+  const join=document.getElementById('paintingJoinRoom');
+  const nameEl=document.getElementById('paintingConnectName');
+  const codeEl=document.getElementById('paintingRoomCode');
+  const msgEl=document.getElementById('paintingConnectMsg');
+  if(create&&!create.__finalRepair){
+    create.__finalRepair=true;
+    create.addEventListener('click',async function(e){
+      e.preventDefault();
+      const name=(nameEl?.value||'').trim().slice(0,18);
+      if(!name){if(msgEl)msgEl.textContent='✏️ اكتب اسمك أولاً.';return;}
+      try{
+        const code=typeof makeCode==='function'?makeCode():'ABC12';
+        me={name:name,team:'red'};roomCode=code;mode='online';
+        const room=paintingRoomObject(code,name);localRoomCache=room;roomState=room;
+        if(msgEl)msgEl.textContent='⏳ إنشاء الغرفة...';
+        if(typeof peer!=='undefined'&&peer){try{peer.destroy()}catch(_){}
+        }
+        await createHostPeer(code);isHost=true;room.leader=name;
+        writeRoom(code,room);if(typeof startListening==='function')startListening();
+        if(typeof show==='function')show('drawLobbyScreen');
+        if(typeof window.renderDrawLobby==='function')window.renderDrawLobby(room);else if(typeof renderLobbyFromRoom==='function')renderLobbyFromRoom(room);
+      }catch(err){console.error(err);if(msgEl)msgEl.textContent='❌ تعذر إنشاء الغرفة: '+(err?.message||'اتصال');}
+    });
+  }
+  if(join&&!join.__finalRepair){
+    join.__finalRepair=true;
+    join.addEventListener('click',async function(e){
+      e.preventDefault();
+      const name=(nameEl?.value||'').trim().slice(0,18),code=(codeEl?.value||'').trim().toUpperCase();
+      if(!name){if(msgEl)msgEl.textContent='✏️ اكتب اسمك أولاً.';return;}
+      if(code.length<4){if(msgEl)msgEl.textContent='🔑 اكتب رمز الغرفة.';return;}
+      try{
+        if(msgEl)msgEl.textContent='⏳ الدخول إلى الغرفة...';
+        const room=await connectAsGuest(code);
+        if(!room||room.gameMode!=='draw')throw new Error('هذه ليست غرفة Painting');
+        me={name:name,team:'red'};roomCode=code;mode='online';localRoomCache=room;roomState=room;
+        if(guestConn?.open)guestConn.send({type:'join',name:name,team:'red'});
+        if(typeof startListening==='function')startListening();
+        if(typeof show==='function')show(room.phase==='lobby'?'drawLobbyScreen':'drawScreen');
+        if(room.phase==='lobby'&&typeof window.renderDrawLobby==='function')window.renderDrawLobby(room);
+        else if(room.phase!=='lobby'&&typeof window.renderDraw==='function')window.renderDraw(room);
+        if(msgEl)msgEl.textContent='✅ تم الاتصال بالغرفة.';
+      }catch(err){console.error(err);if(msgEl)msgEl.textContent='❌ تعذر الدخول: '+(err?.message||'تأكد من الرمز');}
+    });
+  }
+}
+
+function bindPickDraw(){
+  const b=document.getElementById('pickDraw');if(!b||b.__finalRepair)return;
+  const nb=b.cloneNode(true);b.replaceWith(nb);nb.__finalRepair=true;
+  nb.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openPaintingEntry();},true);
+}
+
+/* Prevent a stale Codenames session from winning a race immediately after Painting is opened. */
+let paintingRequestedUntil=0;
+const oldOpen=openPaintingEntry;
+openPaintingEntry=function(){paintingRequestedUntil=Date.now()+2500;oldOpen()};
+const oldShow=window.show;
+if(typeof oldShow==='function'&&!window.__finalRepairShow){
+  window.show=function(id){
+    if(Date.now()<paintingRequestedUntil && (id==='gameScreen'||id==='lobbyScreen'))return;
+    oldShow(id);
+    if(id==='paintingConnectScreen')bindPaintingEntry();
+  };
+  window.__finalRepairShow=true;
+}
+
+function install(){
+  patchBuilder();patchWriter();repairCategoryOptions();bindPickDraw();bindPaintingEntry();repairRenderedVisualCards();
+  try{
+    const r=(typeof localRoomCache!=='undefined'&&localRoomCache)||null;
+    if(r&&visual(r.category||r.settings?.category))r.cards=patchCards(r.cards||[],r.category||r.settings.category);
+  }catch(e){}
+}
+window.addEventListener('load',()=>setTimeout(install,150));
+setInterval(install,800);
+})();
+</script>

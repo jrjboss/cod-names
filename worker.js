@@ -1,74 +1,94 @@
 import { DurableObject } from "cloudflare:workers";
 
+/* =========================================================
+   CONFIG
+========================================================= */
+
 const MATCH_SIZE = 4;
 const WAIT_MS = 15_000;
 const STALE_MS = 90_000;
 const MATCHED_RETENTION_MS = 10 * 60_000;
 
+const MAX_PLAYERS = 20;
+const MAX_STROKES = 12000;
+
+/* =========================================================
+   CORS
+========================================================= */
+
 function corsHeaders(origin = "") {
-  const ok =
+  const allowed =
     origin === "https://jrjboss.github.io" ||
     origin === "null" ||
-    !origin;
+    origin === "";
 
   return {
     "Access-Control-Allow-Origin":
-      ok ? (origin || "*") : "https://jrjboss.github.io",
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Cache-Control": "no-store"
+      allowed ? origin || "*" : "https://jrjboss.github.io",
+
+    "Access-Control-Allow-Methods":
+      "GET,POST,OPTIONS",
+
+    "Access-Control-Allow-Headers":
+      "Content-Type",
+
+    "Access-Control-Allow-Credentials":
+      "true",
+
+    "Cache-Control":
+      "no-store"
   };
 }
 
 function json(data, status = 200, origin = "") {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      ...corsHeaders(origin)
+  return new Response(
+    JSON.stringify(data),
+    {
+      status,
+      headers: {
+        "Content-Type":
+          "application/json; charset=utf-8",
+        ...corsHeaders(origin)
+      }
     }
-  });
+  );
 }
-
-function roomCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let s = "";
-
-  for (let i = 0; i < 5; i++) {
-    s += chars[Math.floor(Math.random() * chars.length)];
-  }
-
-  return s;
-}
-
-function cleanName(v) {
-  return String(v || "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .slice(0, 18);
-}
-
-function norm(v) {
-  return String(v || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9\u0600-\u06ff]+/g, "");
-}
-
-function sameWord(a, b) {
-  return norm(a) === norm(b);
-}
-
 
 /* =========================================================
-   CODENAMES MATCHMAKER
-   ========================================================= */
+   ROOM CODE
+========================================================= */
+
+function makeRoomCode() {
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  let result = "";
+
+  for (let i = 0; i < 5; i++) {
+    result +=
+      chars[
+        Math.floor(
+          Math.random() * chars.length
+        )
+      ];
+  }
+
+  return result;
+}
+
+/* =========================================================
+   MATCHMAKER
+   KEEPING THIS SEPARATE FROM DRAWING
+========================================================= */
 
 export class Matchmaker extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
 
+    this.ctx = ctx;
+
     ctx.blockConcurrencyWhile(async () => {
-      ctx.storage.sql.exec(`
+      this.ctx.storage.sql.exec(`
         CREATE TABLE IF NOT EXISTS queue (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
@@ -81,22 +101,24 @@ export class Matchmaker extends DurableObject {
         );
 
         CREATE INDEX IF NOT EXISTS idx_queue_status_time
-          ON queue(status, joined_at);
+        ON queue(status, joined_at);
 
         CREATE INDEX IF NOT EXISTS idx_queue_match
-          ON queue(match_id);
+        ON queue(match_id);
       `);
     });
   }
 
-  clean() {
+  cleanStale() {
+    const now = Date.now();
+
     this.ctx.storage.sql.exec(
       `
       DELETE FROM queue
       WHERE status = 'waiting'
       AND joined_at < ?
       `,
-      Date.now() - STALE_MS
+      now - STALE_MS
     );
 
     this.ctx.storage.sql.exec(
@@ -105,86 +127,128 @@ export class Matchmaker extends DurableObject {
       WHERE status = 'matched'
       AND joined_at < ?
       `,
-      Date.now() - MATCHED_RETENTION_MS
+      now - MATCHED_RETENTION_MS
     );
   }
 
-  makeMatch(rows) {
-    const id = crypto.randomUUID();
-    const code = roomCode();
+  makeMatch(waitingRows) {
     const now = Date.now();
 
-    const players = rows
-      .slice(0, MATCH_SIZE)
-      .map((row, i) => ({
-        id: row.id,
-        name: row.name,
-        team: i % 2 ? "blue" : "red",
-        bot: false,
-        host: i === 0
-      }));
+    const matchId =
+      crypto.randomUUID();
 
-    while (players.length < MATCH_SIZE) {
-      const i = players.length;
+    const roomCode =
+      makeRoomCode();
+
+    const selected =
+      waitingRows.slice(
+        0,
+        MATCH_SIZE
+      );
+
+    const players =
+      selected.map(
+        (row, index) => ({
+          id: row.id,
+          name: row.name,
+
+          team:
+            index % 2 === 0
+              ? "red"
+              : "blue",
+
+          bot: false,
+          host: index === 0
+        })
+      );
+
+    while (
+      players.length < MATCH_SIZE
+    ) {
+      const index =
+        players.length;
 
       players.push({
-        id: `bot-${id}-${i}`,
-        name: `Codename Bot ${i}`,
-        team: i % 2 ? "blue" : "red",
+        id:
+          `bot-${matchId}-${index}`,
+
+        name:
+          `Codename Bot ${index}`,
+
+        team:
+          index % 2 === 0
+            ? "red"
+            : "blue",
+
         bot: true,
         host: false,
-        difficulty: "normal"
+        difficulty:
+          "normal"
       });
     }
 
-    const payload = JSON.stringify({
-      matchId: id,
-      roomCode: code,
-      players,
-      createdAt: now
-    });
+    const payload =
+      JSON.stringify({
+        matchId,
+        roomCode,
+        players,
+        createdAt: now
+      });
 
-    this.ctx.storage.transactionSync(() => {
-      for (const p of players.filter(x => !x.bot)) {
-        this.ctx.storage.sql.exec(
-          `
-          UPDATE queue
-          SET status = 'matched',
-              match_id = ?,
-              host = ?,
-              team = ?,
-              payload = ?
-          WHERE id = ?
-          `,
-          id,
-          p.host ? 1 : 0,
-          p.team,
-          payload,
-          p.id
-        );
+    this.ctx.storage.transactionSync(
+      () => {
+        for (
+          const player of
+          players.filter(
+            p => !p.bot
+          )
+        ) {
+          this.ctx.storage.sql.exec(
+            `
+            UPDATE queue
+            SET status = 'matched',
+                match_id = ?,
+                host = ?,
+                team = ?,
+                payload = ?
+            WHERE id = ?
+            `,
+            matchId,
+            player.host ? 1 : 0,
+            player.team,
+            payload,
+            player.id
+          );
+        }
       }
-    });
+    );
 
     return {
-      matchId: id,
-      roomCode: code,
+      matchId,
+      roomCode,
       players
     };
   }
 
-  async join(p) {
-    this.clean();
+  async join(player) {
+    this.cleanStale();
 
     const existing =
       this.ctx.storage.sql
         .exec(
-          "SELECT id FROM queue WHERE id = ?",
-          p.id
+          `
+          SELECT *
+          FROM queue
+          WHERE id = ?
+          `,
+          player.id
         )
         .toArray();
 
     if (existing.length) {
-      return this.status(p.id);
+      return this.status(
+        player.id
+      );
     }
 
     this.ctx.storage.sql.exec(
@@ -196,7 +260,7 @@ export class Matchmaker extends DurableObject {
         status,
         payload
       )
-      VALUES(
+      VALUES (
         ?,
         ?,
         ?,
@@ -204,22 +268,28 @@ export class Matchmaker extends DurableObject {
         ?
       )
       `,
-      p.id,
-      p.name,
+      player.id,
+      player.name,
       Date.now(),
-      JSON.stringify(p)
+      JSON.stringify(player)
     );
 
-    return this.status(p.id);
+    return this.status(
+      player.id
+    );
   }
 
   async status(id) {
-    this.clean();
+    this.cleanStale();
 
     const row =
       this.ctx.storage.sql
         .exec(
-          "SELECT * FROM queue WHERE id = ?",
+          `
+          SELECT *
+          FROM queue
+          WHERE id = ?
+          `,
           id
         )
         .toArray()[0];
@@ -235,18 +305,40 @@ export class Matchmaker extends DurableObject {
       row.payload
     ) {
       const match =
-        JSON.parse(row.payload);
+        JSON.parse(
+          row.payload
+        );
+
+      const waiting =
+        this.ctx.storage.sql
+          .exec(
+            `
+            SELECT COUNT(*) AS count
+            FROM queue
+            WHERE status = 'waiting'
+            `
+          )
+          .one();
 
       return {
         status: "matched",
+
         ...match,
-        host: !!row.host,
-        team: row.team,
-        queueCount: 0
+
+        host:
+          !!row.host,
+
+        team:
+          row.team,
+
+        queueCount:
+          Number(
+            waiting.count || 0
+          )
       };
     }
 
-    const rows =
+    const waitingRows =
       this.ctx.storage.sql
         .exec(
           `
@@ -260,57 +352,82 @@ export class Matchmaker extends DurableObject {
         .toArray();
 
     const oldest =
-      rows[0]?.joined_at ||
+      waitingRows[0]?.joined_at ||
       Date.now();
 
     const shouldMatch =
-      rows.length >= MATCH_SIZE ||
+      waitingRows.length >=
+        MATCH_SIZE ||
       (
-        rows.length > 0 &&
-        Date.now() - oldest >= WAIT_MS
+        waitingRows.length > 0 &&
+        Date.now() -
+          oldest >=
+          WAIT_MS
       );
 
     if (shouldMatch) {
       const match =
-        this.makeMatch(rows);
-
-      const me =
-        match.players.find(
-          x => x.id === id
+        this.makeMatch(
+          waitingRows
         );
 
-      if (me) {
+      const matched =
+        match.players.find(
+          p =>
+            p.id === id
+        );
+
+      if (matched) {
         return {
-          status: "matched",
+          status:
+            "matched",
+
           ...match,
-          host: me.host,
-          team: me.team,
-          queueCount: 0
+
+          host:
+            matched.host,
+
+          team:
+            matched.team,
+
+          queueCount:
+            0
         };
       }
     }
 
     const position =
-      rows.findIndex(
-        x => x.id === id
+      waitingRows.findIndex(
+        player =>
+          player.id === id
       );
 
     return {
-      status: "waiting",
+      status:
+        "waiting",
+
       position:
         position >= 0
           ? position + 1
           : 1,
-      queueCount: rows.length,
+
+      queueCount:
+        waitingRows.length,
+
       waitedMs:
         Date.now() -
-        Number(row.joined_at)
+        Number(
+          row.joined_at
+        )
     };
   }
 
   async leave(id) {
     this.ctx.storage.sql.exec(
-      "DELETE FROM queue WHERE id = ?",
+      `
+      DELETE FROM queue
+      WHERE id = ?
+      `,
       id
     );
 
@@ -320,697 +437,920 @@ export class Matchmaker extends DurableObject {
   }
 }
 
-
 /* =========================================================
-   DRAW & GUESS WORD CATEGORIES
-   ========================================================= */
-
-const POOLS = {
-
-  mixed: [
-    "Elephant",
-    "Pizza",
-    "Guitar",
-    "Rocket",
-    "Sunglasses",
-    "Waterfall",
-    "Skateboard",
-    "Dragon",
-    "Umbrella",
-    "Cactus",
-    "Robot",
-    "Snowman",
-    "Bicycle",
-    "Volcano",
-    "Butterfly",
-    "Camera",
-    "Lighthouse",
-    "Astronaut",
-    "Campfire",
-    "Kangaroo",
-    "Rainbow",
-    "Spaceship",
-    "Pirate ship",
-    "Mermaid",
-    "Dinosaur",
-    "Waffle",
-    "Tornado",
-    "Jellyfish",
-    "Skyscraper",
-    "Penguin",
-    "Ninja",
-    "Wizard",
-    "Octopus",
-    "Sandcastle",
-    "Telescope",
-    "Violin",
-    "Compass",
-    "Cupcake",
-    "Parachute",
-    "Panda"
-  ],
-
-  animals: [
-    "Cat",
-    "Dog",
-    "Lion",
-    "Elephant",
-    "Horse",
-    "Eagle",
-    "Shark",
-    "Butterfly",
-    "Penguin",
-    "Octopus",
-    "Tiger",
-    "Bear",
-    "Monkey",
-    "Rabbit",
-    "Turtle",
-    "Crocodile",
-    "Dolphin",
-    "Whale",
-    "Owl",
-    "Fox",
-    "Wolf",
-    "Panda",
-    "Kangaroo",
-    "Cheetah"
-  ],
-
-  food: [
-    "Pizza",
-    "Burger",
-    "Ice cream",
-    "Apple",
-    "Banana",
-    "Watermelon",
-    "Cake",
-    "Donut",
-    "Fries",
-    "Chocolate",
-    "Sushi",
-    "Taco",
-    "Kebab",
-    "Falafel",
-    "Coffee",
-    "Tea",
-    "Waffle",
-    "Popcorn",
-    "Pancakes",
-    "Cupcake"
-  ],
-
-  objects: [
-    "Phone",
-    "Camera",
-    "Computer",
-    "Guitar",
-    "Crown",
-    "Umbrella",
-    "Clock",
-    "Glasses",
-    "Lamp",
-    "Key",
-    "Chair",
-    "Book",
-    "Pen",
-    "Scissors",
-    "Bag",
-    "Mirror",
-    "Cup",
-    "Spoon",
-    "Ball",
-    "Microphone"
-  ],
-
-  places: [
-    "House",
-    "Castle",
-    "Beach",
-    "Island",
-    "Mountain",
-    "Volcano",
-    "School",
-    "Stadium",
-    "Airport",
-    "City",
-    "Village",
-    "Farm",
-    "Museum",
-    "Theater",
-    "Library",
-    "Garden",
-    "Desert",
-    "Forest",
-    "Harbor",
-    "Bridge"
-  ],
-
-  fantasy: [
-    "Dragon",
-    "Robot",
-    "Wizard",
-    "Space ship",
-    "Unicorn",
-    "Galaxy",
-    "Planet",
-    "Knight",
-    "Magic crown",
-    "Portal",
-    "Giant",
-    "Genie",
-    "Monster",
-    "Fairy",
-    "Phoenix"
-  ],
-
-  anime: [
-    "Naruto",
-    "Goku",
-    "Luffy",
-    "Saitama",
-    "Itachi",
-    "Sasuke",
-    "Ichigo",
-    "Eren",
-    "Levi",
-    "Gojo",
-    "Sukuna",
-    "Tanjiro",
-    "Nezuko",
-    "Zenitsu",
-    "Zoro",
-    "Sanji",
-    "Shanks",
-    "Deku",
-    "Bakugo",
-    "Todoroki",
-    "Gon",
-    "Killua"
-  ]
-};
-
-
-/* =========================================================
-   SAFE PUBLIC DRAWING STATE
-   ========================================================= */
-
-function publicState(state, playerId) {
-  const s = structuredClone(state);
-
-  const artist =
-    s.players.find(
-      p => p.id === s.artistId
-    );
-
-  const isArtist =
-    artist &&
-    artist.id === playerId;
-
-  if (!isArtist) {
-    s.prompt = null;
-  }
-
-  if (
-    s.phase === "finished" ||
-    s.phase === "result"
-  ) {
-    s.prompt =
-      s.lastWord ||
-      s.word ||
-      null;
-  }
-
-  /*
-   NEVER expose the secret word to guessers.
-  */
-  s.word = null;
-
-  if (s.deadline) {
-    s.secondsLeft =
-      Math.max(
-        0,
-        Math.ceil(
-          (s.deadline - Date.now()) / 1000
-        )
-      );
-  }
-
-  return s;
-}
-
-
-/* =========================================================
-   DRAWING ROOM DURABLE OBJECT
-   ========================================================= */
+   DRAWING ROOM
+========================================================= */
 
 export class DrawingRoom extends DurableObject {
-
   constructor(ctx, env) {
     super(ctx, env);
 
     this.ctx = ctx;
-    this.sockets = new Map();
+    this.env = env;
 
-    ctx.blockConcurrencyWhile(
+    this.sockets =
+      new Map();
+
+    this.ctx.blockConcurrencyWhile(
       async () => {
-        const existing =
-          await ctx.storage.get(
-            "drawState"
+        let state =
+          await this.ctx.storage.get(
+            "drawingState"
           );
 
-        if (!existing) {
-          await ctx.storage.put(
-            "drawState",
-            this.defaultState()
+        if (!state) {
+          state =
+            this.defaultState();
+
+          await this.ctx.storage.put(
+            "drawingState",
+            state
           );
         }
+
+        /* -------------------------------------------------
+           Repair older room states.
+        ------------------------------------------------- */
+
+        state.players =
+          Array.isArray(
+            state.players
+          )
+            ? state.players
+            : [];
+
+        state.strokes =
+          Array.isArray(
+            state.strokes
+          )
+            ? state.strokes
+            : [];
+
+        state.round =
+          Number(
+            state.round || 0
+          );
+
+        state.totalRounds =
+          Number(
+            state.totalRounds || 0
+          );
+
+        state.version =
+          Number(
+            state.version || 0
+          );
+
+        await this.ctx.storage.put(
+          "drawingState",
+          state
+        );
       }
     );
   }
 
-
   defaultState() {
     return {
-      code: "",
-
-      mode: "1v1",
-
-      category: "mixed",
-
-      phase: "lobby",
-
-      leaderId: null,
+      roomCode: null,
 
       players: [],
 
-      rounds: 4,
-
-      timeLimit: 60,
-
       round: 0,
+      totalRounds: 0,
 
-      artistIndex: 0,
+      drawerId: null,
+      drawerName: null,
 
-      artistId: null,
-
-      prompt: null,
-
+      category: null,
       word: null,
 
       strokes: [],
 
-      guesses: [],
+      version: 0,
 
-      chat: [],
+      started: false,
+      finished: false,
 
-      scores: [],
+      createdAt:
+        Date.now(),
 
-      gallery: [],
-
-      deadline: 0,
-
-      secondsLeft: 0,
-
-      lastSubmission: null,
-
-      lastCorrect: false,
-
-      lastWord: ""
+      updatedAt:
+        Date.now()
     };
   }
 
-
   async getState() {
-    return (
+    const state =
       await this.ctx.storage.get(
-        "drawState"
-      )
-    ) || this.defaultState();
+        "drawingState"
+      );
+
+    if (!state) {
+      return this.defaultState();
+    }
+
+    return state;
   }
 
+  async saveState(state) {
+    state.version =
+      Number(
+        state.version || 0
+      ) + 1;
 
-  async save(state) {
-    state.secondsLeft =
-      state.deadline
-        ? Math.max(
-            0,
-            Math.ceil(
-              (state.deadline - Date.now()) /
-                1000
-            )
-          )
-        : 0;
+    state.updatedAt =
+      Date.now();
 
     await this.ctx.storage.put(
-      "drawState",
+      "drawingState",
       state
     );
+
+    return state;
   }
 
+  /* =======================================================
+     SOCKET HELPERS
+  ======================================================= */
 
-  player(state, id) {
-    return state.players.find(
-      p => p.id === id
-    ) || null;
-  }
-
-
-  guessers(state) {
-
-    if (state.mode !== "teams") {
-      return state.players.filter(
-        p => p.id !== state.artistId
+  send(socket, message) {
+    try {
+      socket.send(
+        JSON.stringify(message)
       );
+
+      return true;
+    } catch {
+      return false;
     }
-
-    const artist =
-      this.player(
-        state,
-        state.artistId
-      );
-
-    const team =
-      artist?.team;
-
-    return state.players.filter(
-      p =>
-        p.id !== state.artistId &&
-        p.team === team
-    );
   }
 
+  broadcast(message) {
+    const dead = [];
 
-  broadcast(
-    state,
-    type = "state"
-  ) {
     for (
-      const [id, ws]
+      const [socket, playerId]
       of this.sockets
     ) {
-      try {
-        ws.send(
-          JSON.stringify({
-            type,
-            state:
-              publicState(
-                state,
-                id
-              )
-          })
+      const ok =
+        this.send(
+          socket,
+          message
         );
-      } catch {
-        this.sockets.delete(id);
+
+      if (!ok) {
+        dead.push(
+          [socket, playerId]
+        );
       }
     }
+
+    for (
+      const [socket, playerId]
+      of dead
+    ) {
+      this.removeSocket(
+        socket,
+        playerId
+      );
+    }
   }
 
+  removeSocket(socket, playerId) {
+    try {
+      socket.close();
+    } catch {}
 
-  chooseWord(state) {
+    this.sockets.delete(
+      socket
+    );
 
-    const pool =
-      POOLS[state.category] ||
-      POOLS.mixed;
+    /*
+      IMPORTANT:
+      We do not immediately delete
+      the player from the room here.
 
-    const used =
-      new Set(
-        (state.gallery || [])
-          .map(x => x.word)
+      Browsers can temporarily lose
+      WebSocket connections.
+
+      The player remains in the lobby
+      and can reconnect.
+    */
+
+    this.broadcastPlayers();
+  }
+
+  broadcastPlayers() {
+    this.getState()
+      .then(state => {
+        this.broadcast({
+          type:
+            "players",
+
+          players:
+            state.players
+        });
+      })
+      .catch(() => {});
+  }
+
+  /* =======================================================
+     PLAYER MANAGEMENT
+  ======================================================= */
+
+  async addPlayer(player) {
+    const state =
+      await this.getState();
+
+    if (
+      !player ||
+      !player.id
+    ) {
+      return state;
+    }
+
+    const id =
+      String(
+        player.id
+      ).slice(
+        0,
+        100
       );
 
-    const available =
-      pool.filter(
-        x => !used.has(x)
-      );
-
-    const source =
-      available.length
-        ? available
-        : pool;
-
-    return source[
-      Math.floor(
-        Math.random() *
-        source.length
+    const name =
+      String(
+        player.name ||
+        "Player"
       )
-    ];
-  }
+        .trim()
+        .slice(
+          0,
+          24
+        );
 
-
-  schedule(state) {
-    if (state.deadline) {
-      this.ctx.storage.setAlarm(
-        state.deadline
+    const existingIndex =
+      state.players.findIndex(
+        p =>
+          p.id === id
       );
-    }
-  }
-
-
-  async start(state) {
 
     if (
-      state.mode === "1v1" &&
-      state.players.length < 2
+      existingIndex >= 0
     ) {
-      throw new Error(
-        "1v1 needs at least 2 players."
-      );
-    }
+      state.players[
+        existingIndex
+      ] = {
+        ...state.players[
+          existingIndex
+        ],
 
-    if (
-      state.mode === "teams"
-    ) {
+        name:
+          name ||
+          state.players[
+            existingIndex
+          ].name,
 
-      const red =
-        state.players.filter(
-          p => p.team === "red"
-        ).length;
+        online: true,
 
-      const blue =
-        state.players.filter(
-          p => p.team === "blue"
-        ).length;
-
+        lastSeen:
+          Date.now()
+      };
+    } else {
       if (
-        red < 2 ||
-        blue < 2
+        state.players.length >=
+        MAX_PLAYERS
       ) {
         throw new Error(
-          "Teams mode needs at least 2 players on each team."
+          "Room is full"
         );
       }
+
+      state.players.push({
+        id,
+
+        name:
+          name ||
+          "Player",
+
+        team:
+          player.team ||
+          null,
+
+        host:
+          !!player.host,
+
+        bot:
+          !!player.bot,
+
+        online:
+          true,
+
+        lastSeen:
+          Date.now()
+      });
     }
 
-    state.phase =
-      "drawing";
+    await this.saveState(
+      state
+    );
 
-    state.round =
-      1;
+    this.broadcast({
+      type:
+        "players",
 
-    state.artistIndex =
-      0;
+      players:
+        state.players
+    });
 
-    state.artistId =
-      state.players[0].id;
-
-    state.strokes = [];
-
-    state.guesses = [];
-
-    state.gallery = [];
-
-    state.chat = [];
-
-    state.lastCorrect =
-      false;
-
-    state.lastWord =
-      "";
-
-    state.word =
-      this.chooseWord(state);
-
-    state.prompt =
-      state.word;
-
-    state.deadline =
-      state.timeLimit
-        ? Date.now() +
-          state.timeLimit * 1000
-        : 0;
-
-    state.scores =
-      state.players.map(
-        p => ({
-          id: p.id,
-          name: p.name,
-          score: 0
-        })
-      );
-
-    await this.save(state);
-
-    this.schedule(state);
+    return state;
   }
 
+  async markOffline(playerId) {
+    if (!playerId) return;
 
-  async finishDrawing(
-    state,
-    timeout = false
-  ) {
+    const state =
+      await this.getState();
 
-    if (
-      state.phase !== "drawing"
-    ) {
+    const player =
+      state.players.find(
+        p =>
+          p.id === playerId
+      );
+
+    if (!player) return;
+
+    player.online =
+      false;
+
+    player.lastSeen =
+      Date.now();
+
+    await this.saveState(
+      state
+    );
+
+    this.broadcast({
+      type:
+        "players",
+
+      players:
+        state.players
+    });
+  }
+
+  async removePlayer(playerId) {
+    if (!playerId) {
       return;
     }
 
-    state.lastSubmission = {
-      artist:
-        state.artistId,
+    const state =
+      await this.getState();
 
-      artistName:
-        this.player(
-          state,
-          state.artistId
-        )?.name ||
-        "Player",
+    state.players =
+      state.players.filter(
+        p =>
+          p.id !== playerId
+      );
 
-      strokes:
-        state.strokes.slice(
-          -1800
-        ),
+    await this.saveState(
+      state
+    );
 
-      word:
-        state.word || "",
+    this.broadcast({
+      type:
+        "players",
 
-      timeout
-    };
-
-    state.phase =
-      "guessing";
-
-    state.guesses =
-      [];
-
-    state.deadline =
-      state.timeLimit
-        ? Date.now() +
-          state.timeLimit * 1000
-        : 0;
-
-    await this.save(state);
-
-    this.schedule(state);
+      players:
+        state.players
+    });
   }
 
-
-  async finishRound(
-    state,
-    correct,
-    winner = null
-  ) {
-
-    state.lastCorrect =
-      !!correct;
-
-    state.lastWord =
-      state.word || "";
-
-    if (
-      correct &&
-      winner
-    ) {
-
-      const left =
-        state.deadline
-          ? Math.max(
-              0,
-              Math.ceil(
-                (state.deadline -
-                  Date.now()) /
-                  1000
-              )
-            )
-          : 0;
-
-      const points =
-        50 +
-        Math.min(
-          50,
-          left
-        );
-
-      const score =
-        state.scores.find(
-          x => x.id === winner
-        );
-
-      if (score) {
-        score.score += points;
-      }
-    }
-
-    if (
-      state.lastSubmission
-    ) {
-
-      state.gallery.push({
-        artist:
-          state.lastSubmission
-            .artistName,
-
-        word:
-          state.lastSubmission
-            .word,
-
-        strokes:
-          state.lastSubmission
-            .strokes,
-
-        correct:
-          !!correct,
-
-        winnerId:
-          winner || null
-      });
-
-      if (
-        state.gallery.length >
-        12
-      ) {
-        state.gallery.shift();
-      }
-    }
-
-    state.phase =
-      "result";
-
-    state.deadline =
-      0;
-
-    state.secondsLeft =
-      0;
-
-    await this.save(state);
-  }
-
+  /* =======================================================
+     REQUEST HANDLER
+  ======================================================= */
 
   async fetch(request) {
-
     const origin =
       request.headers.get(
         "Origin"
       ) || "";
 
     const url =
-      new URL(request.url);
+      new URL(
+        request.url
+      );
 
-    const parts =
-      url.pathname
-        .split("/")
-        .filter(Boolean);
+    /* =====================================================
+       CORS
+    ===================================================== */
+
+    if (
+      request.method ===
+      "OPTIONS"
+    ) {
+      return new Response(
+        null,
+        {
+          status: 204,
+
+          headers:
+            corsHeaders(
+              origin
+            )
+        }
+      );
+    }
+
+    /* =====================================================
+       WEBSOCKET
+       
+       THIS MUST BE BEFORE NORMAL
+       HTTP ROUTES.
+    ===================================================== */
+
+    const upgrade =
+      request.headers
+        .get("Upgrade");
+
+    if (
+      upgrade &&
+      upgrade.toLowerCase() ===
+        "websocket"
+    ) {
+      return this.handleWebSocket(
+        request
+      );
+    }
+
+    /* =====================================================
+       STATE
+       
+       GET /draw/ROOM/state
+    ===================================================== */
+
+    if (
+      request.method ===
+        "GET" &&
+      url.pathname.endsWith(
+        "/state"
+      )
+    ) {
+      const state =
+        await this.getState();
+
+      return json(
+        {
+          ok: true,
+
+          state
+        },
+
+        200,
+
+        origin
+      );
+    }
+
+    /* =====================================================
+       JOIN ROOM
+       
+       POST /draw/ROOM/join
+    ===================================================== */
+
+    if (
+      request.method ===
+        "POST" &&
+      url.pathname.endsWith(
+        "/join"
+      )
+    ) {
+      let body = {};
+
+      try {
+        body =
+          await request.json();
+      } catch {}
+
+      try {
+        const state =
+          await this.addPlayer(
+            body
+          );
+
+        return json(
+          {
+            ok: true,
+
+            state
+          },
+
+          200,
+
+          origin
+        );
+      } catch (error) {
+        return json(
+          {
+            ok: false,
+
+            error:
+              error?.message ||
+              "Unable to join room"
+          },
+
+          400,
+
+          origin
+        );
+      }
+    }
+
+    /* =====================================================
+       LEAVE ROOM
+       
+       POST /draw/ROOM/leave
+    ===================================================== */
+
+    if (
+      request.method ===
+        "POST" &&
+      url.pathname.endsWith(
+        "/leave"
+      )
+    ) {
+      let body = {};
+
+      try {
+        body =
+          await request.json();
+      } catch {}
+
+      await this.removePlayer(
+        body.playerId
+      );
+
+      return json(
+        {
+          ok: true
+        },
+
+        200,
+
+        origin
+      );
+    }
+
+    /* =====================================================
+       START / ROUND
+       
+       POST /draw/ROOM/round
+    ===================================================== */
+
+    if (
+      request.method ===
+        "POST" &&
+      url.pathname.endsWith(
+        "/round"
+      )
+    ) {
+      let body = {};
+
+      try {
+        body =
+          await request.json();
+      } catch {}
+
+      const state =
+        await this.getState();
+
+      if (
+        body.roomCode !==
+        undefined
+      ) {
+        state.roomCode =
+          body.roomCode;
+      }
+
+      if (
+        body.round !==
+        undefined
+      ) {
+        state.round =
+          Number(
+            body.round
+          );
+      }
+
+      if (
+        body.totalRounds !==
+        undefined
+      ) {
+        state.totalRounds =
+          Number(
+            body.totalRounds
+          );
+      }
+
+      if (
+        body.drawerId !==
+        undefined
+      ) {
+        state.drawerId =
+          body.drawerId;
+      }
+
+      if (
+        body.drawerName !==
+        undefined
+      ) {
+        state.drawerName =
+          body.drawerName;
+      }
+
+      if (
+        body.category !==
+        undefined
+      ) {
+        state.category =
+          body.category;
+      }
+
+      if (
+        body.word !==
+        undefined
+      ) {
+        state.word =
+          body.word;
+      }
+
+      state.strokes =
+        [];
+
+      state.started =
+        true;
+
+      state.finished =
+        false;
+
+      await this.saveState(
+        state
+      );
+
+      this.broadcast({
+        type:
+          "round",
+
+        state
+      });
+
+      return json(
+        {
+          ok: true,
+
+          state
+        },
+
+        200,
+
+        origin
+      );
+    }
+
+    /* =====================================================
+       STROKE
+       
+       POST /draw/ROOM/stroke
+    ===================================================== */
+
+    if (
+      request.method ===
+        "POST" &&
+      url.pathname.endsWith(
+        "/stroke"
+      )
+    ) {
+      let stroke;
+
+      try {
+        stroke =
+          await request.json();
+      } catch {
+        return json(
+          {
+            ok: false,
+
+            error:
+              "Invalid stroke"
+          },
+
+          400,
+
+          origin
+        );
+      }
+
+      const state =
+        await this.getState();
+
+      state.strokes.push(
+        stroke
+      );
+
+      if (
+        state.strokes.length >
+        MAX_STROKES
+      ) {
+        state.strokes =
+          state.strokes.slice(
+            -MAX_STROKES
+          );
+      }
+
+      await this.saveState(
+        state
+      );
+
+      /*
+        Send only the new stroke.
+      */
+
+      this.broadcast({
+        type:
+          "stroke",
+
+        stroke,
+
+        version:
+          state.version
+      });
+
+      return json(
+        {
+          ok: true,
+
+          version:
+            state.version
+        },
+
+        200,
+
+        origin
+      );
+    }
+
+    /* =====================================================
+       CLEAR
+       
+       POST /draw/ROOM/clear
+    ===================================================== */
+
+    if (
+      request.method ===
+        "POST" &&
+      url.pathname.endsWith(
+        "/clear"
+      )
+    ) {
+      const state =
+        await this.getState();
+
+      state.strokes =
+        [];
+
+      await this.saveState(
+        state
+      );
+
+      this.broadcast({
+        type:
+          "clear",
+
+        version:
+          state.version
+      });
+
+      return json(
+        {
+          ok: true
+        },
+
+        200,
+
+        origin
+      );
+    }
+
+    /* =====================================================
+       FINISH
+       
+       POST /draw/ROOM/finish
+    ===================================================== */
+
+    if (
+      request.method ===
+        "POST" &&
+      url.pathname.endsWith(
+        "/finish"
+      )
+    ) {
+      const state =
+        await this.getState();
+
+      state.finished =
+        true;
+
+      await this.saveState(
+        state
+      );
+
+      this.broadcast({
+        type:
+          "round_finished",
+
+        round:
+          state.round,
+
+        version:
+          state.version
+      });
+
+      return json(
+        {
+          ok: true,
+
+          round:
+            state.round
+        },
+
+        200,
+
+        origin
+      );
+    }
+
+    /* =====================================================
+       DELETE ROOM
+       
+       POST /draw/ROOM/delete
+    ===================================================== */
+
+    if (
+      request.method ===
+        "POST" &&
+      url.pathname.endsWith(
+        "/delete"
+      )
+    ) {
+      /*
+        Delete DRAWING ROOM DATA ONLY.
+
+        MATCHMAKER IS NOT TOUCHED.
+      */
+
+      this.broadcast({
+        type:
+          "room_deleted"
+      });
+
+      await this.ctx.storage.deleteAll();
+
+      return json(
+        {
+          ok: true
+        },
+
+        200,
+
+        origin
+      );
+    }
+
+    return json(
+      {
+        ok: true,
+
+        service:
+          "drawing-room",
+
+        room:
+          url.pathname
+      },
+
+      200,
+
+      origin
+    );
+  }
+
+  /* =======================================================
+     WEBSOCKET HANDLER
+  ======================================================= */
+
+  async handleWebSocket(request) {
+    const url =
+      new URL(
+        request.url
+      );
 
     const playerId =
       String(
@@ -1019,1668 +1359,501 @@ export class DrawingRoom extends DurableObject {
         ) || ""
       ).trim();
 
-    const send =
-      (data, status = 200) =>
-        json(
-          data,
-          status,
-          origin
-        );
+    const playerName =
+      String(
+        url.searchParams.get(
+          "playerName"
+        ) || ""
+      ).trim();
 
+    const team =
+      String(
+        url.searchParams.get(
+          "team"
+        ) || ""
+      ).trim();
 
-    if (
-      request.method ===
-      "OPTIONS"
-    ) {
+    const host =
+      url.searchParams.get(
+        "host"
+      ) === "1";
+
+    /*
+      IMPORTANT:
+      Do not create a WebSocket if
+      there is no player ID.
+    */
+
+    if (!playerId) {
       return new Response(
-        null,
+        "playerId is required",
         {
-          status: 204,
-          headers:
-            corsHeaders(
-              origin
-            )
+          status: 400
         }
       );
     }
 
+    const pair =
+      new WebSocketPair();
 
-    let state =
-      await this.getState();
+    const client =
+      pair[0];
 
+    const server =
+      pair[1];
 
-    if (!state.code) {
-      state.code =
-        parts[1] || "";
-    }
+    /*
+      Accept the SERVER side.
+    */
 
+    server.accept();
+
+    /*
+      Store socket.
+    */
+
+    this.sockets.set(
+      server,
+      playerId
+    );
+
+    /*
+      Register/update player.
+    */
 
     try {
+      await this.addPlayer({
+        id:
+          playerId,
 
-      /* =========================================
-         STATE
-      ========================================= */
+        name:
+          playerName ||
+          "Player",
 
-      if (
-        url.pathname.endsWith(
-          "/state"
-        ) &&
-        request.method ===
-          "GET"
-      ) {
-        return send({
-          ok: true,
-          state:
-            publicState(
-              state,
-              playerId
-            )
-        });
-      }
+        team:
+          team || null,
 
+        host,
 
-      /* =========================================
-         JOIN
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/join"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        const body =
-          await request
-            .json()
-            .catch(
-              () => ({})
-            );
-
-        const id =
-          String(
-            body.playerId ||
-              ""
-          ).trim();
-
-        const name =
-          cleanName(
-            body.name
-          );
-
-        if (
-          !id ||
-          !name
-        ) {
-          return send(
-            {
-              error:
-                "playerId and name are required"
-            },
-            400
-          );
-        }
-
-
-        const duplicate =
-          state.players.some(
-            p =>
-              p.id !== id &&
-              norm(p.name) ===
-                norm(name)
-          );
-
-        if (duplicate) {
-          return send(
-            {
-              error:
-                "That player name is already in this room."
-            },
-            409
-          );
-        }
-
-
-        if (
-          state.phase !==
-            "lobby" &&
-          !state.players.some(
-            p => p.id === id
-          )
-        ) {
-          return send(
-            {
-              error:
-                "The game has already started."
-            },
-            409
-          );
-        }
-
-
-        if (
-          state.players.length >=
-            12 &&
-          !state.players.some(
-            p => p.id === id
-          )
-        ) {
-          return send(
-            {
-              error:
-                "Room is full."
-            },
-            409
-          );
-        }
-
-
-        let p =
-          state.players.find(
-            x => x.id === id
-          );
-
-
-        if (!p) {
-
-          let team =
-            "solo";
-
-          if (
-            (body.mode ||
-              state.mode) ===
-            "teams"
-          ) {
-
-            const red =
-              state.players.filter(
-                x =>
-                  x.team ===
-                  "red"
-              ).length;
-
-            const blue =
-              state.players.filter(
-                x =>
-                  x.team ===
-                  "blue"
-              ).length;
-
-            team =
-              body.team ===
-                "blue"
-                ? "blue"
-                : body.team ===
-                    "red"
-                  ? "red"
-                  : red <= blue
-                    ? "red"
-                    : "blue";
-          }
-
-
-          p = {
-            id,
-            name,
-            team,
-            joinedAt:
-              Date.now()
-          };
-
-          state.players.push(
-            p
-          );
-
-          state.scores.push({
-            id,
-            name,
-            score: 0
-          });
-
-        } else {
-
-          p.name =
-            name;
-
-          if (
-            state.phase ===
-              "lobby" &&
-            state.mode ===
-              "teams" &&
-            (
-              body.team ===
-                "red" ||
-              body.team ===
-                "blue"
-            )
-          ) {
-            p.team =
-              body.team;
-          }
-        }
-
-
-        if (
-          !state.leaderId ||
-          body.host === true
-        ) {
-          state.leaderId =
-            id;
-        }
-
-
-        if (
-          body.mode ===
-            "1v1" ||
-          body.mode ===
-            "teams"
-        ) {
-          state.mode =
-            body.mode;
-        }
-
-
-        if (
-          Number.isFinite(
-            +body.rounds
-          )
-        ) {
-          state.rounds =
-            Math.min(
-              10,
-              Math.max(
-                1,
-                Math.floor(
-                  +body.rounds
-                )
-              )
-            );
-        }
-
-
-        if (
-          Number.isFinite(
-            +body.timeLimit
-          )
-        ) {
-          state.timeLimit =
-            Math.min(
-              120,
-              Math.max(
-                0,
-                Math.floor(
-                  +body.timeLimit
-                )
-              )
-            );
-        }
-
-
-        if (
-          POOLS[
-            body.category
-          ]
-        ) {
-          state.category =
-            body.category;
-        }
-
-
-        await this.save(
-          state
-        );
-
-        this.broadcast(
-          state,
-          "player_joined"
-        );
-
-        return send({
-          ok: true,
-          state:
-            publicState(
-              state,
-              id
-            )
-        });
-      }
-
-
-      /* =========================================
-         SETTINGS
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/settings"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        if (
-          state.leaderId !==
-          playerId
-        ) {
-          return send(
-            {
-              error:
-                "Only the host can change settings."
-            },
-            403
-          );
-        }
-
-
-        if (
-          state.phase !==
-          "lobby"
-        ) {
-          return send(
-            {
-              error:
-                "Settings are locked after the game starts."
-            },
-            409
-          );
-        }
-
-
-        const body =
-          await request
-            .json()
-            .catch(
-              () => ({})
-            );
-
-
-        if (
-          body.mode ===
-            "1v1" ||
-          body.mode ===
-            "teams"
-        ) {
-          state.mode =
-            body.mode;
-        }
-
-
-        if (
-          Number.isFinite(
-            +body.rounds
-          )
-        ) {
-          state.rounds =
-            Math.min(
-              10,
-              Math.max(
-                1,
-                Math.floor(
-                  +body.rounds
-                )
-              )
-            );
-        }
-
-
-        if (
-          Number.isFinite(
-            +body.timeLimit
-          )
-        ) {
-          state.timeLimit =
-            Math.min(
-              120,
-              Math.max(
-                0,
-                Math.floor(
-                  +body.timeLimit
-                )
-              )
-            );
-        }
-
-
-        if (
-          POOLS[
-            body.category
-          ]
-        ) {
-          state.category =
-            body.category;
-        }
-
-
-        await this.save(
-          state
-        );
-
-        this.broadcast(
-          state,
-          "settings"
-        );
-
-        return send({
-          ok: true,
-          state:
-            publicState(
-              state,
-              playerId
-            )
-        });
-      }
-
-
-      /* =========================================
-         START GAME
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/start"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        if (
-          state.leaderId !==
-          playerId
-        ) {
-          return send(
-            {
-              error:
-                "Only the host can start."
-            },
-            403
-          );
-        }
-
-
-        await this.start(
-          state
-        );
-
-        this.broadcast(
-          state,
-          "start"
-        );
-
-        return send({
-          ok: true,
-          state:
-            publicState(
-              state,
-              playerId
-            )
-        });
-      }
-
-
-      /* =========================================
-         SINGLE STROKE
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/stroke"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        if (
-          state.phase !==
-            "drawing" ||
-          state.artistId !==
-            playerId
-        ) {
-          return send(
-            {
-              error:
-                "You cannot draw right now."
-            },
-            403
-          );
-        }
-
-
-        const body =
-          await request
-            .json()
-            .catch(
-              () => ({})
-            );
-
-
-        const x = {
-          x1: +body.x1,
-          y1: +body.y1,
-          x2: +body.x2,
-          y2: +body.y2,
-
-          color:
-            String(
-              body.color ||
-                "#22262f"
-            ).slice(
-              0,
-              20
-            ),
-
-          size:
-            Math.max(
-              2,
-              Math.min(
-                40,
-                +body.size ||
-                  7
-              )
-            ),
-
-          tool:
-            body.tool ===
-              "eraser"
-              ? "eraser"
-              : "pen"
-        };
-
-
-        if (
-          [
-            x.x1,
-            x.y1,
-            x.x2,
-            x.y2
-          ].some(
-            v =>
-              !Number.isFinite(
-                v
-              )
-          )
-        ) {
-          return send(
-            {
-              error:
-                "Invalid stroke."
-            },
-            400
-          );
-        }
-
-
-        state.strokes.push(
-          x
-        );
-
-
-        if (
-          state.strokes.length >
-          1800
-        ) {
-          state.strokes.splice(
-            0,
-            state.strokes.length -
-              1800
-          );
-        }
-
-
-        await this.save(
-          state
-        );
-
-        this.broadcast(
-          state,
-          "stroke"
-        );
-
-        return send({
-          ok: true
-        });
-      }
-
-
-      /* =========================================
-         BATCH STROKES
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/strokes"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        if (
-          state.phase !==
-            "drawing" ||
-          state.artistId !==
-            playerId
-        ) {
-          return send(
-            {
-              error:
-                "You cannot draw right now."
-            },
-            403
-          );
-        }
-
-
-        const body =
-          await request
-            .json()
-            .catch(
-              () => ({})
-            );
-
-
-        const incoming =
-          Array.isArray(
-            body.strokes
-          )
-            ? body.strokes.slice(
-                0,
-                80
-              )
-            : [];
-
-
-        for (
-          const q of incoming
-        ) {
-
-          const x = {
-            x1: +q.x1,
-            y1: +q.y1,
-            x2: +q.x2,
-            y2: +q.y2,
-
-            color:
-              String(
-                q.color ||
-                  "#22262f"
-              ).slice(
-                0,
-                20
-              ),
-
-            size:
-              Math.max(
-                2,
-                Math.min(
-                  40,
-                  +q.size ||
-                    7
-                )
-              ),
-
-            tool:
-              q.tool ===
-                "eraser"
-                ? "eraser"
-                : "pen"
-          };
-
-
-          if (
-            [
-              x.x1,
-              x.y1,
-              x.x2,
-              x.y2
-            ].every(
-              Number.isFinite
-            )
-          ) {
-            state.strokes.push(
-              x
-            );
-          }
-        }
-
-
-        if (
-          state.strokes.length >
-          1800
-        ) {
-          state.strokes.splice(
-            0,
-            state.strokes.length -
-              1800
-          );
-        }
-
-
-        await this.save(
-          state
-        );
-
-        this.broadcast(
-          state,
-          "strokes"
-        );
-
-        return send({
-          ok: true
-        });
-      }
-
-
-      /* =========================================
-         CLEAR
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/clear"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        if (
-          state.artistId !==
-            playerId ||
-          state.phase !==
-            "drawing"
-        ) {
-          return send(
-            {
-              error:
-                "You cannot clear now."
-            },
-            403
-          );
-        }
-
-
-        state.strokes = [];
-
-
-        await this.save(
-          state
-        );
-
-        this.broadcast(
-          state,
-          "clear"
-        );
-
-        return send({
-          ok: true
-        });
-      }
-
-
-      /* =========================================
-         SUBMIT DRAWING
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/submit"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        if (
-          state.artistId !==
-            playerId ||
-          state.phase !==
-            "drawing"
-        ) {
-          return send(
-            {
-              error:
-                "You cannot submit now."
-            },
-            403
-          );
-        }
-
-
-        await this.finishDrawing(
-          state,
+        bot:
           false
-        );
-
-
-        this.broadcast(
-          state,
-          "guessing"
-        );
-
-
-        return send({
-          ok: true,
-          state:
-            publicState(
-              state,
-              playerId
-            )
-        });
-      }
-
-
-      /* =========================================
-         GUESS
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/guess"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        const guesser =
-          this.player(
-            state,
-            playerId
-          );
-
-
-        if (
-          !guesser ||
-          state.phase !==
-            "guessing" ||
-          state.artistId ===
-            playerId
-        ) {
-          return send(
-            {
-              error:
-                "Guessing is not active."
-            },
-            403
-          );
-        }
-
-
-        if (
-          !this.guessers(
-            state
-          ).some(
-            p =>
-              p.id ===
-              playerId
-          )
-        ) {
-          return send(
-            {
-              error:
-                "You cannot guess in this round."
-            },
-            403
-          );
-        }
-
-
-        if (
-          state.guesses.some(
-            g =>
-              g.id ===
-              playerId
-          )
-        ) {
-          return send(
-            {
-              error:
-                "You already guessed."
-            },
-            409
-          );
-        }
-
-
-        const body =
-          await request
-            .json()
-            .catch(
-              () => ({})
-            );
-
-
-        const guess =
-          String(
-            body.guess ||
-              ""
-          )
-            .trim()
-            .slice(
-              0,
-              80
-            );
-
-
-        if (!guess) {
-          return send(
-            {
-              error:
-                "Enter a guess."
-            },
-            400
-          );
-        }
-
-
-        const correct =
-          sameWord(
-            guess,
-            state.word
-          );
-
-
-        state.guesses.push({
-          id:
-            playerId,
-
-          name:
-            guesser.name,
-
-          guess,
-
-          correct
-        });
-
-
-        if (correct) {
-
-          await this.finishRound(
-            state,
-            true,
-            playerId
-          );
-
-
-          this.broadcast(
-            state,
-            "correct"
-          );
-
-
-          return send({
-            ok: true,
-            correct: true,
-            state:
-              publicState(
-                state,
-                playerId
-              )
-          });
-        }
-
-
-        const eligible =
-          this.guessers(
-            state
-          );
-
-
-        const wrongCount =
-          state.guesses.filter(
-            g =>
-              !g.correct
-          ).length;
-
-
-        if (
-          wrongCount >=
-          eligible.length
-        ) {
-
-          await this.finishRound(
-            state,
-            false
-          );
-
-          this.broadcast(
-            state,
-            "wrong"
-          );
-
-        } else {
-
-          await this.save(
-            state
-          );
-
-          this.broadcast(
-            state,
-            "guess"
-          );
-        }
-
-
-        return send({
-          ok: true,
-          correct: false,
-          state:
-            publicState(
-              state,
-              playerId
-            )
-        });
-      }
-
-
-      /* =========================================
-         HINT
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/hint"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        if (
-          state.phase !==
-            "guessing" ||
-          state.artistId ===
-            playerId ||
-          !this.guessers(
-            state
-          ).some(
-            p =>
-              p.id ===
-              playerId
-          )
-        ) {
-          return send(
-            {
-              error:
-                "Hint unavailable."
-            },
-            403
-          );
-        }
-
-
-        return send({
-          ok: true,
-
-          hint:
-            String(
-              state.word || ""
-            ).slice(
-              0,
-              1
-            ) +
-            " • • •"
-        });
-      }
-
-
-      /* =========================================
-         CHAT
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/chat"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        const p =
-          this.player(
-            state,
-            playerId
-          );
-
-
-        if (!p) {
-          return send(
-            {
-              error:
-                "Join the room first."
-            },
-            403
-          );
-        }
-
-
-        const body =
-          await request
-            .json()
-            .catch(
-              () => ({})
-            );
-
-
-        const text =
-          String(
-            body.text ||
-              ""
-          )
-            .trim()
-            .slice(
-              0,
-              180
-            );
-
-
-        if (!text) {
-          return send(
-            {
-              error:
-                "Empty message."
-            },
-            400
-          );
-        }
-
-
-        state.chat.push({
-          id:
-            playerId,
-
-          name:
-            p.name,
-
-          text,
-
-          at:
-            Date.now()
-        });
-
-
-        if (
-          state.chat.length >
-          100
-        ) {
-          state.chat.shift();
-        }
-
-
-        await this.save(
-          state
-        );
-
-        this.broadcast(
-          state,
-          "chat"
-        );
-
-
-        return send({
-          ok: true
-        });
-      }
-
-
-      /* =========================================
-         NEXT ROUND
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/next"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        if (
-          state.leaderId !==
-          playerId
-        ) {
-          return send(
-            {
-              error:
-                "Only the host can continue."
-            },
-            403
-          );
-        }
-
-
-        if (
-          state.phase !==
-          "result"
-        ) {
-          return send(
-            {
-              error:
-                "The current round is not finished."
-            },
-            409
-          );
-        }
-
-
-        if (
-          state.round >=
-          state.rounds
-        ) {
-
-          state.phase =
-            "finished";
-
-          state.deadline =
-            0;
-
-          await this.save(
-            state
-          );
-
-          this.broadcast(
-            state,
-            "finished"
-          );
-
-
-          return send({
-            ok: true,
-            state:
-              publicState(
-                state,
-                playerId
-              )
-          });
-        }
-
-
-        state.round++;
-
-
-        state.artistIndex =
-          (
-            state.artistIndex +
-            1
-          ) %
-          state.players.length;
-
-
-        state.artistId =
-          state.players[
-            state.artistIndex
-          ].id;
-
-
-        state.word =
-          this.chooseWord(
-            state
-          );
-
-
-        state.prompt =
-          state.word;
-
-
-        state.strokes = [];
-
-        state.guesses = [];
-
-        state.lastSubmission =
-          null;
-
-        state.lastCorrect =
-          false;
-
-        state.lastWord =
-          "";
-
-        state.phase =
-          "drawing";
-
-
-        state.deadline =
-          state.timeLimit
-            ? Date.now() +
-              state.timeLimit *
-                1000
-            : 0;
-
-
-        await this.save(
-          state
-        );
-
-        this.schedule(
-          state
-        );
-
-        this.broadcast(
-          state,
-          "next"
-        );
-
-
-        return send({
-          ok: true,
-          state:
-            publicState(
-              state,
-              playerId
-            )
-        });
-      }
-
-
-      /* =========================================
-         DELETE ROOM
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/delete"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        if (
-          state.leaderId !==
-          playerId
-        ) {
-          return send(
-            {
-              error:
-                "Only the host can delete the room."
-            },
-            403
-          );
-        }
-
-
-        for (
-          const ws of
-          this.sockets.values()
-        ) {
-          try {
-            ws.close(
-              1000,
-              "Room deleted"
-            );
-          } catch {}
-        }
-
-
-        this.sockets.clear();
-
-
-        await this.ctx.storage
-          .deleteAll();
-
-
-        return send({
-          ok: true
-        });
-      }
-
-
-      /* =========================================
-         LEAVE
-      ========================================= */
-
-      if (
-        url.pathname.endsWith(
-          "/leave"
-        ) &&
-        request.method ===
-          "POST"
-      ) {
-
-        state.players =
-          state.players.filter(
-            p =>
-              p.id !==
-              playerId
-          );
-
-
-        state.scores =
-          state.scores.filter(
-            p =>
-              p.id !==
-              playerId
-          );
-
-
-        if (
-          state.leaderId ===
-          playerId
-        ) {
-          state.leaderId =
-            state.players[0]
-              ?.id ||
-            null;
-        }
-
-
-        if (
-          !state.players.length
-        ) {
-
-          for (
-            const ws of
-            this.sockets.values()
-          ) {
-            try {
-              ws.close(
-                1000,
-                "Room closed"
-              );
-            } catch {}
-          }
-
-
-          this.sockets.clear();
-
-
-          await this.ctx.storage
-            .deleteAll();
-
-
-          return send({
-            ok: true
-          });
-        }
-
-
-        await this.save(
-          state
-        );
-
-
-        this.broadcast(
-          state,
-          "player_left"
-        );
-
-
-        return send({
-          ok: true,
-          state:
-            publicState(
-              state,
-              playerId
-            )
-        });
-      }
-
-
-      /* =========================================
-         WEBSOCKET
-      ========================================= */
-
-      if (
-        request.headers.get(
-          "Upgrade"
-        )?.toLowerCase() ===
-        "websocket"
-      ) {
-
-        const pair =
-          new WebSocketPair();
-
-        const server =
-          pair[1];
-
-        server.accept();
-
-
-        /*
-         IMPORTANT:
-         playerId comes from:
-         /draw/CODE?playerId=PLAYER_ID
-
-         This makes each browser's
-         socket belong to the correct
-         player.
-        */
-
-        const socketId =
-          playerId ||
-          `socket-${crypto.randomUUID()}`;
-
-
-        this.sockets.set(
-          socketId,
-          server
-        );
-
-
-        server.addEventListener(
-          "close",
-          () =>
-            this.sockets.delete(
-              socketId
-            )
-        );
-
-
-        server.addEventListener(
-          "error",
-          () =>
-            this.sockets.delete(
-              socketId
-            )
-        );
-
-
-        server.send(
-          JSON.stringify({
-            type: "state",
-
-            state:
-              publicState(
-                state,
-                socketId
-              )
-          })
-        );
-
-
-        return new Response(
-          null,
-          {
-            status: 101,
-            webSocket:
-              pair[0]
-          }
-        );
-      }
-
-
-      return send({
-        ok: true,
-        service:
-          "drawing-room"
       });
+    } catch {}
 
-    } catch (e) {
-
-      console.error(e);
-
-      return send(
-        {
-          error:
-            e?.message ||
-            "Drawing room server error"
-        },
-        500
-      );
-    }
-  }
-
-
-  async alarm() {
+    /*
+      Immediately send complete
+      room state to THIS player.
+    */
 
     const state =
       await this.getState();
 
+    this.send(
+      server,
+      {
+        type:
+          "connected",
+
+        playerId,
+
+        state
+      }
+    );
+
+    /*
+      Also send player list.
+    */
+
+    this.send(
+      server,
+      {
+        type:
+          "players",
+
+        players:
+          state.players
+      }
+    );
+
+    /*
+      Socket messages from client.
+    */
+
+    server.addEventListener(
+      "message",
+      async event => {
+        await this.handleSocketMessage(
+          server,
+          playerId,
+          event
+        );
+      }
+    );
+
+    server.addEventListener(
+      "close",
+      async () => {
+        this.sockets.delete(
+          server
+        );
+
+        await this.markOffline(
+          playerId
+        );
+      }
+    );
+
+    server.addEventListener(
+      "error",
+      async () => {
+        this.sockets.delete(
+          server
+        );
+
+        await this.markOffline(
+          playerId
+        );
+      }
+    );
+
+    /*
+      RETURN THE CLIENT SIDE.
+
+      This is critical for the browser
+      WebSocket handshake.
+    */
+
+    return new Response(
+      null,
+      {
+        status: 101,
+
+        webSocket:
+          client
+      }
+    );
+  }
+
+  /* =======================================================
+     WEBSOCKET MESSAGE ROUTER
+  ======================================================= */
+
+  async handleSocketMessage(
+    socket,
+    playerId,
+    event
+  ) {
+    let message;
+
+    try {
+      if (
+        typeof event.data ===
+        "string"
+      ) {
+        message =
+          JSON.parse(
+            event.data
+          );
+      } else {
+        return;
+      }
+    } catch {
+      this.send(
+        socket,
+        {
+          type:
+            "error",
+
+          error:
+            "Invalid message"
+        }
+      );
+
+      return;
+    }
 
     if (
-      !state.deadline ||
-      Date.now() <
-        state.deadline
+      !message ||
+      typeof message.type !==
+        "string"
     ) {
       return;
     }
 
+    /* -----------------------------------------------------
+       PING
+    ----------------------------------------------------- */
 
     if (
-      state.phase ===
-      "drawing"
+      message.type ===
+      "ping"
     ) {
+      this.send(
+        socket,
+        {
+          type:
+            "pong",
 
-      await this.finishDrawing(
-        state,
-        true
+          time:
+            Date.now()
+        }
       );
 
-      this.broadcast(
-        state,
-        "timeout"
-      );
+      return;
+    }
 
-    } else if (
-      state.phase ===
-      "guessing"
+    /* -----------------------------------------------------
+       PLAYER UPDATE
+    ----------------------------------------------------- */
+
+    if (
+      message.type ===
+      "player"
     ) {
+      await this.addPlayer({
+        id:
+          playerId,
 
-      await this.finishRound(
-        state,
-        false
+        name:
+          message.name,
+
+        team:
+          message.team,
+
+        host:
+          !!message.host,
+
+        bot:
+          false
+      });
+
+      return;
+    }
+
+    /* -----------------------------------------------------
+       STROKE THROUGH WEBSOCKET
+    ----------------------------------------------------- */
+
+    if (
+      message.type ===
+      "stroke"
+    ) {
+      const state =
+        await this.getState();
+
+      const stroke =
+        message.stroke ||
+        message.data;
+
+      if (!stroke) {
+        return;
+      }
+
+      state.strokes.push(
+        stroke
       );
 
-      this.broadcast(
-        state,
-        "timeout"
+      if (
+        state.strokes.length >
+        MAX_STROKES
+      ) {
+        state.strokes =
+          state.strokes.slice(
+            -MAX_STROKES
+          );
+      }
+
+      await this.saveState(
+        state
       );
+
+      this.broadcast({
+        type:
+          "stroke",
+
+        stroke,
+
+        playerId,
+
+        version:
+          state.version
+      });
+
+      return;
+    }
+
+    /* -----------------------------------------------------
+       CLEAR THROUGH WEBSOCKET
+    ----------------------------------------------------- */
+
+    if (
+      message.type ===
+      "clear"
+    ) {
+      const state =
+        await this.getState();
+
+      state.strokes =
+        [];
+
+      await this.saveState(
+        state
+      );
+
+      this.broadcast({
+        type:
+          "clear",
+
+        playerId,
+
+        version:
+          state.version
+      });
+
+      return;
+    }
+
+    /* -----------------------------------------------------
+       ROUND THROUGH WEBSOCKET
+    ----------------------------------------------------- */
+
+    if (
+      message.type ===
+      "round"
+    ) {
+      const state =
+        await this.getState();
+
+      const data =
+        message.state ||
+        message;
+
+      if (
+        data.round !==
+        undefined
+      ) {
+        state.round =
+          Number(
+            data.round
+          );
+      }
+
+      if (
+        data.totalRounds !==
+        undefined
+      ) {
+        state.totalRounds =
+          Number(
+            data.totalRounds
+          );
+      }
+
+      if (
+        data.drawerId !==
+        undefined
+      ) {
+        state.drawerId =
+          data.drawerId;
+      }
+
+      if (
+        data.drawerName !==
+        undefined
+      ) {
+        state.drawerName =
+          data.drawerName;
+      }
+
+      if (
+        data.category !==
+        undefined
+      ) {
+        state.category =
+          data.category;
+      }
+
+      if (
+        data.word !==
+        undefined
+      ) {
+        state.word =
+          data.word;
+      }
+
+      state.strokes =
+        [];
+
+      state.started =
+        true;
+
+      state.finished =
+        false;
+
+      await this.saveState(
+        state
+      );
+
+      this.broadcast({
+        type:
+          "round",
+
+        state
+      });
+
+      return;
+    }
+
+    /* -----------------------------------------------------
+       FINISH THROUGH WEBSOCKET
+    ----------------------------------------------------- */
+
+    if (
+      message.type ===
+      "finish"
+    ) {
+      const state =
+        await this.getState();
+
+      state.finished =
+        true;
+
+      await this.saveState(
+        state
+      );
+
+      this.broadcast({
+        type:
+          "round_finished",
+
+        round:
+          state.round,
+
+        version:
+          state.version
+      });
+
+      return;
     }
   }
 }
 
-
 /* =========================================================
    MAIN WORKER
-   ========================================================= */
+========================================================= */
 
 export default {
-
   async fetch(
     request,
     env
   ) {
-
     const origin =
       request.headers.get(
         "Origin"
       ) || "";
 
+    /* =====================================================
+       CORS
+    ===================================================== */
 
     if (
       request.method ===
@@ -2690,6 +1863,7 @@ export default {
         null,
         {
           status: 204,
+
           headers:
             corsHeaders(
               origin
@@ -2698,65 +1872,81 @@ export default {
       );
     }
 
-
     const url =
-      new URL(request.url);
+      new URL(
+        request.url
+      );
 
+    /* =====================================================
+       DRAWING ROOMS
 
-    /* =========================================
-       DRAWING ROOM
-      ========================================= */
+       /draw/ROOM
+       /draw/ROOM/state
+       /draw/ROOM/join
+       /draw/ROOM/leave
+       /draw/ROOM/round
+       /draw/ROOM/stroke
+       /draw/ROOM/clear
+       /draw/ROOM/finish
+       /draw/ROOM/delete
+    ===================================================== */
 
     if (
       url.pathname.startsWith(
         "/draw/"
       )
     ) {
-
-      const code =
+      const roomCode =
         url.pathname
           .slice(
-            6
+            "/draw/".length
           )
-          .split(
-            "/"
-          )[0]
+          .split("/")[0]
           .trim();
 
-
-      if (!code) {
+      if (!roomCode) {
         return json(
           {
+            ok: false,
+
             error:
               "Drawing room is required"
           },
+
           400,
+
           origin
         );
       }
 
-
       const id =
         env.DRAWING_ROOMS.idFromName(
-          code
+          roomCode
         );
-
 
       const room =
         env.DRAWING_ROOMS.get(
           id
         );
 
+      /*
+        Pass the ORIGINAL request to
+        the Durable Object.
+
+        This is important for WebSocket
+        Upgrade requests.
+      */
 
       return room.fetch(
         request
       );
     }
 
+    /* =====================================================
+       EXISTING MATCHMAKING
 
-    /* =========================================
-       HEALTH
-      ========================================= */
+       NOTHING ABOVE CHANGES THIS.
+    ===================================================== */
 
     if (
       !url.pathname.startsWith(
@@ -2766,28 +1956,31 @@ export default {
       return json(
         {
           ok: true,
+
           service:
             "codenames-matchmaking"
         },
+
         200,
+
         origin
       );
     }
 
-
-    /* =========================================
-       CODENAMES MATCHMAKING
-      ========================================= */
+    const id =
+      env.MATCHMAKER.idFromName(
+        "global-queue"
+      );
 
     const stub =
       env.MATCHMAKER.get(
-        env.MATCHMAKER.idFromName(
-          "global-queue"
-        )
+        id
       );
 
-
     try {
+      /* ---------------------------------------------------
+         JOIN
+      --------------------------------------------------- */
 
       if (
         url.pathname ===
@@ -2795,21 +1988,24 @@ export default {
         request.method ===
           "POST"
       ) {
-
         const body =
           await request.json();
 
         const name =
-          cleanName(
-            body?.name
-          );
+          String(
+            body?.name || ""
+          )
+            .trim()
+            .slice(
+              0,
+              18
+            );
 
         const playerId =
           String(
             body?.playerId ||
               ""
           ).trim();
-
 
         if (
           !name ||
@@ -2820,23 +2016,30 @@ export default {
               error:
                 "name and playerId are required"
             },
+
             400,
+
             origin
           );
         }
-
 
         return json(
           await stub.join({
             id:
               playerId,
+
             name
           }),
+
           200,
+
           origin
         );
       }
 
+      /* ---------------------------------------------------
+         STATUS
+      --------------------------------------------------- */
 
       if (
         url.pathname ===
@@ -2844,36 +2047,40 @@ export default {
         request.method ===
           "GET"
       ) {
-
-        const id =
+        const playerId =
           String(
             url.searchParams.get(
               "playerId"
             ) || ""
           ).trim();
 
-
-        if (!id) {
+        if (!playerId) {
           return json(
             {
               error:
                 "playerId is required"
             },
+
             400,
+
             origin
           );
         }
 
-
         return json(
           await stub.status(
-            id
+            playerId
           ),
+
           200,
+
           origin
         );
       }
 
+      /* ---------------------------------------------------
+         LEAVE
+      --------------------------------------------------- */
 
       if (
         url.pathname ===
@@ -2881,58 +2088,63 @@ export default {
         request.method ===
           "POST"
       ) {
-
         const body =
           await request.json();
 
-        const id =
+        const playerId =
           String(
             body?.playerId ||
               ""
           ).trim();
 
-
-        if (!id) {
+        if (!playerId) {
           return json(
             {
               error:
                 "playerId is required"
             },
+
             400,
+
             origin
           );
         }
 
-
         return json(
           await stub.leave(
-            id
+            playerId
           ),
+
           200,
+
           origin
         );
       }
-
 
       return json(
         {
           error:
             "Not found"
         },
+
         404,
+
         origin
       );
-
-    } catch (e) {
-
-      console.error(e);
+    } catch (error) {
+      console.error(
+        "MATCHMAKER ERROR:",
+        error
+      );
 
       return json(
         {
           error:
             "Matchmaking server error"
         },
+
         500,
+
         origin
       );
     }

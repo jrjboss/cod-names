@@ -5887,6 +5887,7 @@ function setConnDot(ok) {
     };
 
     function renderDraw(room){
+        if(!document.getElementById('drawRoomCode')) return;
         if(!room)return; room=normalizeRoom(room,roomCode); localRoomCache=room; const d=ensureDraw(room);
         const screen=document.getElementById('drawScreen'); if(!screen)return;
         document.getElementById('drawRoomCode').textContent=room.code||roomCode||'-----';
@@ -6138,6 +6139,56 @@ function setConnDot(ok) {
 })();
 </script>
 
+<style id="painting-final-fix-css">
+#drawLobbyScreen .pf-mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0}.pf-mode-card{border:1px solid #ffffff18;background:#07100b;color:#fff;border-radius:14px;padding:14px;cursor:pointer;text-align:center;font-weight:900}.pf-mode-card.active{border-color:#f0cf45;background:#f0cf4512}.pf-mode-card small{display:block;color:#9ea89f;font-weight:500;margin-top:4px}.pf-team-row{display:flex;gap:8px;margin-top:10px}.pf-team-row>*{flex:1}.pf-final-results{margin-top:14px;padding:15px;border-radius:15px;background:#f0cf450c;border:1px solid #f0cf4520}.pf-final-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:10px}.pf-final-card{background:#ffffff06;border:1px solid #ffffff0d;border-radius:12px;padding:8px}.pf-final-card img{width:100%;display:block;border-radius:9px;background:#fff}.pf-final-meta{font-size:11px;line-height:1.6;margin-top:6px;color:#c9cec8}@media(max-width:600px){#drawLobbyScreen .pf-mode-grid{grid-template-columns:1fr}}
+</style>
+<script id="painting-final-fix-script">
+(function(){
+'use strict';
+const $=id=>document.getElementById(id), esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=x=>String(x||'').trim().toLowerCase().replace(/[ً-ٰٟ]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/\s+/g,' ');
+const name=()=>String((typeof me!=='undefined'&&me?.name)||'').trim();
+const R=()=>((typeof localRoomCache!=='undefined'&&localRoomCache)?localRoomCache:(typeof roomState!=='undefined'?roomState:null));
+const ps=r=>['red','blue'].flatMap(t=>(r?.teams?.[t]||[]).filter(p=>p&&!p.bot&&p.name));
+const team=(r,n)=>['red','blue'].find(t=>(r?.teams?.[t]||[]).some(p=>norm(p.name)===norm(n)))||'red';
+const cats={
+'mixed':['قطة','كلب','سيارة','طائرة','بيت','شجرة','بيتزا','روبوت','تنين','غيتار','كرة قدم','كاميرا','جبل','شاطئ','رائد فضاء'],
+'anime_images':['ناروتو','غوكو','لوفي','سايتاما','إيتاتشي','ساسكي','غوجو','سوكونا','تانجيرو','نيزوكو','زورو','سانجي','شانكس','ميدوريا','باكوغو','غون','كيلوا','هيسوكا','إدوارد','ريم'],
+'cartoons':['سبونج بوب','توم وجيري','ميكي ماوس','دونالد داك','سكوبي دو','بن 10','بوكيمون','شريك','نيمو','مولان','الأسد الملك','فروزن','توي ستوري','كوكو','موانا','هيلو كيتي'],
+'movies_images':['تايتانيك','أفاتار','إنسبشن','ماتريكس','غلادياتور','جوكر','أوبنهايمر','باربي','كوكو','جون ويك','سيد الخواتم','باتمان'],
+'games_images':['ماينكرافت','فورتنايت','كول أوف ديوتي','جتا','ريد ديد','غود أوف وور','ذا لاست أوف أس','سكايرم','ويتشر','سوبر ماريو','زيلدا','بوكيمون','روبلوكس','فالورانت'],
+'sports_images':['كرة القدم','كرة السلة','التنس','السباحة','الملاكمة','الجودو','الكاراتيه','الجمباز','كرة الطائرة','كرة اليد','فورمولا 1','الماراثون','ركوب الدراجات','المصارعة','بادل']};
+const labels={mixed:'🎲 متنوع',anime_images:'🍥 أنمي بالصور',cartoons:'🎨 كرتون بالصور',movies_images:'🎬 أفلام بالصور',games_images:'🎮 ألعاب بالصور',sports_images:'⚽ رياضة بالصور'};
+function state(){let r=R()||{};r.gameMode='draw';r.phase=r.phase||'lobby';r.teams=r.teams||{red:[],blue:[]};r.teams.red=(r.teams.red||[]).filter(p=>p&&!p.bot);r.teams.blue=(r.teams.blue||[]).filter(p=>p&&!p.bot);r.chat=[];r.draw=r.draw||{};let d=r.draw;d.mode=d.mode==='teams'?'teams':'1v1';d.category=cats[d.category]?d.category:'mixed';d.timeLimit=[0,60,90,120].includes(+d.timeLimit)?+d.timeLimit:90;d.turns=Array.isArray(d.turns)?d.turns:[];d.artistIndex=+d.artistIndex||0;d.round=+d.round||1;d.rounds=+d.rounds||1;d.strokes=Array.isArray(d.strokes)?d.strokes.slice(-1800):[];d.submissions=Array.isArray(d.submissions)?d.submissions:[];d.guesses=Array.isArray(d.guesses)?d.guesses:[];d.gallery=Array.isArray(d.gallery)?d.gallery:[];d.scores=d.scores||{};d.teamScores=d.teamScores||{red:0,blue:0};d.hints=Array.isArray(d.hints)?d.hints:[];d.deadline=+d.deadline||0;return r}
+function save(r){localRoomCache=r;roomState=r;try{if(typeof writeRoom==='function')writeRoom(roomCode,r)}catch(e){}}
+function bc(){try{if(typeof broadcastState==='function')broadcastState()}catch(e){}}
+function emit(ev){if(typeof isHost!=='undefined'&&isHost){host(ev);return}if(typeof guestConn!=='undefined'&&guestConn?.open)guestConn.send({type:'drawEvent',event:ev})}
+function buildTurns(r){let d=r.draw,a=ps(r);if(d.mode==='1v1'){if(a.length!==2)return null;return Array.from({length:4},(_,i)=>({artist:a[i%2].name,team:team(r,a[i%2].name)}))}let red=r.teams.red||[],blue=r.teams.blue||[];if(red.length<2||blue.length<2)return null;let out=[];for(let i=0;i<3;i++){out.push({artist:red[i%red.length].name,team:'red'});out.push({artist:blue[i%blue.length].name,team:'blue'})}return out}
+function privateWord(r,p){let d=r.draw,a=d.turns[d.artistIndex]?.artist;window.__paintingPrivatePrompt=p;window.__paintingSecrets=window.__paintingSecrets||{};window.__paintingSecrets[(r.code||'')+'|'+d.round+'|'+d.artistIndex]=p;if(typeof hostConns!=='undefined')for(const c of hostConns){if(c?.open&&c.paintPlayerName===a)try{c.send({type:'drawPrivatePrompt',prompt:p,round:d.round})}catch(e){}}}
+function startRound(r){let d=r.draw;d.phase='drawing';d.submissions=[];d.guesses=[];d.hints=[];d.secretHint='';d.winner=null;d.strokes=[];let arr=cats[d.category]||cats.mixed,p=arr[Math.floor(Math.random()*arr.length)];privateWord(r,p);d.deadline=d.timeLimit?Date.now()+d.timeLimit*1000:0;save(r);bc();paint()}
+function host(ev){let r=state(),d=r.draw,a=String(ev.actor||'').trim();if(!a||!ps(r).some(p=>norm(p.name)===norm(a)))return;
+ if(ev.type==='mode'&&r.phase==='lobby'&&a===r.leader){d.mode=ev.mode==='teams'?'teams':'1v1';save(r);bc();paint();return}
+ if(ev.type==='settings'&&r.phase==='lobby'&&a===r.leader){if(cats[ev.category])d.category=ev.category;d.timeLimit=[0,60,90,120].includes(+ev.time)?+ev.time:90;save(r);bc();paint();return}
+ if(ev.type==='team'&&r.phase==='lobby'){let to=ev.team==='blue'?'blue':'red',p=null;for(const t of ['red','blue']){let i=(r.teams[t]||[]).findIndex(x=>norm(x.name)===norm(a));if(i>=0){p=r.teams[t].splice(i,1)[0];break}}if(p){p.team=to;if(typeof me!=='undefined'&&norm(me.name)===norm(a))me.team=to;r.teams[to].push(p);save(r);bc();paint()}return}
+ if(ev.type==='start'&&r.phase==='lobby'&&a===r.leader){let ts=buildTurns(r);if(!ts){$('pfMsg')&&($('pfMsg').textContent=d.mode==='1v1'?'⚔️ يحتاج لاعبين اثنين فقط.':'👥 ضع لاعبين في الأحمر والأزرق.');return}d.turns=ts;d.artists=ts.map(x=>x.artist);d.rounds=ts.length;d.artistIndex=0;d.round=1;d.scores={};d.teamScores={red:0,blue:0};ps(r).forEach(p=>d.scores[p.name]=0);r.phase='drawing';save(r);startRound(r);return}
+ let cur=d.turns[d.artistIndex],ar=cur?.artist,t=cur?.team;if(ev.type==='strokes'&&d.phase==='drawing'&&a===ar){for(const s of (ev.strokes||[]).slice(0,40)){if([s.x1,s.y1,s.x2,s.y2].some(v=>!Number.isFinite(+v)))continue;d.strokes.push({x1:+s.x1,y1:+s.y1,x2:+s.x2,y2:+s.y2,color:String(s.color||'#111').slice(0,12),size:Math.max(1,Math.min(40,+s.size||8)),tool:s.tool==='eraser'?'eraser':'pen'})}save(r);bc();return}
+ if(ev.type==='clear'&&d.phase==='drawing'&&a===ar){d.strokes=[];save(r);bc();paint();return}
+ if(ev.type==='submit'&&d.phase==='drawing'&&a===ar){let p=window.__paintingSecrets?.[(r.code||'')+'|'+d.round+'|'+d.artistIndex]||window.__paintingPrivatePrompt||'',image=String(ev.image||'');if(!p||!image)return;d.submissions=[{artist:a,image,prompt:p}];d.phase='guessing';d.deadline=d.timeLimit?Date.now()+d.timeLimit*1000:0;save(r);bc();paint();return}
+ if(ev.type==='guess'&&d.phase==='guessing'&&a!==ar){let allowed=d.mode==='teams'?(r.teams[t]||[]):ps(r);if(!allowed.some(p=>norm(p.name)===norm(a))||d.guesses.some(g=>norm(g.name)===norm(a)))return;let g=String(ev.guess||'').trim().slice(0,80),p=d.submissions[0]?.prompt||'',ok=norm(g)===norm(p)||(norm(g).length>=3&&norm(p).includes(norm(g)));if(!g)return;d.guesses.push({name:a,guess:g,correct:ok});if(ok){d.scores[a]=(d.scores[a]||0)+100;d.scores[ar]=(d.scores[ar]||0)+25;if(d.mode==='teams')d.teamScores[t]=(d.teamScores[t]||0)+100;d.winner=a;d.phase='reveal';d.deadline=0}else if(d.guesses.length>=allowed.filter(p=>norm(p.name)!==norm(ar)).length){d.phase='reveal';d.deadline=0}save(r);bc();paint();return}
+ if(ev.type==='hint'&&d.phase==='guessing'&&a!==ar&&!d.hints.includes(a)){let allowed=d.mode==='teams'?(r.teams[t]||[]):ps(r);if(!allowed.some(p=>norm(p.name)===norm(a)))return;let p=d.submissions[0]?.prompt||'';d.hints.push(a);d.secretHint=p.slice(0,1)+' • • •';d.scores[a]=Math.max(0,(d.scores[a]||0)-10);save(r);bc();paint();return}}
+function start(){let r=state(),d=r.draw;if(r.leader!==name()||r.phase!=='lobby')return;let ts=buildTurns(r);if(!ts){if($('pfMsg'))$('pfMsg').textContent=d.mode==='1v1'?'⚔️ نمط 1 ضد 1 يحتاج لاعبين اثنين.':'👥 نمط الفرق يحتاج لاعبين في الأحمر والأزرق.';return}host({type:'start',actor:name()})}
+function lobby(){let r=state(),d=r.draw,arr=ps(r),lead=r.leader===name();$('drawLobbyScreen').innerHTML=`<div class="pf-shell"><div class="pf-card"><div class="pf-head"><div><div class="pf-title">🎨 Painting Lobby</div><div class="pf-sub">بدون Codenames • بدون دردشة • بدون بوتات</div></div><div class="pf-code"><span class="pf-pill">🔑 رمز الغرفة</span><strong id="pfRoomCode">${esc(roomCode||r.code||'-----')}</strong><button class="pf-btn" id="pfCopy">📋 نسخ</button><button class="pf-btn danger" id="pfLeave">↩ مغادرة</button></div></div><div class="pf-grid"><div class="pf-panel"><h3>👥 اللاعبون</h3><div id="pfPlayers" class="pf-players">${arr.map(p=>`<div class="pf-player"><span>👤 ${esc(p.name)}</span><span>${p.name===r.leader?'👑 قائد':team(r,p.name)==='red'?'🔴 أحمر':'🔵 أزرق'}</span></div>`).join('')||'<div class="pf-empty">لا يوجد لاعبون.</div>'}</div><div class="pf-team-row"><select id="pfTeam" class="pf-select"><option value="red">🔴 الأحمر</option><option value="blue">🔵 الأزرق</option></select><button class="pf-btn" id="pfTeamApply">تغيير فريقي</button></div></div><div class="pf-panel"><h3>🎮 نمط اللعب</h3><div class="pf-mode-grid"><button id="pfMode1" class="pf-mode-card ${d.mode==='1v1'?'active':''}">⚔️ 1 ضد 1<small>تبديل الرسم والتخمين • 4 جولات</small></button><button id="pfModeTeams" class="pf-mode-card ${d.mode==='teams'?'active':''}">👥 الفرق<small>3 جولات لكل فريق • الفريق يخمن معاً</small></button></div><h3>⚙️ الفئة والوقت</h3><div class="pf-settings"><div class="pf-setting"><label>الفئة</label><select id="pfCat" class="pf-select">${Object.keys(cats).map(k=>`<option value="${k}">${labels[k]}</option>`).join('')}</select></div><div class="pf-setting"><label>الوقت</label><select id="pfTime" class="pf-select"><option value="0">بدون مؤقت</option><option value="60">60 ثانية</option><option value="90">90 ثانية</option><option value="120">120 ثانية</option></select></div></div><div class="pf-start"><button id="pfStart" class="pf-btn primary">🚀 ابدأ Painting</button><div id="pfMsg" class="pf-note"></div></div></div></div></div></div>`;$('pfCat').value=d.category;$('pfTime').value=String(d.timeLimit);$('pfTeam').value=team(r,name());$('pfMode1').onclick=()=>emit({type:'mode',actor:name(),mode:'1v1'});$('pfModeTeams').onclick=()=>emit({type:'mode',actor:name(),mode:'teams'});$('pfTeamApply').onclick=()=>emit({type:'team',actor:name(),team:$('pfTeam').value});$('pfCat').onchange=()=>emit({type:'settings',actor:name(),category:$('pfCat').value,time:+$('pfTime').value});$('pfTime').onchange=()=>emit({type:'settings',actor:name(),category:$('pfCat').value,time:+$('pfTime').value});$('pfStart').disabled=!lead||(d.mode==='1v1'?arr.length!==2:!r.teams.red.length||!r.teams.blue.length);$('pfStart').onclick=start;$('pfLeave').onclick=()=>{if(typeof window.leaveRoom==='function')window.leaveRoom()};$('pfCopy').onclick=async()=>{try{await navigator.clipboard.writeText(String(roomCode||r.code))}catch(e){}};if($('pfMsg'))$('pfMsg').textContent=lead?(d.mode==='1v1'?'⚔️ 1 ضد 1: 4 جولات.':'👥 الفرق: 3 جولات لكل فريق.'):'⏳ انتظر قائد الغرفة.'}
+function game(){if(!$('drawScreen'))return;$('drawScreen').innerHTML=`<div class="pf-shell"><div class="pf-card"><div class="pf-head"><div><div class="pf-title">🎨 Painting</div><div id="pfRound" class="pf-sub"></div></div><div class="pf-code"><span id="pfTimer" class="pf-timer">⏱</span><button class="pf-btn danger" id="pfGameLeave">↩ مغادرة</button></div></div><div class="pf-game"><main class="pf-board"><div class="pf-status"><span id="pfPhase" class="pf-pill"></span><span id="pfArtist" class="pf-pill"></span><span id="pfTeamTurn" class="pf-pill"></span></div><div id="pfTask" class="pf-task"></div><div id="pfInfo" class="pf-info"></div><div class="pf-canvas-wrap"><canvas id="pfCanvas" class="pf-canvas" width="1000" height="600"></canvas></div><div class="pf-tools"><button class="pf-color active" data-color="#111111" style="background:#111111"></button><button class="pf-color" data-color="#e53935" style="background:#e53935"></button><button class="pf-color" data-color="#1976d2" style="background:#1976d2"></button><button class="pf-color" data-color="#2e7d32" style="background:#2e7d32"></button><button class="pf-color" data-color="#f5a623" style="background:#f5a623"></button><button class="pf-color" data-color="#8e44ad" style="background:#8e44ad"></button><button class="pf-btn" id="pfEraser">🧽 ممحاة</button><label class="pf-pill">الحجم <input id="pfSize" class="pf-size" type="range" min="2" max="36" value="8"></label><button class="pf-btn" id="pfClear">🧹 مسح</button><button class="pf-btn primary" id="pfSubmit">✅ تم الرسم</button></div><div id="pfReveal" class="pf-reveal" style="display:none"></div></main><aside class="pf-side"><div class="pf-sidebox"><h3>🤔 خمن الكلمة</h3><div id="pfGuessState" class="pf-note"></div><div class="pf-guess-row"><input id="pfGuess" class="pf-input" placeholder="اكتب تخمينك"><button id="pfGuessBtn" class="pf-btn primary">خمن</button></div><button id="pfHint" class="pf-btn" style="width:100%;margin-top:8px">💡 تلميح</button></div><div class="pf-sidebox"><h3>🏆 النقاط</h3><div id="pfScores"></div><div id="pfTeamScores" class="pf-note"></div></div><div class="pf-sidebox"><h3>👥 اللاعبون</h3><div id="pfGamePlayers"></div></div></aside></div><div id="pfResults" class="pf-final-results" style="display:none"></div><h3 style="color:#f0cf45;margin:14px 0 8px">🖼️ الرسومات والنتائج</h3><div id="pfGallery" class="pf-final-grid"></div></div></div>`;bindCanvas();$('pfGameLeave').onclick=()=>{if(typeof window.leaveRoom==='function')window.leaveRoom()}}
+let ds={color:'#111111',size:8,tool:'pen',down:false,last:null};
+function bindCanvas(){let c=$('pfCanvas');if(!c)return;let point=e=>{let r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height}},ctx=c.getContext('2d');c.onpointerdown=e=>{let r=R(),a=r?.draw?.turns?.[r.draw.artistIndex]?.artist;if(r?.draw?.phase!=='drawing'||norm(a)!==norm(name()))return;ds.down=true;c.setPointerCapture?.(e.pointerId);ds.last=point(e)};c.onpointermove=e=>{if(!ds.down)return;let p=point(e),q=ds.last,s={x1:q.x,y1:q.y,x2:p.x,y2:p.y,color:ds.color,size:ds.size,tool:ds.tool};ctx.strokeStyle=s.tool==='eraser'?'#fff':s.color;ctx.lineWidth=s.size;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();emit({type:'strokes',actor:name(),strokes:[s]});ds.last=p};c.onpointerup=()=>ds.down=false;c.onpointercancel=()=>ds.down=false;document.querySelectorAll('.pf-color').forEach(b=>b.onclick=()=>{ds.color=b.dataset.color;ds.tool='pen';document.querySelectorAll('.pf-color').forEach(x=>x.classList.remove('active'));b.classList.add('active')});$('pfEraser').onclick=()=>ds.tool='eraser';$('pfSize').oninput=e=>ds.size=+e.target.value;$('pfClear').onclick=()=>emit({type:'clear',actor:name()});$('pfSubmit').onclick=()=>{if(R()?.draw?.phase==='drawing')emit({type:'submit',actor:name(),image:c.toDataURL('image/jpeg',.82)})};$('pfGuessBtn').onclick=()=>emit({type:'guess',actor:name(),guess:$('pfGuess').value});$('pfGuess').onkeydown=e=>{if(e.key==='Enter')$('pfGuessBtn').click()};$('pfHint').onclick=()=>emit({type:'hint',actor:name()})}
+function redraw(){let c=$('pfCanvas');if(!c)return;let x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);for(let s of R()?.draw?.strokes||[]){x.strokeStyle=s.tool==='eraser'?'#fff':s.color;x.lineWidth=s.size;x.lineCap='round';x.beginPath();x.moveTo(s.x1,s.y1);x.lineTo(s.x2,s.y2);x.stroke()}}
+function paint(){let r=state(),d=r.draw;if(d.phase==='lobby'){lobby();return}if(!$('pfCanvas'))game();let cur=d.turns[d.artistIndex],ar=cur?.artist,t=cur?.team,mine=norm(ar)===norm(name()),canGuess=d.phase==='guessing'&&(d.mode==='teams'?team(r,name())===t:!mine);if($('pfRound'))$('pfRound').textContent=`الجولة ${d.round} / ${d.rounds} • ${labels[d.category]} • ${d.mode==='teams'?'فرق':'1 ضد 1'}`;if($('pfTimer'))$('pfTimer').textContent=d.deadline?'⏱ '+Math.max(0,Math.ceil((d.deadline-Date.now())/1000)):'⏱ بدون مؤقت';if($('pfPhase'))$('pfPhase').textContent=d.phase==='drawing'?'🎨 الرسم':d.phase==='guessing'?'🤔 التخمين':d.phase==='reveal'?'🎉 الكشف':'🏆 النتيجة';if($('pfArtist'))$('pfArtist').textContent='🎨 '+(ar||'');if($('pfTeamTurn'))$('pfTeamTurn').textContent=d.mode==='teams'?(t==='red'?'🔴 دور الأحمر':'🔵 دور الأزرق'):'';let secret=window.__paintingPrivatePrompt||'';if($('pfTask'))$('pfTask').textContent=d.phase==='drawing'?(mine?(secret||'الكلمة السرية'):'🎨 الرسام يرسم الآن'):d.phase==='guessing'?(canGuess?'🤔 خمن الكلمة':'👀 انتظر فريق الرسام'):d.phase==='reveal'?'🔓 '+(d.submissions[0]?.prompt||''):'🏆 انتهت اللعبة';if($('pfInfo'))$('pfInfo').textContent=mine&&d.phase==='drawing'?'الكلمة خاصة بك — لا تكتبها.':d.phase==='guessing'?(d.mode==='teams'?'أعضاء فريق الرسام فقط يخمنون.':'اللاعب الآخر يخمن الآن.'):(d.phase==='finished'?'شاهد النتائج والرسومات بالأسفل.':'');if($('pfSubmit'))$('pfSubmit').disabled=!mine||d.phase!=='drawing';if($('pfClear'))$('pfClear').disabled=!mine||d.phase!=='drawing';if($('pfGuess'))$('pfGuess').disabled=!canGuess;if($('pfGuessBtn'))$('pfGuessBtn').disabled=!canGuess;if($('pfHint'))$('pfHint').disabled=!canGuess||d.hints.includes(name());if($('pfScores'))$('pfScores').innerHTML=Object.entries(d.scores||{}).sort((a,b)=>b[1]-a[1]).map(([n,s])=>`<div class="pf-score-row"><span>${esc(n)}</span><b>${s}</b></div>`).join('');if($('pfTeamScores'))$('pfTeamScores').innerHTML=d.mode==='teams'?`🔴 ${d.teamScores.red||0} &nbsp; | &nbsp; 🔵 ${d.teamScores.blue||0}`:'';if($('pfGamePlayers'))$('pfGamePlayers').innerHTML=(d.artists||[]).map((n,i)=>`<div class="pf-player ${i===d.artistIndex?'leader':''}"><span>👤 ${esc(n)}</span><span>${i===d.artistIndex?'🎨 يرسم':team(r,n)==='red'?'🔴':'🔵'}</span></div>`).join('');let sub=d.submissions[0];if($('pfReveal')){if(sub&&d.phase!=='drawing'){$('pfReveal').style.display='block';$('pfReveal').innerHTML=`الكلمة كانت <div class="pf-word">${esc(sub.prompt)}</div>${d.winner?'🏆 '+esc(d.winner)+' صحيح!':'❌ لا يوجد تخمين صحيح.'}${d.phase==='reveal'&&r.leader===name()?'<br><button class="pf-btn primary" id="pfNext" style="margin-top:10px">➡️ الجولة التالية</button>':''}`;if($('pfNext'))$('pfNext').onclick=next}else $('pfReveal').style.display='none'}if($('pfResults')){if(d.phase==='finished'){$('pfResults').style.display='block';let s=Object.entries(d.scores||{}).sort((a,b)=>b[1]-a[1]),title=d.mode==='teams'?((d.teamScores.red||0)>=(d.teamScores.blue||0)?'🏆 الفريق الأحمر يفوز':'🏆 الفريق الأزرق يفوز'):(s[0]?`🏆 الفائز: ${esc(s[0][0])}`:'🏆 انتهت');$('pfResults').innerHTML=`<div style="font-size:22px;color:#f0cf45;font-weight:1000">${title}</div>${s.map(([n,v],i)=>`<div>${i+1}. ${esc(n)} — <b>${v}</b></div>`).join('')}`}else $('pfResults').style.display='none'}if($('pfGallery'))$('pfGallery').innerHTML=(d.gallery||[]).map(g=>`<div class="pf-final-card"><img src="${g.image||''}"><div class="pf-final-meta">🎨 <b>${esc(g.artist)}</b> • 📝 ${esc(g.prompt)}<br>${g.winner?'🏆 '+esc(g.winner):'❌ بدون إجابة'}${g.guesses?.length?'<br>'+g.guesses.map(x=>`${esc(x.name)}: ${esc(x.guess)} ${x.correct?'✅':'❌'}`).join(' · '):''}</div></div>`).join('')||'<div class="pf-empty">ستظهر الرسومات هنا.</div>';redraw()}
+function next(){let r=state(),d=r.draw;if(r.leader!==name()||d.phase!=='reveal')return;let s=d.submissions[0];if(s)d.gallery.push({artist:s.artist,image:s.image,prompt:s.prompt,winner:d.winner||null,guesses:(d.guesses||[]).map(x=>({...x}))});d.artistIndex++;if(d.artistIndex>=d.turns.length){d.phase='finished';r.phase='drawing-finished';d.deadline=0;save(r);bc();paint();return}d.round++;startRound(r)}
+window.handleDrawEventOnHost=msg=>host(msg?.event||msg);window.sendDrawEvent=emit;window.startDrawMode=start;window.renderDraw=paint;window.renderDrawLobby=lobby;
+const os=window.show;window.show=function(id){os(id);if(id==='drawLobbyScreen')setTimeout(lobby,0);if(id==='drawScreen')setTimeout(game,0)};
+window.addEventListener('load',()=>{setTimeout(()=>{try{if(R()?.gameMode==='draw')paint()}catch(e){}},250);setInterval(()=>{let r=R();if(!r||r.gameMode!=='draw')return;let d=r.draw;if(typeof isHost!=='undefined'&&isHost&&d.deadline&&Date.now()>=d.deadline&&(d.phase==='drawing'||d.phase==='guessing')){let ar=d.turns[d.artistIndex]?.artist,p=window.__paintingSecrets?.[(r.code||'')+'|'+d.round+'|'+d.artistIndex]||window.__paintingPrivatePrompt||'';if(d.phase==='drawing')d.submissions=[{artist:ar,image:$('pfCanvas')?.toDataURL('image/jpeg',.72)||'',prompt:p,timeout:true}];d.phase='reveal';d.deadline=0;save(r);bc();paint()}else if($('pfCanvas')||$('pfPlayers'))paint()},500)})
+})();
+</script>
 
 <script id="stability-and-turn-reminder-fix">
 (function(){
@@ -6540,185 +6591,3 @@ function setConnDot(ok) {
 </script>
 </body>
 </html>
-
-<script id="FINAL-ROOM-AND-CATEGORY-REPAIR">
-(function(){
-'use strict';
-
-/* FINAL REPAIR: do not change the existing network/server layer. */
-const VISUAL_CATS={
-  pictures:{label:'📸 صور حقيقية — Picture Cards',query:'photo'},
-  anime_images:{label:'🍥 أنمي بالصور — Anime Images',query:'anime'},
-  cartoons:{label:'🎨 كرتون بالصور — Cartoon Images',query:'cartoon'},
-  movies_images:{label:'🎬 أفلام بالصور — Movie Images',query:'movie'},
-  games_images:{label:'🎮 ألعاب بالصور — Game Images',query:'video-game'},
-  sports_images:{label:'⚽ رياضة بالصور — Sports Images',query:'sports'}
-};
-function visual(cat){return !!VISUAL_CATS[cat];}
-function visualImage(cat,i){
-  const q=VISUAL_CATS[cat]?.query||'photo';
-  const lock=93000+(Object.keys(VISUAL_CATS).indexOf(cat)+1)*1000+(Number(i)||0);
-  return 'https://loremflickr.com/520/360/'+encodeURIComponent(q)+'?lock='+lock;
-}
-function patchCards(cards,cat){
-  if(!visual(cat)||!Array.isArray(cards))return cards;
-  return cards.map((c,i)=>{c=c||{}; c.image=visualImage(cat,i); return c;});
-}
-
-/* Existing board builder: keep all its game logic, only attach the correct images. */
-function patchBuilder(){
-  try{
-    if(typeof window.buildBoard!=='function'||window.__finalRepairBuilder)return;
-    const old=window.buildBoard;
-    window.buildBoard=function(a,d,c,w){const out=old.apply(this,arguments);if(out&&visual(c))out.cards=patchCards(out.cards,c);return out;};
-    window.__finalRepairBuilder=true;
-  }catch(e){console.warn('builder repair',e)}
-}
-
-/* Existing room writes remain untouched; visual cards are corrected before saving. */
-function patchWriter(){
-  try{
-    if(typeof window.writeRoom!=='function'||window.__finalRepairWriter)return;
-    const old=window.writeRoom;
-    window.writeRoom=function(code,room){
-      try{const cat=room?.category||room?.settings?.category;if(visual(cat))room.cards=patchCards(room.cards||[],cat);}catch(e){}
-      return old.apply(this,arguments);
-    };
-    window.__finalRepairWriter=true;
-  }catch(e){console.warn('writer repair',e)}
-}
-
-/* If an image host fails, never leave a blank card. */
-function repairRenderedVisualCards(){
-  const board=document.getElementById('board');if(!board)return;
-  board.querySelectorAll('.picture-card').forEach(card=>{
-    if(!card.querySelector('.picture-word')){
-      const img=card.querySelector('img');
-      const word=(typeof state!=='undefined'&&state.cards)?state.cards[[...board.children].indexOf(card)]?.word:'';
-      const w=document.createElement('div');w.className='picture-word';w.textContent=word||'';
-      w.style.cssText='display:block!important;padding:8px 5px;text-align:center;font-weight:900;color:#111;background:#eee8da;min-height:34px;box-sizing:border-box;';
-      card.appendChild(w);
-      if(img)img.addEventListener('error',function(){this.style.display='none';card.classList.add('image-failed');},{once:true});
-    }
-  });
-}
-
-/* Fix category choices without deleting the original popular categories. */
-function repairCategoryOptions(){
-  ['localCategory','onlineCategory'].forEach(id=>{
-    const s=document.getElementById(id);if(!s)return;
-    Object.entries(VISUAL_CATS).forEach(([value,v])=>{
-      let o=s.querySelector('option[value="'+value+'"]');
-      if(!o){o=document.createElement('option');o.value=value;s.appendChild(o)}
-      o.textContent=v.label;
-    });
-  });
-  try{
-    if(typeof CATEGORIES!=='undefined'){
-      /* These pools are intentionally simple and distinct; no server data is changed. */
-      if(!CATEGORIES.anime_images)CATEGORIES.anime_images=['ناروتو','غوكو','لوفي','غوجو','إيتاتشي','ساسكي','إيرين','ليفاي','تانجيرو','نيزوكو','زورو','سانجي','ميدوريا','باكوغو','تودوروكي','غون','كيلوا','إدوارد','ريم','سوكونا','شانكس','سايتاما','إيتشيغو','زيرك','شينرا'];
-      if(!CATEGORIES.cartoons)CATEGORIES.cartoons=['سبونج بوب','توم وجيري','ميكي ماوس','دونالد داك','سكوبي دو','بن 10','بوكيمون','فتيات القوة','غارفيلد','شريك','مدغشقر','نيمو','مولان','علاء الدين','الأسد الملك','فروزن','توي ستوري','كوكو','راتاتوي','موانا','السنافر','هيلو كيتي','وقت المغامرة','كونغ فو باندا','تشارلي براون'];
-      if(!CATEGORIES.movies_images)CATEGORIES.movies_images=['تايتانيك','أفاتار','إنسبشن','ماتريكس','غلادياتور','فورست غامب','بالب فيكشن','إنترستيلار','جوراسيك بارك','العراب','روكي','جوكر','أوبنهايمر','باربي','جون ويك','سيد الخواتم','الهوبيت','باتمان','سبايدرمان','توب غان','كوكو','موانا','شريك','مولان','راتاتوي'];
-      if(!CATEGORIES.games_images)CATEGORIES.games_images=['ماينكرافت','فورتنايت','كول أوف ديوتي','جتا','ريد ديد','أساسنز كريد','غود أوف وور','ذا لاست أوف أس','فالوت','سكايرم','ويتشر','سايبر بانك','إيلدن رينغ','سوبر ماريو','زيلدا','بوكيمون','روبلوكس','فالورانت','ببجي','فري فاير','أمونغ أس','تيراريا','هالو','دوم','روكيت ليغ'];
-      if(!CATEGORIES.sports_images)CATEGORIES.sports_images=['كرة القدم','كرة السلة','التنس','السباحة','الملاكمة','الجودو','الكاراتيه','التايكواندو','الجمباز','كرة الطائرة','كرة اليد','الفروسية','التزلج','ركوب الأمواج','الجولف','البيسبول','الكريكت','الرغبي','فورمولا 1','الماراثون','ركوب الدراجات','المصارعة','الهوكي','بلياردو','بادل','سباق السيارات'];
-      if(!CATEGORIES.pictures)CATEGORIES.pictures=['قطة','كلب','أسد','فيل','حصان','نسر','سمكة','فراشة','تفاحة','بيتزا','برغر','قهوة','طائرة','سيارة','دراجة','قطار','قلعة','شاطئ','جبل','غابة','صاروخ','غيتار','كاميرا','روبوت','بركان'];
-    }
-  }catch(e){}
-}
-
-/* ---- Painting entry: the old visible entry is kept, but its buttons are finally wired. ---- */
-function paintingRoomObject(code,name){
-  return {
-    code:code,phase:'lobby',gameMode:'draw',leader:name,
-    teams:{red:[{name:name,team:'red',bot:false,spymaster:false}],blue:[]},
-    bots:[],cards:[],chat:[],
-    draw:{phase:'lobby',round:1,rounds:1,artists:[],artistIndex:0,prompt:'',submissions:[],guesses:[],gallery:[],startedAt:0,mode:'prompt',timeLimit:0,strokeUsed:false,strokes:[],scores:{},hints:[],secretHint:'',deadline:0}
-  };
-}
-function openPaintingEntry(){
-  try{if(typeof mode!=='undefined')mode='online';if(typeof teams!=='undefined')teams={red:[],blue:[]};}catch(e){}
-  if(typeof show==='function')show('paintingConnectScreen');
-  const oldName=document.getElementById('paintingConnectName');
-  if(oldName){setTimeout(()=>oldName.focus(),50);return;}
-  const pf=document.getElementById('pfName');if(pf)setTimeout(()=>pf.focus(),50);
-}
-function bindPaintingEntry(){
-  const create=document.getElementById('paintingCreateRoom');
-  const join=document.getElementById('paintingJoinRoom');
-  const nameEl=document.getElementById('paintingConnectName');
-  const codeEl=document.getElementById('paintingRoomCode');
-  const msgEl=document.getElementById('paintingConnectMsg');
-  if(create&&!create.__finalRepair){
-    create.__finalRepair=true;
-    create.addEventListener('click',async function(e){
-      e.preventDefault();
-      const name=(nameEl?.value||'').trim().slice(0,18);
-      if(!name){if(msgEl)msgEl.textContent='✏️ اكتب اسمك أولاً.';return;}
-      try{
-        const code=typeof makeCode==='function'?makeCode():'ABC12';
-        me={name:name,team:'red'};roomCode=code;mode='online';
-        const room=paintingRoomObject(code,name);localRoomCache=room;roomState=room;
-        if(msgEl)msgEl.textContent='⏳ إنشاء الغرفة...';
-        if(typeof peer!=='undefined'&&peer){try{peer.destroy()}catch(_){}
-        }
-        await createHostPeer(code);isHost=true;room.leader=name;
-        writeRoom(code,room);if(typeof startListening==='function')startListening();
-        if(typeof show==='function')show('drawLobbyScreen');
-        if(typeof window.renderDrawLobby==='function')window.renderDrawLobby(room);else if(typeof renderLobbyFromRoom==='function')renderLobbyFromRoom(room);
-      }catch(err){console.error(err);if(msgEl)msgEl.textContent='❌ تعذر إنشاء الغرفة: '+(err?.message||'اتصال');}
-    });
-  }
-  if(join&&!join.__finalRepair){
-    join.__finalRepair=true;
-    join.addEventListener('click',async function(e){
-      e.preventDefault();
-      const name=(nameEl?.value||'').trim().slice(0,18),code=(codeEl?.value||'').trim().toUpperCase();
-      if(!name){if(msgEl)msgEl.textContent='✏️ اكتب اسمك أولاً.';return;}
-      if(code.length<4){if(msgEl)msgEl.textContent='🔑 اكتب رمز الغرفة.';return;}
-      try{
-        if(msgEl)msgEl.textContent='⏳ الدخول إلى الغرفة...';
-        const room=await connectAsGuest(code);
-        if(!room||room.gameMode!=='draw')throw new Error('هذه ليست غرفة Painting');
-        me={name:name,team:'red'};roomCode=code;mode='online';localRoomCache=room;roomState=room;
-        if(guestConn?.open)guestConn.send({type:'join',name:name,team:'red'});
-        if(typeof startListening==='function')startListening();
-        if(typeof show==='function')show(room.phase==='lobby'?'drawLobbyScreen':'drawScreen');
-        if(room.phase==='lobby'&&typeof window.renderDrawLobby==='function')window.renderDrawLobby(room);
-        else if(room.phase!=='lobby'&&typeof window.renderDraw==='function')window.renderDraw(room);
-        if(msgEl)msgEl.textContent='✅ تم الاتصال بالغرفة.';
-      }catch(err){console.error(err);if(msgEl)msgEl.textContent='❌ تعذر الدخول: '+(err?.message||'تأكد من الرمز');}
-    });
-  }
-}
-
-function bindPickDraw(){
-  const b=document.getElementById('pickDraw');if(!b||b.__finalRepair)return;
-  const nb=b.cloneNode(true);b.replaceWith(nb);nb.__finalRepair=true;
-  nb.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openPaintingEntry();},true);
-}
-
-/* Prevent a stale Codenames session from winning a race immediately after Painting is opened. */
-let paintingRequestedUntil=0;
-const oldOpen=openPaintingEntry;
-openPaintingEntry=function(){paintingRequestedUntil=Date.now()+2500;oldOpen()};
-const oldShow=window.show;
-if(typeof oldShow==='function'&&!window.__finalRepairShow){
-  window.show=function(id){
-    if(Date.now()<paintingRequestedUntil && (id==='gameScreen'||id==='lobbyScreen'))return;
-    oldShow(id);
-    if(id==='paintingConnectScreen')bindPaintingEntry();
-  };
-  window.__finalRepairShow=true;
-}
-
-function install(){
-  patchBuilder();patchWriter();repairCategoryOptions();bindPickDraw();bindPaintingEntry();repairRenderedVisualCards();
-  try{
-    const r=(typeof localRoomCache!=='undefined'&&localRoomCache)||null;
-    if(r&&visual(r.category||r.settings?.category))r.cards=patchCards(r.cards||[],r.category||r.settings.category);
-  }catch(e){}
-}
-window.addEventListener('load',()=>setTimeout(install,150));
-setInterval(install,800);
-})();
-</script>

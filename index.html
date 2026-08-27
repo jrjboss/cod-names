@@ -2590,11 +2590,57 @@ let matchmakingTeam = 'red';
 let aiActionTimer = null;
 let aiBusy = false;
 
+let cloudflareTurnCache = null;
+let cloudflareTurnCacheUntil = 0;
+
 async function getIceServers() {
-    // Fast path: never block room creation/joining on an external TURN worker.
-    // PeerJS can establish the signaling/data connection immediately with the
-    // bundled public STUN/TURN fallbacks. This removes the old 5-second wait.
-    return FREE_ICE_SERVERS;
+    // Use the user's Cloudflare TURN Worker for real WebRTC relay credentials.
+    // Keep public STUN as a fallback, but do NOT expose the Cloudflare API token.
+    const now = Date.now();
+    if (cloudflareTurnCache && now < cloudflareTurnCacheUntil) {
+        return cloudflareTurnCache;
+    }
+
+    const fallback = FREE_ICE_SERVERS.slice();
+
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(TURN_CREDENTIALS_URL, {
+            method: 'GET',
+            cache: 'no-store',
+            signal: controller.signal
+        });
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+            throw new Error('TURN Worker HTTP ' + response.status);
+        }
+
+        const data = await response.json();
+        const returned = Array.isArray(data.iceServers) ? data.iceServers : [];
+
+        if (!returned.length) {
+            throw new Error('TURN Worker returned no iceServers');
+        }
+
+        // Cloudflare returns short-lived credentials. Put them first so ICE
+        // prefers the user's TURN service when direct P2P cannot connect.
+        cloudflareTurnCache = returned.concat(fallback);
+
+        // Worker requests ttl=3600. Refresh early so credentials never expire
+        // during a game.
+        cloudflareTurnCacheUntil = Date.now() + 45 * 60 * 1000;
+
+        console.log('☁️ Cloudflare TURN ready:', returned.length, 'ICE server entries');
+        return cloudflareTurnCache;
+    } catch (error) {
+        console.warn('⚠️ Cloudflare TURN unavailable; using fallback ICE:', error);
+        cloudflareTurnCache = null;
+        cloudflareTurnCacheUntil = 0;
+        return fallback;
+    }
 }
 
 // ------------------------------------------------------------
@@ -4954,10 +5000,16 @@ function setConnDot(ok) {
             setMatchStatus('🔎 نبحث عن لاعبين من كل مكان...', true);
             try {
                 var response = await fetch(MATCHMAKING_URL + '/matchmaking/join', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    cache: 'no-store',
                     body: JSON.stringify({ playerId: matchmakingPlayerId, name: name })
                 });
-                if (!response.ok) throw new Error('HTTP ' + response.status);
+                if (!response.ok) {
+                    var joinBody = '';
+                    try { joinBody = await response.text(); } catch (_) {}
+                    throw new Error('Matchmaking HTTP ' + response.status + (joinBody ? ': ' + joinBody : ''));
+                }
                 pollMatchmaking();
             } catch (e) {
                 console.error(e);
@@ -6169,6 +6221,30 @@ function setConnDot(ok) {
   document.addEventListener('DOMContentLoaded',ready);
   window.addEventListener('load',ready);
   setInterval(ready,500);
+})();
+</script>
+
+
+<script id="CLOUDFLARE_NETWORK_DIAGNOSTICS">
+(function(){
+  window.testCloudflareServices = async function(){
+    const result = { matchmaking:null, turn:null };
+    try{
+      const r = await fetch(MATCHMAKING_URL + '/', {cache:'no-store'});
+      result.matchmaking = {ok:r.ok,status:r.status,text:await r.text()};
+    }catch(e){
+      result.matchmaking = {ok:false,error:String(e)};
+    }
+    try{
+      const r = await fetch(TURN_CREDENTIALS_URL, {cache:'no-store'});
+      const body = await r.json();
+      result.turn = {ok:r.ok,status:r.status,hasIceServers:Array.isArray(body.iceServers),count:Array.isArray(body.iceServers)?body.iceServers.length:0};
+    }catch(e){
+      result.turn = {ok:false,error:String(e)};
+    }
+    console.log('☁️ Cloudflare services:', result);
+    return result;
+  };
 })();
 </script>
 

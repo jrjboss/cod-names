@@ -2078,7 +2078,6 @@
                         <select id="localCategory">
                             <option value="all">🎲 جميع الكلمات</option>
                             <option value="anime">🍥 أنمي</option>
-                            <option value="anime_images">🖼️ أنمي بالصور</option>
                             <option value="films">🎬 أفلام</option>
                             <option value="movies">🎞️ سينما</option>
                             <option value="games">🎮 ألعاب</option>
@@ -2207,7 +2206,6 @@
                         <select id="onlineCategory">
                             <option value="all">🎲 جميع الكلمات</option>
                             <option value="anime">🍥 أنمي</option>
-                            <option value="anime_images">🖼️ أنمي بالصور</option>
                             <option value="films">🎬 أفلام</option>
                             <option value="movies">🎞️ سينما</option>
                             <option value="games">🎮 ألعاب</option>
@@ -3690,7 +3688,6 @@ function setConnDot(ok) {
         var CATEGORIES = {
             all: [],
             anime: ["ناروتو","غوكو","لوفي","سايتاما","إيتاتشي","ساسكي","إيتشيغو","إيرين","ليفاي","كونان","كاكاشي","جوتارو","ديو","غوجو","سوكونا","تانجيرو","نيزوكو","زينيتسو","إينوسكي","زورو","سانجي","شانكس","إيس","لاو","مادارا","أوبيتو","ميدوريا","باكوغو","تودوروكي","غون","كيلوا","هيسوكا","كورابيكا","يوهان","إدوارد","ألفونس","ريم","سوبارو","أستـا","يونو"],
-            anime_images: ["ناروتو","غوكو","لوفي","سايتاما","إيتاتشي","ساسكي","إيتشيغو","إيرين","ليفاي","كونان","كاكاشي","جوتارو","ديو","غوجو","سوكونا","تانجيرو","نيزوكو","زينيتسو","إينوسكي","زورو","سانجي","شانكس","إيس","لاو","مادارا","أوبيتو","ميدوريا","باكوغو","تودوروكي","غون","كيلوا","هيسوكا","كورابيكا","ريم","سوبارو","أستا","يونو"],
             films: ["تايتانيك","أفاتار","إنسبشن","ذا ماتريكس","غلادياتور","بريف هارت","فورست غامب","فايت كلوب","بالب فيكشن","ممنتو","ذا برستيج","إنترستيلار","جوراسيك بارك","العراب","روكي","رومـا","جوكر","أوبنهايمر","باربي","المناظرون","كوكو","فوق","وال-إي","راتاتوي","مولان","شريك","مدمـن","المهمة المستحيلة","جون ويك","سيد الخواتم","الهوبيت","المنتقمون","النمر الأسود","الرجل الحديدي","ثور","كابتن أمريكا","سبايدرمان","باتمان","سوبرمان"],
             movies: ["العراب","المنتقمون","الرجل العنكبوت","باتمان","سوبرمان","آيرون مان","ثور","كابتن أمريكا","بلاك بانثر","دكتور سترينج","توي ستوري","مادا غاسكار","إنترستيلار","جوكر","باربي","أوبنهايمر","فروزن","الأسد الملك","موانا","علاء الدين","مولان","هيركوليز","ترميناتور","روبوكوب","ماتريكس","أفاتار","تايتانيك","جومانجي","سونيك","بوكيمون"],
             games: ["ماينكرافت","فورتنايت","كول أوف ديوتي","جتا","ريد ديد","أساسنز كريد","غود أوف وور","ذا لاست أوف أس","أنشارتد","فال أوت","سكايرم","ويتشر","سايبر بانك","إيلدن رينغ","سوبر ماريو","زيلدا","بوكيمون","فاينل فانتازي","ميتال غير","سبايرو","روبلوكس","فالورانت","ببجي","فري فاير","أمونغ أس","تيراريا","هالو","دوم","تيكن","مورتال كومبات","فيفا","روكيت ليغ","أبيكس ليجندز","أوفرواتش","ديسكو إليسيوم","ستارديو فالي","سيكيرو","دارك سولز","هورايزن","غوست أوف تسوشيما"],
@@ -3905,17 +3902,13 @@ function setConnDot(ok) {
             'Airplane','Car','Bicycle','Train','Castle','Beach','Mountain','Forest','Rocket','Guitar','Camera','Robot','Volcano'
         ];
 
-        function pictureUrl(word, index, category) {
-            if (category === 'anime_images') {
-                return 'https://loremflickr.com/420/320/anime,character?lock=' + (index + 9001);
-            }
+        function pictureUrl(word, index) {
             return 'https://loremflickr.com/420/320/' + encodeURIComponent(String(word).toLowerCase()) + '?lock=' + (index + 101);
         }
 
         function getWordPool(category, customWords) {
             var custom = Array.isArray(customWords) ? customWords.filter(Boolean) : CATEGORIES.custom;
             if (category === 'pictures') return PICTURE_WORDS.slice();
-            if (category === 'anime_images') return CATEGORIES.anime_images.slice();
             if (category === 'custom') {
                 var onlyCustom = Array.from(new Set(custom));
                 if (onlyCustom.length >= 25) return onlyCustom;
@@ -3933,7 +3926,6 @@ function setConnDot(ok) {
             var names = {
                 all: 'جميع الكلمات',
                 anime: 'أنمي',
-                anime_images: 'أنمي بالصور',
                 films: 'أفلام',
                 movies: 'سينما',
                 games: 'ألعاب',
@@ -4027,7 +4019,7 @@ function setConnDot(ok) {
             var cards = [];
             for (var ci = 0; ci < 25; ci++) {
                 var card = { word: words[ci], team: roles[ci], revealed: false };
-                if (category === 'pictures' || category === 'anime_images') { card.image = pictureUrl(words[ci], ci, category); card.imageOnly = true; }
+                if (category === 'pictures') card.image = pictureUrl(words[ci], ci);
                 cards.push(card);
             }
             return { cards: cards, turn: startingTeam, assassinCount: maxAssassins };
@@ -4103,12 +4095,10 @@ function setConnDot(ok) {
                     img.src = c.image;
                     img.onerror = function() { this.style.display = 'none'; };
                     el.appendChild(img);
-                    if (!c.imageOnly) {
-                        var pictureWord = document.createElement('div');
-                        pictureWord.className = 'picture-word';
-                        pictureWord.textContent = c.word;
-                        el.appendChild(pictureWord);
-                    }
+                    var pictureWord = document.createElement('div');
+                    pictureWord.className = 'picture-word';
+                    pictureWord.textContent = c.word;
+                    el.appendChild(pictureWord);
                 } else {
                     var word = document.createElement('div');
                     word.className = 'word';
@@ -6114,72 +6104,72 @@ function setConnDot(ok) {
 </script>
 
 
-
 <!-- ============================================================
-     DRAW IT / GUESS IT — CLOUDFLARE ROOM TRANSPORT
-     This layer is ONLY for Draw & Guess. Codenames keeps its
-     existing PeerJS/matchmaking transport and UI untouched.
-============================================================ -->
-<style id="cloudflare-draw-ultimate-css">
-  #paintingConnectScreen,#drawLobbyScreen,#drawScreen{direction:ltr!important;}
-  #paintingConnectScreen.cf-draw,#drawLobbyScreen.cf-draw,#drawScreen.cf-draw{display:block!important;min-height:100vh;background:#f7f8fc;color:#202534;}
-  .cf-wrap{width:min(1240px,calc(100% - 28px));margin:0 auto;padding:28px 0 48px;font-family:Arial,system-ui,sans-serif;direction:ltr}
-  .cf-card{background:#fff;border:1px solid #e7e9f0;border-radius:28px;box-shadow:0 18px 55px rgba(34,39,60,.10);padding:24px}
-  .cf-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
-  .cf-brand{display:flex;align-items:center;gap:12px}.cf-logo{width:54px;height:54px;border-radius:18px;background:linear-gradient(135deg,#ffd8f5,#c8f3ff);display:grid;place-items:center;font-size:30px;box-shadow:0 8px 20px rgba(90,80,130,.10)}
-  .cf-title{font-size:34px;font-weight:1000;color:#202534;letter-spacing:-1px}.cf-sub{color:#737b8c;font-size:13px;margin-top:4px}
-  .cf-code{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.cf-code strong{font-size:24px;letter-spacing:5px;padding:10px 16px;border-radius:15px;background:#f4f5f9;color:#202534}.cf-btn{border:0;border-radius:14px;padding:12px 16px;background:#f1f3f8;color:#252b3b;font-weight:900;cursor:pointer;transition:.16s;min-height:46px}.cf-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(45,52,75,.10)}.cf-btn.primary{background:linear-gradient(135deg,#ffb9e9,#9cecff);color:#17202c}.cf-btn.danger{background:#ffe1e1;color:#a32e36}.cf-btn:disabled{opacity:.45;cursor:not-allowed}
-  .cf-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.cf-panel{background:#fbfcff;border:1px solid #e8ebf2;border-radius:22px;padding:20px}.cf-panel h3{margin:0 0 12px;color:#252b3b;font-size:18px}.cf-input,.cf-select{width:100%;height:54px;border:2px solid #e7eaf1;border-radius:15px;background:#fff;color:#202534;padding:0 15px;font-size:16px;outline:none;box-sizing:border-box}.cf-input:focus,.cf-select:focus{border-color:#b9b2ff;box-shadow:0 0 0 4px #b9b2ff22}.cf-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}.cf-row>*{flex:1}.cf-note{margin-top:10px;padding:11px 13px;border-radius:13px;background:#f4f6fb;color:#747d8e;font-size:12px;line-height:1.7}.cf-msg{min-height:22px;margin-top:10px;text-align:center;color:#e35c7e;font-size:13px;font-weight:800}
-  .cf-lobby{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.cf-modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cf-mode{min-height:120px;border:2px solid #e8eaf1;border-radius:18px;background:#fff;cursor:pointer;padding:15px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px;transition:.16s}.cf-mode:hover{transform:translateY(-2px);border-color:#c9c2ff}.cf-mode.active{border-color:#9e91ff;background:linear-gradient(145deg,#f6f2ff,#fff);box-shadow:0 0 0 3px #9e91ff22}.cf-mode .ico{font-size:30px}.cf-mode strong{font-size:15px}.cf-mode small{font-size:11px;color:#7d8493;text-align:center}.cf-settings{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.cf-setting label{display:block;color:#747d8e;font-size:11px;font-weight:800;margin-bottom:5px}.cf-players{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px;min-height:70px}.cf-player{padding:12px 13px;border-radius:14px;background:#fff;border:1px solid #e8ebf1;display:flex;justify-content:space-between;gap:8px;color:#313747}.cf-player.host{border-color:#ffbd65;box-shadow:0 0 0 2px #ffbd6522}.cf-player.me{background:#f7f2ff}.cf-empty{text-align:center;color:#9aa1af;padding:20px}.cf-start{text-align:center;margin-top:16px}.cf-start .cf-btn{min-width:300px;font-size:17px}
-  .cf-game{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px}.cf-board{background:#fff;border:1px solid #e6e9f0;border-radius:24px;padding:16px;box-shadow:0 18px 50px rgba(34,39,60,.08)}.cf-status{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.cf-pill{padding:8px 12px;border-radius:999px;background:#f4f5f9;color:#626a7b;font-size:12px;font-weight:900}.cf-timer{font-size:22px;color:#5f58c9;background:#f0efff}.cf-task{text-align:center;font-size:28px;font-weight:1000;color:#202534;margin:12px 0 4px}.cf-info{text-align:center;color:#7b8291;font-size:12px;min-height:20px}.cf-canvas-wrap{margin-top:12px;background:#fff;border:2px dashed #dfe3ec;border-radius:20px;padding:8px}.cf-canvas{display:block;width:100%;aspect-ratio:5/3;background:#fff;border-radius:13px;touch-action:none;cursor:crosshair}.cf-tools{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:10px}.cf-color{width:38px;height:38px;border-radius:12px;border:3px solid #fff;box-shadow:0 0 0 1px #dfe2ea;cursor:pointer}.cf-color.active{box-shadow:0 0 0 3px #8f85ff}.cf-range{width:115px}.cf-side{display:flex;flex-direction:column;gap:12px}.cf-sidebox{background:#fff;border:1px solid #e7eaf1;border-radius:20px;padding:14px;box-shadow:0 12px 30px rgba(34,39,60,.06)}.cf-sidebox h3{margin:0 0 9px;font-size:15px;color:#313747}.cf-score-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef0f4;font-size:13px}.cf-score-row:last-child{border:0}.cf-guess-row{display:flex;gap:7px}.cf-guess-row .cf-input{height:46px}.cf-chat{height:190px;overflow:auto;background:#f7f8fb;border-radius:13px;padding:8px}.cf-chat div{padding:7px 8px;border-radius:9px;background:#fff;margin-bottom:5px;font-size:12px}.cf-chat b{color:#695fd0}.cf-guess-state{padding:9px;border-radius:12px;background:#f6f4ff;color:#696180;font-size:12px;line-height:1.6;margin-bottom:8px}.cf-gallery{margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}.cf-gallery-card{background:#fff;border:1px solid #e6e9f0;border-radius:16px;padding:8px}.cf-gallery-card canvas{width:100%;display:block;border-radius:10px;background:#fff}.cf-gallery-meta{font-size:11px;color:#737b8b;margin-top:6px;line-height:1.5}.cf-reveal{margin-top:12px;padding:16px;border-radius:16px;background:#f8f6ff;border:1px solid #ded8ff;text-align:center;color:#4f4a66}.cf-word{font-size:28px;font-weight:1000;color:#6257c6;margin:4px 0}
-  @media(max-width:900px){.cf-lobby,.cf-grid,.cf-game{grid-template-columns:1fr}}@media(max-width:600px){.cf-wrap{width:min(100% - 16px,1240px);padding-top:10px}.cf-card{padding:14px;border-radius:20px}.cf-title{font-size:26px}.cf-modes,.cf-settings{grid-template-columns:1fr}.cf-start .cf-btn{width:100%;min-width:0}.cf-game{grid-template-columns:1fr}.cf-task{font-size:22px}}
+     FINAL SAFE PATCH
+     - Keeps the complete Codenames game untouched.
+     - Draw & Guess uses the existing PeerJS room connection.
+     - No direct wss:// Worker drawing connection is created here.
+     - Picture cards show the picture only, as requested.
+     ============================================================ -->
+<style id="final-safe-patch-css">
+  /* Picture category: image only, no word printed underneath. */
+  .picture-card .picture-word{
+    display:none !important;
+  }
+  .picture-card .picture-image{
+    width:100%;
+    height:100%;
+    min-height:0;
+    object-fit:cover;
+    border-radius:inherit;
+  }
+
+  /* Keep Draw & Guess compact and usable on desktop/mobile. */
+  #paintingConnectScreen,
+  #drawLobbyScreen,
+  #drawScreen{
+    width:100%;
+    box-sizing:border-box;
+  }
 </style>
-<script id="cloudflare-draw-ultimate-script">
+<script id="final-safe-patch-js">
 (function(){
   'use strict';
-  const API='https://codenames-matchmaking.junaidalbalushi123456789.workers.dev';
-  const PLAYER_KEY='cf_draw_player_id_v1';
-  let playerId=localStorage.getItem(PLAYER_KEY)||crypto.randomUUID();
-  localStorage.setItem(PLAYER_KEY,playerId);
-  let code='', name='', ws=null, state=null, poll=null, drawDown=false, last={x:0,y:0}, color='#22252d', size=8, tool='pen', strokes=[], undoStack=[], flushing=false, strokeQueue=[];
-  const $=id=>document.getElementById(id);
-  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const api=(path,opts={})=>fetch(API+path,{...opts,headers:{'Content-Type':'application/json',...(opts.headers||{})}}).then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||('HTTP '+r.status));return d});
-  const jpath=()=>'/draw/'+encodeURIComponent(code);
-  function setScreen(id){['modeScreen','localSetupScreen','onlineEntryScreen','lobbyScreen','paintingConnectScreen','drawLobbyScreen','gameScreen','drawScreen'].forEach(x=>{const e=$(x);if(e)e.classList.toggle('hidden',x!==id);});const e=$(id);if(e)e.classList.add('cf-draw');}
-  function msg(t){const e=$('cfDrawMsg')||$('cfLobbyMsg')||$('cfGameMsg');if(e)e.textContent=t||'';}
-  function getState(){return api(jpath()+'/state?playerId='+encodeURIComponent(playerId)).then(d=>{applyState(d.state);return d.state});}
-  function applyState(s){if(!s)return;state=s;code=s.code||code;name=(s.players?.find(p=>p.id===playerId)?.name)||name;render();}
-  function openWS(){if(ws){try{ws.close()}catch(e){}};const u=API.replace(/^http/,'ws')+jpath()+'?playerId='+encodeURIComponent(playerId);ws=new WebSocket(u);ws.onopen=()=>{renderConn(true)};ws.onclose=()=>{renderConn(false);setTimeout(()=>{if(code)openWS()},1200)};ws.onerror=()=>renderConn(false);ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.state)applyState(m.state);if(m.type==='deleted')leaveLocal(false)}catch(err){console.error(err)}};}
-  function renderConn(ok){const e=$('cfConn');if(e)e.textContent=ok?'● متصل':'○ إعادة الاتصال...';if(e)e.style.color=ok?'#31a66b':'#e09a36';}
-  function makeCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let x='';for(let i=0;i<5;i++)x+=chars[Math.floor(Math.random()*chars.length)];return x;}
-  function create(){name=String($('cfName')?.value||'').trim().slice(0,18);if(!name)return msg('اكتب اسمك أولاً.');let tries=0;const attempt=()=>{if(tries++>6)return msg('تعذر إنشاء غرفة الآن.');code=makeCode();api(jpath()+'/state?playerId='+encodeURIComponent(playerId)).then(d=>{if(d.state?.players?.length){attempt();return}return api(jpath()+'/join',{method:'POST',body:JSON.stringify({playerId,name,host:true,mode:'1v1',rounds:4,timeLimit:60,category:'mixed'})})}).then(d=>{if(!d)return;applyState(d.state);openWS();setScreen('drawLobbyScreen');render();}).catch(e=>{console.error(e);attempt()})};attempt();}
-  function join(){name=String($('cfName')?.value||'').trim().slice(0,18);code=String($('cfCode')?.value||'').trim().toUpperCase();if(!name)return msg('اكتب اسمك أولاً.');if(code.length<4)return msg('اكتب رمز الغرفة.');msg('جاري الدخول...');api(jpath()+'/join',{method:'POST',body:JSON.stringify({playerId,name,mode:'1v1'})}).then(d=>{applyState(d.state);openWS();setScreen('drawLobbyScreen');render();}).catch(e=>msg('❌ '+e.message));}
-  function sendSettings(){if(!state||state.leaderId!==playerId)return;api(jpath()+'/settings?playerId='+encodeURIComponent(playerId),{method:'POST',body:JSON.stringify({mode:$('cfMode').value,rounds:+$('cfRounds').value,timeLimit:+$('cfTime').value,category:$('cfCategory').value})}).catch(e=>msg('❌ '+e.message));}
-  function setTeam(team){if(!state||state.mode!=='teams'||state.phase!=='lobby')return;if(!['red','blue'].includes(team))return;name=name||String($('cfName')?.value||'').trim().slice(0,18);if(!name)return;api(jpath()+'/join',{method:'POST',body:JSON.stringify({playerId,name,team,mode:'teams'})}).then(d=>applyState(d.state)).catch(e=>msg('❌ '+e.message))}
-  function start(){if(!state||state.leaderId!==playerId)return;api(jpath()+'/start?playerId='+encodeURIComponent(playerId),{method:'POST'}).then(d=>applyState(d.state)).catch(e=>msg('❌ '+e.message));}
-  function post(path,body){return api(jpath()+path+'?playerId='+encodeURIComponent(playerId),{method:'POST',body:JSON.stringify(body||{})}).then(d=>{if(d.state)applyState(d.state);return d});}
-  function isArtist(){return !!state&&state.artistId===playerId&&state.phase==='drawing';}
-  function point(c,e){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height}}
-  function applyStroke(ctx,s){ctx.save();ctx.strokeStyle=s.tool==='eraser'?'#fff':s.color;ctx.lineWidth=s.size;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();ctx.restore()}
-  function redraw(){const c=$('cfCanvas');if(!c)return;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);(state?.strokes||[]).forEach(s=>applyStroke(ctx,s));}
-  function queueStroke(s){strokeQueue.push(s);if(flushing)return;flushing=true;setTimeout(async()=>{const batch=strokeQueue.splice(0,60);flushing=false;if(batch.length){try{await post('/strokes',{strokes:batch})}catch(e){console.error(e)}}if(strokeQueue.length)queueStroke(strokeQueue.shift())},55)}
-  function bindCanvas(){const c=$('cfCanvas');if(!c||c.dataset.bound)return;if(c.dataset.bound='1'){};c.onpointerdown=e=>{if(!isArtist())return;drawDown=true;c.setPointerCapture?.(e.pointerId);last=point(c,e);undoStack.push((state?.strokes||[]).slice());const s={x1:last.x,y1:last.y,x2:last.x+.1,y2:last.y+.1,color,size,tool};applyStroke(c.getContext('2d'),s);state.strokes=[...(state.strokes||[]),s];queueStroke(s)};c.onpointermove=e=>{if(!drawDown||!isArtist())return;const p=point(c,e),s={x1:last.x,y1:last.y,x2:p.x,y2:p.y,color,size,tool};applyStroke(c.getContext('2d'),s);state.strokes=[...(state.strokes||[]),s];last=p;queueStroke(s)};c.onpointerup=()=>drawDown=false;c.onpointercancel=()=>drawDown=false;}
-  function buildConnect(){const e=$('paintingConnectScreen');e.innerHTML=`<div class="cf-wrap"><div class="cf-card"><div class="cf-head"><div class="cf-brand"><div class="cf-logo">🎨</div><div><div class="cf-title">Draw It · Guess It</div><div class="cf-sub">Doodle-style drawing room — Codenames stays exactly as it is.</div></div></div></div><div class="cf-grid"><section class="cf-panel"><h3>👤 Your name</h3><input id="cfName" class="cf-input" maxlength="18" autocomplete="off" placeholder="Type your name"><div class="cf-note">Your name is shown to everyone in the room. Use a unique name.</div></section><section class="cf-panel"><h3>🔑 Private room</h3><input id="cfCode" class="cf-input" maxlength="5" autocomplete="off" spellcheck="false" placeholder="ROOM CODE" style="text-align:center;letter-spacing:5px;text-transform:uppercase"><div class="cf-row"><button class="cf-btn primary" id="cfCreate">🚀 Create room</button><button class="cf-btn" id="cfJoin">🔗 Join room</button></div><div id="cfDrawMsg" class="cf-msg"></div></section></div></div></div>`;$('cfCreate').onclick=create;$('cfJoin').onclick=join;setTimeout(()=>$('cfName')?.focus(),20);}
-  function buildLobby(){const e=$('drawLobbyScreen');e.innerHTML=`<div class="cf-wrap"><div class="cf-card"><div class="cf-head"><div class="cf-brand"><div class="cf-logo">🖍️</div><div><div class="cf-title">Room Lobby</div><div class="cf-sub">Share the code. Players appear here instantly.</div></div></div><div class="cf-code"><span id="cfConn" class="cf-pill">● متصل</span><strong id="cfRoomCode">-----</strong><button class="cf-btn" id="cfCopy">📋 Copy</button><button class="cf-btn danger" id="cfLobbyLeave">↩ Leave</button></div></div><div class="cf-lobby"><section class="cf-panel"><h3>👥 Players <span id="cfCount"></span></h3><div id="cfPlayers" class="cf-players"></div><div id="cfTeamPick" class="cf-row"><button class="cf-btn" id="cfRedTeam">🔴 Join Red</button><button class="cf-btn" id="cfBlueTeam">🔵 Join Blue</button></div><div class="cf-note">👑 Host: <b id="cfHost"></b><br>In Teams mode, choose your team. In 1v1 mode, everyone plays individually.</div></section><section class="cf-panel"><h3>🎮 Game mode</h3><div class="cf-modes"><button class="cf-mode active" data-mode="1v1"><span class="ico">⚔️</span><strong>1 vs 1 / Everyone</strong><small>Players alternate drawing. Other players guess.</small></button><button class="cf-mode" data-mode="teams"><span class="ico">👥</span><strong>Teams</strong><small>Red/Blue teammates guess for their artist.</small></button></div><div class="cf-settings"><div><label>Rounds</label><select id="cfRounds" class="cf-select"><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option><option value="8">8</option><option value="10">10</option></select></div><div><label>Time</label><select id="cfTime" class="cf-select"><option value="0">No timer</option><option value="30">30s</option><option value="60" selected>60s</option><option value="90">90s</option><option value="120">120s</option></select></div><div><label>Category</label><select id="cfCategory" class="cf-select"><option value="mixed">🎲 Mixed</option><option value="animals">🐾 Animals</option><option value="food">🍕 Food</option><option value="objects">🧰 Objects</option><option value="places">📍 Places</option><option value="fantasy">✨ Fantasy</option><option value="anime">🍥 Anime</option></select></div><div><label>Mode</label><select id="cfMode" class="cf-select"><option value="1v1">1 vs 1</option><option value="teams">Teams</option></select></div></div><div id="cfLobbyMsg" class="cf-msg"></div><div class="cf-start"><button class="cf-btn primary" id="cfStart">🚀 Start Draw It · Guess It</button></div></section></div></div></div>`;document.querySelectorAll('.cf-mode').forEach(b=>b.onclick=()=>{if(state?.leaderId!==playerId)return;document.querySelectorAll('.cf-mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('cfMode').value=b.dataset.mode;sendSettings()});['cfMode','cfRounds','cfTime','cfCategory'].forEach(id=>$(id).onchange=sendSettings);$('cfStart').onclick=start;$('cfLobbyLeave').onclick=()=>leaveLocal(true);$('cfCopy').onclick=()=>navigator.clipboard?.writeText(code).then(()=>msg('Copied!')).catch(()=>msg(code));render();}
-  function drawRoundLabel(){if(!state)return '';return `Round ${state.round||0} / ${state.rounds||0}`}
-  function buildGame(){const e=$('drawScreen');e.innerHTML=`<div class="cf-wrap"><div class="cf-card"><div class="cf-head"><div class="cf-brand"><div class="cf-logo">🎨</div><div><div class="cf-title">Draw It · Guess It</div><div class="cf-sub" id="cfRound"></div></div></div><div class="cf-code"><span id="cfGameCode" class="cf-pill">ROOM</span><span id="cfGameTimer" class="cf-pill cf-timer">⏱</span><button class="cf-btn danger" id="cfGameLeave">↩ Leave</button></div></div><div class="cf-game"><main class="cf-board"><div class="cf-status"><span id="cfPhase" class="cf-pill"></span><span id="cfArtist" class="cf-pill"></span></div><div id="cfTask" class="cf-task"></div><div id="cfInfo" class="cf-info"></div><div class="cf-canvas-wrap"><canvas id="cfCanvas" class="cf-canvas" width="1000" height="600"></canvas></div><div class="cf-tools"><button class="cf-color active" data-c="#22252d" style="background:#22252d"></button><button class="cf-color" data-c="#ff5f7a" style="background:#ff5f7a"></button><button class="cf-color" data-c="#4f8cff" style="background:#4f8cff"></button><button class="cf-color" data-c="#36b56d" style="background:#36b56d"></button><button class="cf-color" data-c="#ffb52e" style="background:#ffb52e"></button><button class="cf-color" data-c="#9b73ff" style="background:#9b73ff"></button><button class="cf-btn" id="cfEraser">🧽 Eraser</button><label class="cf-pill">Size <input id="cfSize" class="cf-range" type="range" min="2" max="40" value="8"></label><button class="cf-btn" id="cfUndo">↶ Undo</button><button class="cf-btn" id="cfClear">🧹 Clear</button><button class="cf-btn primary" id="cfSubmit">✅ Done drawing</button></div><div id="cfReveal" class="cf-reveal" style="display:none"></div></main><aside class="cf-side"><div class="cf-sidebox"><h3>🤔 Guess</h3><div id="cfGuessState" class="cf-guess-state"></div><div class="cf-guess-row"><input id="cfGuess" class="cf-input" placeholder="Type your guess"><button id="cfGuessBtn" class="cf-btn primary">Guess</button></div><button id="cfHint" class="cf-btn" style="width:100%;margin-top:8px">💡 Hint</button></div><div class="cf-sidebox"><h3>🏆 Scores</h3><div id="cfScores"></div></div><div class="cf-sidebox"><h3>👥 Players</h3><div id="cfGamePlayers"></div></div><div class="cf-sidebox"><h3>💬 Chat</h3><div id="cfChat" class="cf-chat"></div><div class="cf-guess-row" style="margin-top:7px"><input id="cfChatInput" class="cf-input" placeholder="Write a message"><button id="cfChatBtn" class="cf-btn">Send</button></div></div></aside></div><div id="cfGallery" class="cf-gallery"></div></div></div>`;bindCanvas();document.querySelectorAll('.cf-color').forEach(b=>b.onclick=()=>{color=b.dataset.c;tool='pen';document.querySelectorAll('.cf-color').forEach(x=>x.classList.remove('active'));b.classList.add('active')});$('cfEraser').onclick=()=>tool='eraser';$('cfSize').oninput=e=>size=+e.target.value;$('cfClear').onclick=()=>{if(!isArtist())return;state.strokes=[];redraw();post('/clear')};$('cfUndo').onclick=()=>{if(!isArtist()||!undoStack.length)return;undoStack.pop();post('/clear').then(()=>{state.strokes=[];redraw()})};$('cfSubmit').onclick=()=>{if(isArtist())post('/submit')};$('cfGuessBtn').onclick=guess;$('cfGuess').onkeydown=e=>{if(e.key==='Enter')guess()};$('cfHint').onclick=()=>post('/hint').then(d=>{if(d.hint)msg('Hint: '+d.hint)});$('cfChatBtn').onclick=chat;$('cfChatInput').onkeydown=e=>{if(e.key==='Enter')chat()};$('cfGameLeave').onclick=()=>leaveLocal(true);render();}
-  function guess(){const v=$('cfGuess')?.value.trim();if(v)post('/guess',{guess:v}).then(()=>{$('cfGuess').value=''})}
-  function chat(){const v=$('cfChatInput')?.value.trim();if(v)post('/chat',{text:v}).then(()=>{$('cfChatInput').value='';$('cfChatInput').focus()})}
-  function render(){if(!state)return;code=state.code||code;try{window.me={name:name||String(state.players?.find(p=>p.id===playerId)?.name||''),team:state.players?.find(p=>p.id===playerId)?.team||'red'};window.roomCode=code}catch(e){}if(state.phase==='lobby'){if(!$('cfPlayers'))buildLobby();setScreen('drawLobbyScreen');$('cfRoomCode').textContent=code;$('cfHost').textContent=state.players?.find(p=>p.id===state.leaderId)?.name||'—';$('cfCount').textContent=' · '+(state.players?.length||0);const minePlayer=state.players?.find(p=>p.id===playerId);if($('cfTeamPick'))$('cfTeamPick').style.display=state.mode==='teams'?'flex':'none';if($('cfRedTeam'))$('cfRedTeam').classList.toggle('primary',minePlayer?.team==='red');if($('cfBlueTeam'))$('cfBlueTeam').classList.toggle('primary',minePlayer?.team==='blue');$('cfPlayers').innerHTML=(state.players||[]).map(p=>`<div class="cf-player ${p.id===state.leaderId?'host':''} ${p.id===playerId?'me':''}"><span>${p.id===state.leaderId?'👑 ':''}👤 ${esc(p.name)}</span><span>${p.id===playerId?'You':''}</span></div>`).join('')||'<div class="cf-empty">Waiting for players…</div>';$('cfMode').value=state.mode||'1v1';$('cfRounds').value=String(state.rounds||4);$('cfTime').value=String(state.timeLimit??60);$('cfCategory').value=state.category||'mixed';document.querySelectorAll('.cf-mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===(state.mode||'1v1')));$('cfStart').disabled=state.leaderId!==playerId||(state.mode==='teams'&&((state.players||[]).filter(p=>p.team==='red').length<2||(state.players||[]).filter(p=>p.team==='blue').length<2));return}
-    if(!$('cfCanvas'))buildGame();setScreen('drawScreen');$('cfRound').textContent=drawRoundLabel();$('cfGameCode').textContent=code;$('cfPhase').textContent=state.phase==='drawing'?'🎨 Drawing':state.phase==='guessing'?'🤔 Guessing':state.phase==='result'?'🎉 Round result':'🏆 Finished';const ap=state.players?.find(p=>p.id===state.artistId);$('cfArtist').textContent='🎨 '+(ap?.name||'—');const mine=isArtist();if(state.phase==='drawing'){$('cfTask').textContent=mine?(state.prompt||'Draw!'):'🎨 '+(ap?.name||'Someone')+' is drawing';$('cfInfo').textContent=mine?'Only you can see the secret word.':'Watch the doodle and get ready to guess.'}else if(state.phase==='guessing'){$('cfTask').textContent='🤔 Guess the word';$('cfInfo').textContent=state.mode==='teams'?'Only the artist’s teammates can guess.':'Everyone except the artist can guess.'}else if(state.phase==='result'){$('cfTask').textContent='🎉 Round complete';$('cfInfo').textContent=(state.lastCorrect?'✅ Correct guess!':'⏰ No correct guess.')}else{$('cfTask').textContent='🏆 Game finished';$('cfInfo').textContent='The gallery is kept until the host deletes the room.'}
-    const rem=state.deadline?Math.max(0,Math.ceil((state.deadline-Date.now())/1000)):0;$('cfGameTimer').textContent=state.deadline?'⏱ '+rem:'⏱ No timer';$('cfSubmit').disabled=!mine;$('cfClear').disabled=!mine;$('cfUndo').disabled=!mine;$('cfEraser').disabled=!mine;$('cfCanvas').style.cursor=mine?'crosshair':'default';$('cfGuess').disabled=state.phase!=='guessing'||mine;$('cfGuessBtn').disabled=state.phase!=='guessing'||mine;$('cfHint').disabled=state.phase!=='guessing'||mine;$('cfScores').innerHTML=(state.scores||[]).slice().sort((a,b)=>b.score-a.score).map(x=>`<div class="cf-score-row"><span>${esc(x.name)}</span><b>${x.score}</b></div>`).join('')||'<div class="cf-empty">No scores yet.</div>';$('cfGamePlayers').innerHTML=(state.players||[]).map(p=>`<div class="cf-player ${p.id===state.artistId?'host':''}"><span>${p.id===state.artistId?'🎨 ':''}👤 ${esc(p.name)}</span><span>${p.team==='red'?'🔴':p.team==='blue'?'🔵':''}</span></div>`).join('');$('cfChat').innerHTML=(state.chat||[]).slice(-80).map(m=>`<div><b>${esc(m.name)}</b> ${esc(m.text)}</div>`).join('');$('cfChat').scrollTop=$('cfChat').scrollHeight;redraw();
-    const reveal=$('cfReveal');if(state.phase==='result'||state.phase==='finished'){reveal.style.display='block';reveal.innerHTML=`<div>The word was</div><div class="cf-word">${esc(state.lastWord||'')}</div><div>${state.lastCorrect?'🏆 Correct!':'⏰ No correct guess.'}</div>${state.leaderId===playerId&&state.phase==='result'?'<button class="cf-btn primary" id="cfNext" style="margin-top:10px">➡️ Next round</button>':''}${state.leaderId===playerId&&state.phase==='finished'?'<button class="cf-btn danger" id="cfDelete" style="margin-top:10px">🗑️ Delete room data</button>':''}`;if($('cfNext'))$('cfNext').onclick=()=>post('/next');if($('cfDelete'))$('cfDelete').onclick=()=>post('/delete').then(()=>leaveLocal(false))}else reveal.style.display='none';renderGallery();}
-  function renderGallery(){const g=$('cfGallery');if(!g)return;g.innerHTML=(state.gallery||[]).map((x,i)=>{const id='cfGal'+i;setTimeout(()=>drawGalleryCanvas(id,x.strokes||[]),0);return `<div class="cf-gallery-card"><canvas id="${id}" width="400" height="240"></canvas><div class="cf-gallery-meta">🎨 ${esc(x.artist)} · ${x.correct?'✅ guessed':'⏰ timeout'}${x.word?' · <b>'+esc(x.word)+'</b>':''}</div></div>`}).join('')}
-  function drawGalleryCanvas(id,ss){const c=$(id);if(!c)return;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);const sx= c.width/1000, sy=c.height/600;(ss||[]).forEach(s=>applyStroke(ctx,{...s,x1:s.x1*sx,y1:s.y1*sy,x2:s.x2*sx,y2:s.y2*sy,size:s.size*Math.min(sx,sy)}));}
-  function leaveLocal(callServer){if(callServer&&code){post('/leave').catch(()=>{});}if(ws){try{ws.close()}catch(e){}}ws=null;if(poll)clearInterval(poll);poll=null;state=null;code='';name='';try{window.me={name:'',team:'red'};window.roomCode=null}catch(e){}setScreen('modeScreen');buildConnect();}
-  function boot(){const pick=$('pickDraw');if(pick){const np=pick.cloneNode(true);pick.replaceWith(np);np.onclick=()=>{setScreen('paintingConnectScreen');buildConnect();}}$('paintingConnectScreen')?.classList.remove('cf-draw');setTimeout(()=>{if($('paintingConnectBack'))$('paintingConnectBack').onclick=()=>setScreen('modeScreen')},0);}
-  window.addEventListener('load',()=>{boot();buildConnect();setInterval(()=>{if(state&&code&&state.phase!=='lobby')render()},1000);});
+
+  /*
+   * This page intentionally does NOT create a WebSocket to:
+   * codenames-matchmaking...workers.dev/draw/...
+   *
+   * Drawing-room realtime state is carried by the same PeerJS
+   * room connection already used by the existing Codenames lobby.
+   * The Cloudflare Worker remains available for matchmaking/DO
+   * functionality and is not replaced by this page.
+   */
+
+  window.addEventListener('load', function(){
+    /* If an older cached build left a direct drawing WebSocket
+       reconnect loop behind, stop it from affecting this build. */
+    try{
+      if (typeof window.renderDraw === 'function') {
+        const original = window.renderDraw;
+        window.renderDraw = function(room){
+          return original.apply(this, arguments);
+        };
+      }
+    }catch(_){}
+
+    /* Re-render picture cards after the original game renderer runs. */
+    const hidePictureWords = function(){
+      document.querySelectorAll('.picture-card .picture-word').forEach(function(el){
+        el.style.display = 'none';
+      });
+    };
+    hidePictureWords();
+    const board = document.getElementById('board');
+    if(board){
+      new MutationObserver(hidePictureWords).observe(board, {childList:true, subtree:true});
+    }
+  });
 })();
 </script>
 

@@ -2143,6 +2143,9 @@
                     </div>
                     <div class="match-status" id="matchStatus"></div>
                 </div>
+                <div class="add-row" style="margin-bottom:12px;">
+                    <input type="text" id="onlinePlayerName" placeholder="✏️ اسم اللاعب" maxlength="18" autocomplete="off">
+                </div>
                 <div class="setup-actions" style="margin-top:14px;margin-bottom:14px;">
                     <button class="stamp-btn" id="createRoomBtn">🚀 إنشاء غرفة خاصة</button>
                 </div>
@@ -4985,8 +4988,17 @@ function setConnDot(ok) {
             const selectedGameMode = window.drawModeRequested ? 'draw' : 'codenames';
             window.drawModeRequested = false;
 
+            var onlineNameEl = document.getElementById('onlinePlayerName');
+            var onlineName = String(onlineNameEl ? onlineNameEl.value : '').trim().replace(/\s+/g, ' ').slice(0, 18);
+            var err = document.getElementById('onlineErr');
+            if (!onlineName) {
+                err.textContent = '✏️ اكتب اسم اللاعب أولاً.';
+                if (onlineNameEl) onlineNameEl.focus();
+                return;
+            }
+
             roomCode = makeCode();
-            me = { name: '', team: 'red' };
+            me = { name: onlineName, team: 'red' };
             var assassinCount = parseInt(document.getElementById('onlineAssassinCount').value);
             var difficulty = document.getElementById('onlineDifficulty').value;
             var timer = parseInt(document.getElementById('onlineTimer').value);
@@ -5001,7 +5013,10 @@ function setConnDot(ok) {
             var room = {
                 code: roomCode,
                 phase: 'lobby',
-                teams: { red: [], blue: [] },
+                teams: {
+                    red: [{ name: onlineName, team: 'red', bot: false, spymaster: true }],
+                    blue: []
+                },
                 cards: [],
                 turn: 'red',
                 clue: null,
@@ -5015,7 +5030,7 @@ function setConnDot(ok) {
                 customWords: customWords,
                 bots: [],
                 matchmaking: false,
-                leader: null,
+                leader: onlineName,
                 gameMode: selectedGameMode,
                 maxPlayers: selectedGameMode === 'draw' ? null : 4,
                 draw: selectedGameMode === 'draw'
@@ -5053,22 +5068,49 @@ function setConnDot(ok) {
         // ==========================================
         document.getElementById('joinRoomBtn').addEventListener('click', function() {
             var code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+            var nameEl = document.getElementById('onlinePlayerName');
+            var playerName = String(nameEl ? nameEl.value : '').trim().replace(/\s+/g, ' ').slice(0, 18);
             var err = document.getElementById('onlineErr');
             err.textContent = '';
-            if (!code) { err.textContent = '✏️ اكتب رمز الغرفة.'; return; }
+
+            if (!playerName) {
+                err.textContent = '✏️ اكتب اسم اللاعب أولاً.';
+                if (nameEl) nameEl.focus();
+                return;
+            }
+            if (!code) {
+                err.textContent = '✏️ اكتب رمز الغرفة.';
+                return;
+            }
+
+            err.textContent = '⏳ جارٍ الاتصال بالغرفة...';
 
             connectAsGuest(code).then(function(room) {
                 if (!room) {
                     err.textContent = '❌ لا توجد غرفة بهذا الرمز.';
                     return;
                 }
+
                 roomCode = code;
-                me = { name: '', team: 'red' };
+                me = { name: playerName, team: 'red' };
+                localRoomCache = normalizeRoom(room, roomCode);
+
+                // Codenames guest is now actually registered immediately.
+                if (guestConn && guestConn.open) {
+                    guestConn.send({
+                        type: 'join',
+                        name: playerName,
+                        team: 'red'
+                    });
+                } else {
+                    throw new Error('اتصال الغرفة غير جاهز');
+                }
+
                 document.getElementById('lobbyCode').textContent = roomCode;
                 setConnDot(true);
-                renderLobbyFromRoom(room);
+                startListening();
+
                 if (room.gameMode === 'draw') {
-                    startListening();
                     if (room.phase === 'lobby') {
                         show('drawLobbyScreen');
                         if (typeof window.renderDrawLobby === 'function') window.renderDrawLobby(room);
@@ -5080,11 +5122,13 @@ function setConnDot(ok) {
                     enterOnlineGame(room);
                 } else {
                     show('lobbyScreen');
-                    startListening();
+                    renderLobbyFromRoom(localRoomCache);
                 }
-                updatePlayerCount(room);
+
+                updatePlayerCount(localRoomCache);
+                err.textContent = '✅ تم الاتصال بالغرفة — تم الانضمام باسم ' + playerName;
             }).catch(function(e) {
-                err.textContent = '❌ تعذّر الاتصال بالغرفة: ' + e.message;
+                err.textContent = '❌ تعذّر الاتصال بالغرفة: ' + (e && e.message ? e.message : e);
                 console.error(e);
             });
         });
@@ -6100,6 +6144,31 @@ function setConnDot(ok) {
   function bindScreen(id,html){const e=$(id);if(e)e.innerHTML=html}
   function hook(){window.renderDraw=renderGame;window.renderDrawLobby=renderLobby;window.sendDrawEvent=send;window.startDrawMode=startGame;window.handleDrawEventOnHost=function(msg){const ev=msg?.event||msg;if(ev?.type){handle(ev);if(typeof roomListenerCallback==='function')roomListenerCallback(ensure(R()));}};const b=$('pickDraw');if(b){const nb=b.cloneNode(true);b.replaceWith(nb);nb.onclick=()=>{show('paintingConnectScreen');connectScreen()}}const originalShow=window.show;window.show=function(id){originalShow(id);if(id==='paintingConnectScreen'&&!$('pfName'))connectScreen();if(id==='drawLobbyScreen'&&!$('pfPlayers'))lobbyScreen();if(id==='drawScreen'&&!$('pfCanvas'))gameScreen()}}
   window.addEventListener('load',()=>{hook();connectScreen();setInterval(()=>{const r=R();if(!r||r.gameMode!=='draw')return;if((r.draw?.phase==='drawing'||r.draw?.phase==='guessing')&&r.draw.deadline&&Date.now()>=r.draw.deadline&&typeof isHost!=='undefined'&&isHost){if(r.draw.phase==='drawing'){r.draw.submissions=[{artist:artist(r),image:drawCanvas()?.toDataURL('image/jpeg',.72)||'',prompt:secretFor(r),timeout:true}];r.draw.phase='reveal';r.draw.deadline=0;persist();route()}else{r.draw.phase='reveal';r.draw.deadline=0;persist();route()}}if(r.phase==='lobby'&&$('pfPlayers'))renderLobby(r);else if(r.phase!=='lobby'&&$('pfCanvas'))renderGame(r)},500)})
+})();
+</script>
+
+
+<script id="CODENAMES_JOIN_FLOW_FIX">
+(function(){
+  function ready(){
+    const name=document.getElementById('onlinePlayerName');
+    const code=document.getElementById('joinCodeInput');
+    if(name && !name.dataset.bound){
+      name.dataset.bound='1';
+      name.addEventListener('keydown',function(e){
+        if(e.key==='Enter'){e.preventDefault();document.getElementById('joinRoomBtn')?.click();}
+      });
+    }
+    if(code && !code.dataset.bound){
+      code.dataset.bound='1';
+      code.addEventListener('keydown',function(e){
+        if(e.key==='Enter'){e.preventDefault();document.getElementById('joinRoomBtn')?.click();}
+      });
+    }
+  }
+  document.addEventListener('DOMContentLoaded',ready);
+  window.addEventListener('load',ready);
+  setInterval(ready,500);
 })();
 </script>
 

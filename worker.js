@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 
 /* =========================================================
-   CONFIG
+   CODENAMES MATCHMAKING
 ========================================================= */
 
 const MATCH_SIZE = 4;
@@ -9,85 +9,58 @@ const WAIT_MS = 15_000;
 const STALE_MS = 90_000;
 const MATCHED_RETENTION_MS = 10 * 60_000;
 
-const MAX_PLAYERS = 20;
-const MAX_STROKES = 12000;
-
-/* =========================================================
-   CORS
-========================================================= */
-
-function corsHeaders(origin = "") {
+function corsHeaders(origin) {
   const allowed =
     origin === "https://jrjboss.github.io" ||
     origin === "null" ||
-    origin === "";
+    !origin;
 
   return {
-    "Access-Control-Allow-Origin":
-      allowed ? origin || "*" : "https://jrjboss.github.io",
+    "Access-Control-Allow-Origin": allowed
+      ? origin || "*"
+      : "https://jrjboss.github.io",
 
-    "Access-Control-Allow-Methods":
-      "GET,POST,OPTIONS",
-
-    "Access-Control-Allow-Headers":
-      "Content-Type",
-
-    "Access-Control-Allow-Credentials":
-      "true",
-
-    "Cache-Control":
-      "no-store"
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Cache-Control": "no-store"
   };
 }
 
 function json(data, status = 200, origin = "") {
-  return new Response(
-    JSON.stringify(data),
-    {
-      status,
-      headers: {
-        "Content-Type":
-          "application/json; charset=utf-8",
-        ...corsHeaders(origin)
-      }
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      ...corsHeaders(origin)
     }
-  );
+  });
 }
-
-/* =========================================================
-   ROOM CODE
-========================================================= */
 
 function makeRoomCode() {
-  const chars =
-    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-  let result = "";
+  let code = "";
 
   for (let i = 0; i < 5; i++) {
-    result +=
-      chars[
-        Math.floor(
-          Math.random() * chars.length
-        )
-      ];
+    code += chars[
+      Math.floor(Math.random() * chars.length)
+    ];
   }
 
-  return result;
+  return code;
 }
+
 
 /* =========================================================
    MATCHMAKER
-   KEEPING THIS SEPARATE FROM DRAWING
+   EXISTING CODENAMES LOGIC
 ========================================================= */
 
 export class Matchmaker extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
 
-    this.ctx = ctx;
-
-    ctx.blockConcurrencyWhile(async () => {
+    this.ctx.blockConcurrencyWhile(async () => {
       this.ctx.storage.sql.exec(`
         CREATE TABLE IF NOT EXISTS queue (
           id TEXT PRIMARY KEY,
@@ -131,97 +104,69 @@ export class Matchmaker extends DurableObject {
     );
   }
 
-  makeMatch(waitingRows) {
+  makeMatch(rows) {
+    const matchId = crypto.randomUUID();
+    const roomCode = makeRoomCode();
     const now = Date.now();
 
-    const matchId =
-      crypto.randomUUID();
+    const selected = rows.slice(0, MATCH_SIZE);
 
-    const roomCode =
-      makeRoomCode();
+    const players = selected.map((row, index) => ({
+      id: row.id,
+      name: row.name,
 
-    const selected =
-      waitingRows.slice(
-        0,
-        MATCH_SIZE
-      );
+      team:
+        index % 2 === 0
+          ? "red"
+          : "blue",
 
-    const players =
-      selected.map(
-        (row, index) => ({
-          id: row.id,
-          name: row.name,
+      bot: false,
+      host: index === 0
+    }));
 
-          team:
-            index % 2 === 0
-              ? "red"
-              : "blue",
-
-          bot: false,
-          host: index === 0
-        })
-      );
-
-    while (
-      players.length < MATCH_SIZE
-    ) {
-      const index =
-        players.length;
+    while (players.length < MATCH_SIZE) {
+      const index = players.length;
 
       players.push({
-        id:
-          `bot-${matchId}-${index}`,
-
-        name:
-          `Codename Bot ${index}`,
-
+        id: `bot-${matchId}-${index}`,
+        name: `Codename Bot ${index}`,
         team:
           index % 2 === 0
             ? "red"
             : "blue",
-
         bot: true,
         host: false,
-        difficulty:
-          "normal"
+        difficulty: "normal"
       });
     }
 
-    const payload =
-      JSON.stringify({
-        matchId,
-        roomCode,
-        players,
-        createdAt: now
-      });
+    const payload = JSON.stringify({
+      matchId,
+      roomCode,
+      players,
+      createdAt: now
+    });
 
-    this.ctx.storage.transactionSync(
-      () => {
-        for (
-          const player of
-          players.filter(
-            p => !p.bot
-          )
-        ) {
-          this.ctx.storage.sql.exec(
-            `
-            UPDATE queue
-            SET status = 'matched',
-                match_id = ?,
-                host = ?,
-                team = ?,
-                payload = ?
-            WHERE id = ?
-            `,
-            matchId,
-            player.host ? 1 : 0,
-            player.team,
-            payload,
-            player.id
-          );
-        }
+    this.ctx.storage.transactionSync(() => {
+      for (const player of players.filter(p => !p.bot)) {
+        this.ctx.storage.sql.exec(
+          `
+          UPDATE queue
+          SET status = 'matched',
+              match_id = ?,
+              host = ?,
+              team = ?,
+              payload = ?
+          WHERE id = ?
+          `,
+          matchId,
+          player.host ? 1 : 0,
+          player.team,
+          payload,
+          player.id
+        );
       }
-    );
+    });
 
     return {
       matchId,
@@ -246,9 +191,7 @@ export class Matchmaker extends DurableObject {
         .toArray();
 
     if (existing.length) {
-      return this.status(
-        player.id
-      );
+      return this.status(player.id);
     }
 
     this.ctx.storage.sql.exec(
@@ -260,13 +203,7 @@ export class Matchmaker extends DurableObject {
         status,
         payload
       )
-      VALUES (
-        ?,
-        ?,
-        ?,
-        'waiting',
-        ?
-      )
+      VALUES (?, ?, ?, 'waiting', ?)
       `,
       player.id,
       player.name,
@@ -274,9 +211,7 @@ export class Matchmaker extends DurableObject {
       JSON.stringify(player)
     );
 
-    return this.status(
-      player.id
-    );
+    return this.status(player.id);
   }
 
   async status(id) {
@@ -300,14 +235,8 @@ export class Matchmaker extends DurableObject {
       };
     }
 
-    if (
-      row.status === "matched" &&
-      row.payload
-    ) {
-      const match =
-        JSON.parse(
-          row.payload
-        );
+    if (row.status === "matched" && row.payload) {
+      const match = JSON.parse(row.payload);
 
       const waiting =
         this.ctx.storage.sql
@@ -322,19 +251,10 @@ export class Matchmaker extends DurableObject {
 
       return {
         status: "matched",
-
         ...match,
-
-        host:
-          !!row.host,
-
-        team:
-          row.team,
-
-        queueCount:
-          Number(
-            waiting.count || 0
-          )
+        host: !!row.host,
+        team: row.team,
+        queueCount: Number(waiting.count || 0)
       };
     }
 
@@ -352,73 +272,50 @@ export class Matchmaker extends DurableObject {
         .toArray();
 
     const oldest =
-      waitingRows[0]?.joined_at ||
-      Date.now();
+      waitingRows[0]?.joined_at || Date.now();
 
     const shouldMatch =
-      waitingRows.length >=
-        MATCH_SIZE ||
+      waitingRows.length >= MATCH_SIZE ||
       (
         waitingRows.length > 0 &&
-        Date.now() -
-          oldest >=
-          WAIT_MS
+        Date.now() - oldest >= WAIT_MS
       );
 
     if (shouldMatch) {
       const match =
-        this.makeMatch(
-          waitingRows
-        );
+        this.makeMatch(waitingRows);
 
       const matched =
         match.players.find(
-          p =>
-            p.id === id
+          p => p.id === id
         );
 
       if (matched) {
         return {
-          status:
-            "matched",
-
+          status: "matched",
           ...match,
-
-          host:
-            matched.host,
-
-          team:
-            matched.team,
-
-          queueCount:
-            0
+          host: matched.host,
+          team: matched.team,
+          queueCount: 0
         };
       }
     }
 
     const position =
       waitingRows.findIndex(
-        player =>
-          player.id === id
+        p => p.id === id
       );
 
     return {
-      status:
-        "waiting",
-
+      status: "waiting",
       position:
         position >= 0
           ? position + 1
           : 1,
-
       queueCount:
         waitingRows.length,
-
       waitedMs:
-        Date.now() -
-        Number(
-          row.joined_at
-        )
+        Date.now() - Number(row.joined_at)
     };
   }
 
@@ -437,8 +334,10 @@ export class Matchmaker extends DurableObject {
   }
 }
 
+
 /* =========================================================
    DRAWING ROOM
+   REAL MULTIPLAYER ROOM
 ========================================================= */
 
 export class DrawingRoom extends DurableObject {
@@ -446,83 +345,49 @@ export class DrawingRoom extends DurableObject {
     super(ctx, env);
 
     this.ctx = ctx;
-    this.env = env;
 
-    this.sockets =
-      new Map();
+    /*
+     * IMPORTANT:
+     *
+     * We now use Cloudflare's Durable Object
+     * Hibernation WebSocket API.
+     *
+     * This is different from:
+     *
+     * server.accept()
+     *
+     * and avoids keeping a fragile in-memory
+     * Set of sockets.
+     */
+    this.ctx.setWebSocketAutoResponse(
+      new WebSocketRequestResponsePair(
+        "ping",
+        "pong"
+      )
+    );
 
-    this.ctx.blockConcurrencyWhile(
-      async () => {
-        let state =
-          await this.ctx.storage.get(
-            "drawingState"
-          );
+    this.ctx.blockConcurrencyWhile(async () => {
+      const existing =
+        await this.ctx.storage.get(
+          "drawingState"
+        );
 
-        if (!state) {
-          state =
-            this.defaultState();
-
-          await this.ctx.storage.put(
-            "drawingState",
-            state
-          );
-        }
-
-        /* -------------------------------------------------
-           Repair older room states.
-        ------------------------------------------------- */
-
-        state.players =
-          Array.isArray(
-            state.players
-          )
-            ? state.players
-            : [];
-
-        state.strokes =
-          Array.isArray(
-            state.strokes
-          )
-            ? state.strokes
-            : [];
-
-        state.round =
-          Number(
-            state.round || 0
-          );
-
-        state.totalRounds =
-          Number(
-            state.totalRounds || 0
-          );
-
-        state.version =
-          Number(
-            state.version || 0
-          );
-
+      if (!existing) {
         await this.ctx.storage.put(
           "drawingState",
-          state
+          this.defaultState()
         );
       }
-    );
+    });
   }
 
   defaultState() {
     return {
-      roomCode: null,
-
-      players: [],
-
       round: 0,
       totalRounds: 0,
 
       drawerId: null,
       drawerName: null,
-
-      category: null,
-      word: null,
 
       strokes: [],
 
@@ -531,603 +396,296 @@ export class DrawingRoom extends DurableObject {
       started: false,
       finished: false,
 
-      createdAt:
-        Date.now(),
+      players: [],
 
-      updatedAt:
-        Date.now()
+      createdAt: Date.now()
     };
   }
 
   async getState() {
-    const state =
+    return (
       await this.ctx.storage.get(
         "drawingState"
-      );
-
-    if (!state) {
-      return this.defaultState();
-    }
-
-    return state;
+      )
+    ) || this.defaultState();
   }
 
   async saveState(state) {
-    state.version =
-      Number(
-        state.version || 0
-      ) + 1;
-
-    state.updatedAt =
-      Date.now();
+    state.version = Date.now();
 
     await this.ctx.storage.put(
       "drawingState",
       state
     );
-
-    return state;
   }
 
-  /* =======================================================
-     SOCKET HELPERS
-  ======================================================= */
+  async broadcast(message) {
+    const encoded =
+      JSON.stringify(message);
 
-  send(socket, message) {
+    for (
+      const socket of
+      this.ctx.getWebSockets()
+    ) {
+      try {
+        socket.send(encoded);
+      } catch {
+        try {
+          socket.close();
+        } catch {}
+      }
+    }
+  }
+
+  async sendTo(socket, message) {
     try {
       socket.send(
         JSON.stringify(message)
       );
-
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  broadcast(message) {
-    const dead = [];
-
-    for (
-      const [socket, playerId]
-      of this.sockets
-    ) {
-      const ok =
-        this.send(
-          socket,
-          message
-        );
-
-      if (!ok) {
-        dead.push(
-          [socket, playerId]
-        );
-      }
-    }
-
-    for (
-      const [socket, playerId]
-      of dead
-    ) {
-      this.removeSocket(
-        socket,
-        playerId
-      );
-    }
-  }
-
-  removeSocket(socket, playerId) {
-    try {
-      socket.close();
     } catch {}
-
-    this.sockets.delete(
-      socket
-    );
-
-    /*
-      IMPORTANT:
-      We do not immediately delete
-      the player from the room here.
-
-      Browsers can temporarily lose
-      WebSocket connections.
-
-      The player remains in the lobby
-      and can reconnect.
-    */
-
-    this.broadcastPlayers();
   }
 
-  broadcastPlayers() {
-    this.getState()
-      .then(state => {
-        this.broadcast({
-          type:
-            "players",
-
-          players:
-            state.players
-        });
-      })
-      .catch(() => {});
-  }
-
-  /* =======================================================
-     PLAYER MANAGEMENT
-  ======================================================= */
-
-  async addPlayer(player) {
+  async updatePresence() {
     const state =
       await this.getState();
 
-    if (
-      !player ||
-      !player.id
-    ) {
-      return state;
-    }
+    const players =
+      this.ctx.getWebSockets()
+        .map(ws => {
+          try {
+            return ws.deserializeAttachment();
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean);
 
-    const id =
-      String(
-        player.id
-      ).slice(
-        0,
-        100
-      );
+    state.players = players;
 
-    const name =
-      String(
-        player.name ||
-        "Player"
-      )
-        .trim()
-        .slice(
-          0,
-          24
-        );
+    await this.saveState(state);
 
-    const existingIndex =
-      state.players.findIndex(
-        p =>
-          p.id === id
-      );
-
-    if (
-      existingIndex >= 0
-    ) {
-      state.players[
-        existingIndex
-      ] = {
-        ...state.players[
-          existingIndex
-        ],
-
-        name:
-          name ||
-          state.players[
-            existingIndex
-          ].name,
-
-        online: true,
-
-        lastSeen:
-          Date.now()
-      };
-    } else {
-      if (
-        state.players.length >=
-        MAX_PLAYERS
-      ) {
-        throw new Error(
-          "Room is full"
-        );
-      }
-
-      state.players.push({
-        id,
-
-        name:
-          name ||
-          "Player",
-
-        team:
-          player.team ||
-          null,
-
-        host:
-          !!player.host,
-
-        bot:
-          !!player.bot,
-
-        online:
-          true,
-
-        lastSeen:
-          Date.now()
-      });
-    }
-
-    await this.saveState(
-      state
-    );
-
-    this.broadcast({
-      type:
-        "players",
-
-      players:
-        state.players
-    });
-
-    return state;
-  }
-
-  async markOffline(playerId) {
-    if (!playerId) return;
-
-    const state =
-      await this.getState();
-
-    const player =
-      state.players.find(
-        p =>
-          p.id === playerId
-      );
-
-    if (!player) return;
-
-    player.online =
-      false;
-
-    player.lastSeen =
-      Date.now();
-
-    await this.saveState(
-      state
-    );
-
-    this.broadcast({
-      type:
-        "players",
-
-      players:
-        state.players
+    await this.broadcast({
+      type: "players",
+      players
     });
   }
-
-  async removePlayer(playerId) {
-    if (!playerId) {
-      return;
-    }
-
-    const state =
-      await this.getState();
-
-    state.players =
-      state.players.filter(
-        p =>
-          p.id !== playerId
-      );
-
-    await this.saveState(
-      state
-    );
-
-    this.broadcast({
-      type:
-        "players",
-
-      players:
-        state.players
-    });
-  }
-
-  /* =======================================================
-     REQUEST HANDLER
-  ======================================================= */
 
   async fetch(request) {
-    const origin =
-      request.headers.get(
-        "Origin"
-      ) || "";
-
     const url =
-      new URL(
-        request.url
-      );
+      new URL(request.url);
 
-    /* =====================================================
-       CORS
-    ===================================================== */
+    /*
+     * ==========================================
+     * WEBSOCKET
+     * ==========================================
+     */
+
+    const upgrade =
+      request.headers.get("Upgrade");
 
     if (
-      request.method ===
-      "OPTIONS"
+      request.method === "GET" &&
+      upgrade &&
+      upgrade.toLowerCase() === "websocket"
     ) {
+      const pair =
+        new WebSocketPair();
+
+      const client = pair[0];
+      const server = pair[1];
+
+      /*
+       * THIS IS THE IMPORTANT FIX.
+       *
+       * Do NOT call:
+       *
+       * server.accept()
+       *
+       * Instead use:
+       *
+       * ctx.acceptWebSocket(server)
+       */
+      this.ctx.acceptWebSocket(server);
+
+      const playerId =
+        url.searchParams.get(
+          "playerId"
+        ) ||
+        crypto.randomUUID();
+
+      const playerName =
+        (
+          url.searchParams.get(
+            "playerName"
+          ) ||
+          "Player"
+        )
+          .trim()
+          .slice(0, 24);
+
+      const team =
+        url.searchParams.get(
+          "team"
+        ) || null;
+
+      server.serializeAttachment({
+        id: playerId,
+        name: playerName,
+        team,
+        joinedAt: Date.now()
+      });
+
+      /*
+       * Send current state immediately.
+       */
+      const state =
+        await this.getState();
+
+      await this.sendTo(server, {
+        type: "state",
+        state
+      });
+
+      /*
+       * Tell the new player that the
+       * connection is actually ready.
+       */
+      await this.sendTo(server, {
+        type: "connected",
+        playerId,
+        room:
+          url.pathname
+            .split("/")
+            .filter(Boolean)[1] || null
+      });
+
+      /*
+       * Update everybody's player list.
+       */
+      await this.updatePresence();
+
       return new Response(
         null,
         {
-          status: 204,
-
-          headers:
-            corsHeaders(
-              origin
-            )
+          status: 101,
+          webSocket: client
         }
       );
     }
 
-    /* =====================================================
-       WEBSOCKET
-       
-       THIS MUST BE BEFORE NORMAL
-       HTTP ROUTES.
-    ===================================================== */
 
-    const upgrade =
-      request.headers
-        .get("Upgrade");
+    /*
+     * ==========================================
+     * OPTIONS
+     * ==========================================
+     */
 
-    if (
-      upgrade &&
-      upgrade.toLowerCase() ===
-        "websocket"
-    ) {
-      return this.handleWebSocket(
-        request
-      );
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders(
+          request.headers.get("Origin") || ""
+        )
+      });
     }
 
-    /* =====================================================
-       STATE
-       
-       GET /draw/ROOM/state
-    ===================================================== */
+
+    /*
+     * ==========================================
+     * GET STATE
+     * ==========================================
+     */
 
     if (
-      request.method ===
-        "GET" &&
-      url.pathname.endsWith(
-        "/state"
-      )
+      request.method === "GET" &&
+      url.pathname.endsWith("/state")
     ) {
       const state =
         await this.getState();
 
-      return json(
-        {
-          ok: true,
-
-          state
-        },
-
-        200,
-
-        origin
-      );
+      return json({
+        ok: true,
+        state
+      }, 200,
+      request.headers.get("Origin") || "");
     }
 
-    /* =====================================================
-       JOIN ROOM
-       
-       POST /draw/ROOM/join
-    ===================================================== */
+
+    /*
+     * ==========================================
+     * ROUND
+     * ==========================================
+     */
 
     if (
-      request.method ===
-        "POST" &&
-      url.pathname.endsWith(
-        "/join"
-      )
+      request.method === "POST" &&
+      url.pathname.endsWith("/round")
     ) {
       let body = {};
 
       try {
-        body =
-          await request.json();
-      } catch {}
-
-      try {
-        const state =
-          await this.addPlayer(
-            body
-          );
-
-        return json(
-          {
-            ok: true,
-
-            state
-          },
-
-          200,
-
-          origin
-        );
-      } catch (error) {
-        return json(
-          {
-            ok: false,
-
-            error:
-              error?.message ||
-              "Unable to join room"
-          },
-
-          400,
-
-          origin
-        );
-      }
-    }
-
-    /* =====================================================
-       LEAVE ROOM
-       
-       POST /draw/ROOM/leave
-    ===================================================== */
-
-    if (
-      request.method ===
-        "POST" &&
-      url.pathname.endsWith(
-        "/leave"
-      )
-    ) {
-      let body = {};
-
-      try {
-        body =
-          await request.json();
-      } catch {}
-
-      await this.removePlayer(
-        body.playerId
-      );
-
-      return json(
-        {
-          ok: true
-        },
-
-        200,
-
-        origin
-      );
-    }
-
-    /* =====================================================
-       START / ROUND
-       
-       POST /draw/ROOM/round
-    ===================================================== */
-
-    if (
-      request.method ===
-        "POST" &&
-      url.pathname.endsWith(
-        "/round"
-      )
-    ) {
-      let body = {};
-
-      try {
-        body =
-          await request.json();
+        body = await request.json();
       } catch {}
 
       const state =
         await this.getState();
 
       if (
-        body.roomCode !==
-        undefined
-      ) {
-        state.roomCode =
-          body.roomCode;
-      }
-
-      if (
-        body.round !==
-        undefined
+        body.round !== undefined
       ) {
         state.round =
-          Number(
-            body.round
-          );
+          Number(body.round);
       }
 
       if (
-        body.totalRounds !==
-        undefined
+        body.totalRounds !== undefined
       ) {
         state.totalRounds =
-          Number(
-            body.totalRounds
-          );
+          Number(body.totalRounds);
       }
 
       if (
-        body.drawerId !==
-        undefined
+        body.drawerId !== undefined
       ) {
         state.drawerId =
           body.drawerId;
       }
 
       if (
-        body.drawerName !==
-        undefined
+        body.drawerName !== undefined
       ) {
         state.drawerName =
           body.drawerName;
       }
 
-      if (
-        body.category !==
-        undefined
-      ) {
-        state.category =
-          body.category;
-      }
+      state.strokes = [];
+      state.started = true;
+      state.finished = false;
 
-      if (
-        body.word !==
-        undefined
-      ) {
-        state.word =
-          body.word;
-      }
+      await this.saveState(state);
 
-      state.strokes =
-        [];
-
-      state.started =
-        true;
-
-      state.finished =
-        false;
-
-      await this.saveState(
-        state
-      );
-
-      this.broadcast({
-        type:
-          "round",
-
+      await this.broadcast({
+        type: "round",
         state
       });
 
-      return json(
-        {
-          ok: true,
-
-          state
-        },
-
-        200,
-
-        origin
-      );
+      return json({
+        ok: true,
+        state
+      }, 200,
+      request.headers.get("Origin") || "");
     }
 
-    /* =====================================================
-       STROKE
-       
-       POST /draw/ROOM/stroke
-    ===================================================== */
+
+    /*
+     * ==========================================
+     * STROKE
+     * ==========================================
+     */
 
     if (
-      request.method ===
-        "POST" &&
-      url.pathname.endsWith(
-        "/stroke"
-      )
+      request.method === "POST" &&
+      url.pathname.endsWith("/stroke")
     ) {
       let stroke;
 
@@ -1135,836 +693,357 @@ export class DrawingRoom extends DurableObject {
         stroke =
           await request.json();
       } catch {
-        return json(
-          {
-            ok: false,
-
-            error:
-              "Invalid stroke"
-          },
-
-          400,
-
-          origin
-        );
+        return json({
+          ok: false,
+          error: "Invalid stroke"
+        }, 400,
+        request.headers.get("Origin") || "");
       }
 
       const state =
         await this.getState();
-
-      state.strokes.push(
-        stroke
-      );
 
       if (
-        state.strokes.length >
-        MAX_STROKES
+        state.strokes.length >= 10000
       ) {
         state.strokes =
-          state.strokes.slice(
-            -MAX_STROKES
-          );
+          state.strokes.slice(-9000);
       }
 
-      await this.saveState(
-        state
-      );
+      state.strokes.push(stroke);
+
+      await this.saveState(state);
 
       /*
-        Send only the new stroke.
-      */
-
-      this.broadcast({
-        type:
-          "stroke",
-
-        stroke,
-
-        version:
-          state.version
+       * Only send the new stroke.
+       * This makes drawing much faster.
+       */
+      await this.broadcast({
+        type: "stroke",
+        stroke
       });
 
-      return json(
-        {
-          ok: true,
-
-          version:
-            state.version
-        },
-
-        200,
-
-        origin
-      );
+      return json({
+        ok: true,
+        version: state.version
+      }, 200,
+      request.headers.get("Origin") || "");
     }
 
-    /* =====================================================
-       CLEAR
-       
-       POST /draw/ROOM/clear
-    ===================================================== */
+
+    /*
+     * ==========================================
+     * CLEAR
+     * ==========================================
+     */
 
     if (
-      request.method ===
-        "POST" &&
-      url.pathname.endsWith(
-        "/clear"
-      )
+      request.method === "POST" &&
+      url.pathname.endsWith("/clear")
     ) {
       const state =
         await this.getState();
 
-      state.strokes =
-        [];
+      state.strokes = [];
 
-      await this.saveState(
-        state
-      );
+      await this.saveState(state);
 
-      this.broadcast({
-        type:
-          "clear",
-
-        version:
-          state.version
+      await this.broadcast({
+        type: "clear",
+        version: state.version
       });
 
-      return json(
-        {
-          ok: true
-        },
-
-        200,
-
-        origin
-      );
+      return json({
+        ok: true
+      }, 200,
+      request.headers.get("Origin") || "");
     }
 
-    /* =====================================================
-       FINISH
-       
-       POST /draw/ROOM/finish
-    ===================================================== */
+
+    /*
+     * ==========================================
+     * FINISH
+     * ==========================================
+     */
 
     if (
-      request.method ===
-        "POST" &&
-      url.pathname.endsWith(
-        "/finish"
-      )
+      request.method === "POST" &&
+      url.pathname.endsWith("/finish")
     ) {
       const state =
         await this.getState();
 
-      state.finished =
-        true;
+      state.finished = true;
 
-      await this.saveState(
-        state
-      );
+      await this.saveState(state);
 
-      this.broadcast({
-        type:
-          "round_finished",
-
-        round:
-          state.round,
-
-        version:
-          state.version
+      await this.broadcast({
+        type: "round_finished",
+        round: state.round,
+        version: state.version
       });
 
-      return json(
-        {
-          ok: true,
-
-          round:
-            state.round
-        },
-
-        200,
-
-        origin
-      );
+      return json({
+        ok: true,
+        round: state.round
+      }, 200,
+      request.headers.get("Origin") || "");
     }
 
-    /* =====================================================
-       DELETE ROOM
-       
-       POST /draw/ROOM/delete
-    ===================================================== */
+
+    /*
+     * ==========================================
+     * DELETE ROOM
+     * ==========================================
+     */
 
     if (
-      request.method ===
-        "POST" &&
-      url.pathname.endsWith(
-        "/delete"
-      )
+      request.method === "POST" &&
+      url.pathname.endsWith("/delete")
     ) {
-      /*
-        Delete DRAWING ROOM DATA ONLY.
-
-        MATCHMAKER IS NOT TOUCHED.
-      */
-
-      this.broadcast({
-        type:
-          "room_deleted"
-      });
-
       await this.ctx.storage.deleteAll();
 
-      return json(
-        {
-          ok: true
-        },
+      await this.broadcast({
+        type: "room_deleted"
+      });
 
-        200,
-
-        origin
-      );
+      return json({
+        ok: true
+      }, 200,
+      request.headers.get("Origin") || "");
     }
 
-    return json(
-      {
-        ok: true,
 
-        service:
-          "drawing-room",
+    /*
+     * ==========================================
+     * ROOM HEALTH
+     * ==========================================
+     */
 
-        room:
-          url.pathname
-      },
-
-      200,
-
-      origin
-    );
+    return json({
+      ok: true,
+      service: "drawing-room",
+      websocket: true,
+      connections:
+        this.ctx.getWebSockets().length
+    }, 200,
+    request.headers.get("Origin") || "");
   }
 
-  /* =======================================================
-     WEBSOCKET HANDLER
-  ======================================================= */
 
-  async handleWebSocket(request) {
-    const url =
-      new URL(
-        request.url
-      );
+  /*
+   * ==========================================
+   * WEBSOCKET MESSAGE
+   * ==========================================
+   */
 
-    const playerId =
-      String(
-        url.searchParams.get(
-          "playerId"
-        ) || ""
-      ).trim();
-
-    const playerName =
-      String(
-        url.searchParams.get(
-          "playerName"
-        ) || ""
-      ).trim();
-
-    const team =
-      String(
-        url.searchParams.get(
-          "team"
-        ) || ""
-      ).trim();
-
-    const host =
-      url.searchParams.get(
-        "host"
-      ) === "1";
-
-    /*
-      IMPORTANT:
-      Do not create a WebSocket if
-      there is no player ID.
-    */
-
-    if (!playerId) {
-      return new Response(
-        "playerId is required",
-        {
-          status: 400
-        }
-      );
-    }
-
-    const pair =
-      new WebSocketPair();
-
-    const client =
-      pair[0];
-
-    const server =
-      pair[1];
-
-    /*
-      Accept the SERVER side.
-    */
-
-    server.accept();
-
-    /*
-      Store socket.
-    */
-
-    this.sockets.set(
-      server,
-      playerId
-    );
-
-    /*
-      Register/update player.
-    */
+  async webSocketMessage(ws, message) {
+    let data;
 
     try {
-      await this.addPlayer({
-        id:
-          playerId,
+      data =
+        typeof message === "string"
+          ? JSON.parse(message)
+          : null;
+    } catch {
+      data = null;
+    }
 
-        name:
-          playerName ||
-          "Player",
-
-        team:
-          team || null,
-
-        host,
-
-        bot:
-          false
-      });
-    } catch {}
+    if (!data) return;
 
     /*
-      Immediately send complete
-      room state to THIS player.
-    */
+     * Client can send:
+     *
+     * {type:"ping"}
+     * {type:"hello"}
+     */
+
+    if (data.type === "ping") {
+      try {
+        ws.send(
+          JSON.stringify({
+            type: "pong"
+          })
+        );
+      } catch {}
+    }
+
+    if (data.type === "hello") {
+      const attachment =
+        ws.deserializeAttachment();
+
+      try {
+        ws.send(
+          JSON.stringify({
+            type: "hello",
+            player: attachment,
+            connections:
+              this.ctx.getWebSockets().length
+          })
+        );
+      } catch {}
+    }
+  }
+
+
+  /*
+   * ==========================================
+   * WEBSOCKET CLOSE
+   * ==========================================
+   */
+
+  async webSocketClose(
+    ws,
+    code,
+    reason,
+    wasClean
+  ) {
+    /*
+     * Remove this player's presence
+     * and notify everyone.
+     */
 
     const state =
       await this.getState();
 
-    this.send(
-      server,
-      {
-        type:
-          "connected",
+    const players =
+      this.ctx.getWebSockets()
+        .filter(socket => socket !== ws)
+        .map(socket => {
+          try {
+            return socket.deserializeAttachment();
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean);
 
-        playerId,
+    state.players = players;
 
-        state
-      }
-    );
+    await this.saveState(state);
 
-    /*
-      Also send player list.
-    */
-
-    this.send(
-      server,
-      {
-        type:
-          "players",
-
-        players:
-          state.players
-      }
-    );
+    await this.broadcast({
+      type: "players",
+      players
+    });
 
     /*
-      Socket messages from client.
-    */
-
-    server.addEventListener(
-      "message",
-      async event => {
-        await this.handleSocketMessage(
-          server,
-          playerId,
-          event
-        );
-      }
-    );
-
-    server.addEventListener(
-      "close",
-      async () => {
-        this.sockets.delete(
-          server
-        );
-
-        await this.markOffline(
-          playerId
-        );
-      }
-    );
-
-    server.addEventListener(
-      "error",
-      async () => {
-        this.sockets.delete(
-          server
-        );
-
-        await this.markOffline(
-          playerId
-        );
-      }
-    );
-
-    /*
-      RETURN THE CLIENT SIDE.
-
-      This is critical for the browser
-      WebSocket handshake.
-    */
-
-    return new Response(
-      null,
-      {
-        status: 101,
-
-        webSocket:
-          client
-      }
-    );
+     * Cloudflare automatically handles
+     * the close response for hibernatable
+     * WebSockets.
+     */
   }
 
-  /* =======================================================
-     WEBSOCKET MESSAGE ROUTER
-  ======================================================= */
 
-  async handleSocketMessage(
-    socket,
-    playerId,
-    event
-  ) {
-    let message;
-
-    try {
-      if (
-        typeof event.data ===
-        "string"
-      ) {
-        message =
-          JSON.parse(
-            event.data
-          );
-      } else {
-        return;
-      }
-    } catch {
-      this.send(
-        socket,
-        {
-          type:
-            "error",
-
-          error:
-            "Invalid message"
-        }
-      );
-
-      return;
-    }
-
-    if (
-      !message ||
-      typeof message.type !==
-        "string"
-    ) {
-      return;
-    }
-
-    /* -----------------------------------------------------
-       PING
-    ----------------------------------------------------- */
-
-    if (
-      message.type ===
-      "ping"
-    ) {
-      this.send(
-        socket,
-        {
-          type:
-            "pong",
-
-          time:
-            Date.now()
-        }
-      );
-
-      return;
-    }
-
-    /* -----------------------------------------------------
-       PLAYER UPDATE
-    ----------------------------------------------------- */
-
-    if (
-      message.type ===
-      "player"
-    ) {
-      await this.addPlayer({
-        id:
-          playerId,
-
-        name:
-          message.name,
-
-        team:
-          message.team,
-
-        host:
-          !!message.host,
-
-        bot:
-          false
-      });
-
-      return;
-    }
-
-    /* -----------------------------------------------------
-       STROKE THROUGH WEBSOCKET
-    ----------------------------------------------------- */
-
-    if (
-      message.type ===
-      "stroke"
-    ) {
-      const state =
-        await this.getState();
-
-      const stroke =
-        message.stroke ||
-        message.data;
-
-      if (!stroke) {
-        return;
-      }
-
-      state.strokes.push(
-        stroke
-      );
-
-      if (
-        state.strokes.length >
-        MAX_STROKES
-      ) {
-        state.strokes =
-          state.strokes.slice(
-            -MAX_STROKES
-          );
-      }
-
-      await this.saveState(
-        state
-      );
-
-      this.broadcast({
-        type:
-          "stroke",
-
-        stroke,
-
-        playerId,
-
-        version:
-          state.version
-      });
-
-      return;
-    }
-
-    /* -----------------------------------------------------
-       CLEAR THROUGH WEBSOCKET
-    ----------------------------------------------------- */
-
-    if (
-      message.type ===
-      "clear"
-    ) {
-      const state =
-        await this.getState();
-
-      state.strokes =
-        [];
-
-      await this.saveState(
-        state
-      );
-
-      this.broadcast({
-        type:
-          "clear",
-
-        playerId,
-
-        version:
-          state.version
-      });
-
-      return;
-    }
-
-    /* -----------------------------------------------------
-       ROUND THROUGH WEBSOCKET
-    ----------------------------------------------------- */
-
-    if (
-      message.type ===
-      "round"
-    ) {
-      const state =
-        await this.getState();
-
-      const data =
-        message.state ||
-        message;
-
-      if (
-        data.round !==
-        undefined
-      ) {
-        state.round =
-          Number(
-            data.round
-          );
-      }
-
-      if (
-        data.totalRounds !==
-        undefined
-      ) {
-        state.totalRounds =
-          Number(
-            data.totalRounds
-          );
-      }
-
-      if (
-        data.drawerId !==
-        undefined
-      ) {
-        state.drawerId =
-          data.drawerId;
-      }
-
-      if (
-        data.drawerName !==
-        undefined
-      ) {
-        state.drawerName =
-          data.drawerName;
-      }
-
-      if (
-        data.category !==
-        undefined
-      ) {
-        state.category =
-          data.category;
-      }
-
-      if (
-        data.word !==
-        undefined
-      ) {
-        state.word =
-          data.word;
-      }
-
-      state.strokes =
-        [];
-
-      state.started =
-        true;
-
-      state.finished =
-        false;
-
-      await this.saveState(
-        state
-      );
-
-      this.broadcast({
-        type:
-          "round",
-
-        state
-      });
-
-      return;
-    }
-
-    /* -----------------------------------------------------
-       FINISH THROUGH WEBSOCKET
-    ----------------------------------------------------- */
-
-    if (
-      message.type ===
-      "finish"
-    ) {
-      const state =
-        await this.getState();
-
-      state.finished =
-        true;
-
-      await this.saveState(
-        state
-      );
-
-      this.broadcast({
-        type:
-          "round_finished",
-
-        round:
-          state.round,
-
-        version:
-          state.version
-      });
-
-      return;
-    }
+  async webSocketError(ws, error) {
+    /*
+     * Do not crash the room because one
+     * player's browser/network had an error.
+     */
+    console.error(
+      "Drawing WebSocket error:",
+      error
+    );
   }
 }
+
 
 /* =========================================================
    MAIN WORKER
 ========================================================= */
 
 export default {
-  async fetch(
-    request,
-    env
-  ) {
+  async fetch(request, env) {
     const origin =
-      request.headers.get(
-        "Origin"
-      ) || "";
+      request.headers.get("Origin") || "";
 
-    /* =====================================================
-       CORS
-    ===================================================== */
+    /*
+     * CORS
+     */
 
     if (
-      request.method ===
-      "OPTIONS"
+      request.method === "OPTIONS"
     ) {
-      return new Response(
-        null,
-        {
-          status: 204,
-
-          headers:
-            corsHeaders(
-              origin
-            )
-        }
-      );
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders(origin)
+      });
     }
 
     const url =
-      new URL(
-        request.url
-      );
+      new URL(request.url);
 
-    /* =====================================================
-       DRAWING ROOMS
 
-       /draw/ROOM
-       /draw/ROOM/state
-       /draw/ROOM/join
-       /draw/ROOM/leave
-       /draw/ROOM/round
-       /draw/ROOM/stroke
-       /draw/ROOM/clear
-       /draw/ROOM/finish
-       /draw/ROOM/delete
-    ===================================================== */
+    /*
+     * ==========================================
+     * DRAWING ROOMS
+     * ==========================================
+     *
+     * /draw/ROOM
+     * /draw/ROOM/state
+     * /draw/ROOM/round
+     * /draw/ROOM/stroke
+     * /draw/ROOM/clear
+     * /draw/ROOM/finish
+     * /draw/ROOM/delete
+     */
 
     if (
-      url.pathname.startsWith(
-        "/draw/"
-      )
+      url.pathname.startsWith("/draw/")
     ) {
-      const roomCode =
+      const roomName =
         url.pathname
-          .slice(
-            "/draw/".length
-          )
+          .slice("/draw/".length)
           .split("/")[0]
           .trim();
 
-      if (!roomCode) {
-        return json(
-          {
-            ok: false,
-
-            error:
-              "Drawing room is required"
-          },
-
-          400,
-
-          origin
-        );
+      if (!roomName) {
+        return json({
+          ok: false,
+          error: "Room code required"
+        }, 400, origin);
       }
 
+      /*
+       * IMPORTANT:
+       *
+       * Every player using the same room
+       * gets the exact same Durable Object.
+       */
       const id =
         env.DRAWING_ROOMS.idFromName(
-          roomCode
+          roomName.toUpperCase()
         );
 
       const room =
-        env.DRAWING_ROOMS.get(
-          id
-        );
+        env.DRAWING_ROOMS.get(id);
 
       /*
-        Pass the ORIGINAL request to
-        the Durable Object.
-
-        This is important for WebSocket
-        Upgrade requests.
-      */
-
-      return room.fetch(
-        request
-      );
+       * IMPORTANT:
+       *
+       * Return the DO response directly.
+       * Do NOT convert the 101 WebSocket
+       * response into JSON.
+       */
+      return room.fetch(request);
     }
 
-    /* =====================================================
-       EXISTING MATCHMAKING
 
-       NOTHING ABOVE CHANGES THIS.
-    ===================================================== */
+    /*
+     * ==========================================
+     * CODENAMES MATCHMAKING
+     * ==========================================
+     */
 
     if (
       !url.pathname.startsWith(
         "/matchmaking"
       )
     ) {
-      return json(
-        {
-          ok: true,
-
-          service:
-            "codenames-matchmaking"
-        },
-
-        200,
-
-        origin
-      );
+      return json({
+        ok: true,
+        service: "codenames-matchmaking"
+      }, 200, origin);
     }
 
     const id =
@@ -1973,79 +1052,58 @@ export default {
       );
 
     const stub =
-      env.MATCHMAKER.get(
-        id
-      );
+      env.MATCHMAKER.get(id);
 
     try {
-      /* ---------------------------------------------------
-         JOIN
-      --------------------------------------------------- */
+
+      /*
+       * JOIN
+       */
 
       if (
         url.pathname ===
           "/matchmaking/join" &&
-        request.method ===
-          "POST"
+        request.method === "POST"
       ) {
         const body =
           await request.json();
 
         const name =
-          String(
-            body?.name || ""
-          )
+          String(body?.name || "")
             .trim()
-            .slice(
-              0,
-              18
-            );
+            .slice(0, 18);
 
         const playerId =
           String(
-            body?.playerId ||
-              ""
+            body?.playerId || ""
           ).trim();
 
-        if (
-          !name ||
-          !playerId
-        ) {
-          return json(
-            {
-              error:
-                "name and playerId are required"
-            },
-
-            400,
-
-            origin
-          );
+        if (!name || !playerId) {
+          return json({
+            error:
+              "name and playerId are required"
+          }, 400, origin);
         }
 
         return json(
           await stub.join({
-            id:
-              playerId,
-
+            id: playerId,
             name
           }),
-
           200,
-
           origin
         );
       }
 
-      /* ---------------------------------------------------
-         STATUS
-      --------------------------------------------------- */
+
+      /*
+       * STATUS
+       */
 
       if (
         url.pathname ===
           "/matchmaking/status" &&
-        request.method ===
-          "GET"
+        request.method === "GET"
       ) {
         const playerId =
           String(
@@ -2055,98 +1113,65 @@ export default {
           ).trim();
 
         if (!playerId) {
-          return json(
-            {
-              error:
-                "playerId is required"
-            },
-
-            400,
-
-            origin
-          );
+          return json({
+            error:
+              "playerId is required"
+          }, 400, origin);
         }
 
         return json(
-          await stub.status(
-            playerId
-          ),
-
+          await stub.status(playerId),
           200,
-
           origin
         );
       }
 
-      /* ---------------------------------------------------
-         LEAVE
-      --------------------------------------------------- */
+
+      /*
+       * LEAVE
+       */
 
       if (
         url.pathname ===
           "/matchmaking/leave" &&
-        request.method ===
-          "POST"
+        request.method === "POST"
       ) {
         const body =
           await request.json();
 
         const playerId =
           String(
-            body?.playerId ||
-              ""
+            body?.playerId || ""
           ).trim();
 
         if (!playerId) {
-          return json(
-            {
-              error:
-                "playerId is required"
-            },
-
-            400,
-
-            origin
-          );
+          return json({
+            error:
+              "playerId is required"
+          }, 400, origin);
         }
 
         return json(
-          await stub.leave(
-            playerId
-          ),
-
+          await stub.leave(playerId),
           200,
-
           origin
         );
       }
 
-      return json(
-        {
-          error:
-            "Not found"
-        },
+      return json({
+        error: "Not found"
+      }, 404, origin);
 
-        404,
-
-        origin
-      );
     } catch (error) {
       console.error(
-        "MATCHMAKER ERROR:",
+        "Matchmaking error:",
         error
       );
 
-      return json(
-        {
-          error:
-            "Matchmaking server error"
-        },
-
-        500,
-
-        origin
-      );
+      return json({
+        error:
+          "Matchmaking server error"
+      }, 500, origin);
     }
   }
 };

@@ -19,6 +19,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- ===== GOOGLE VERIFICATION ===== -->
     <meta name="google-site-verification" content="25be7cf5605470fb" />
@@ -1921,6 +1922,302 @@
 .draw-timer-badge{padding:9px 13px;border-radius:11px;background:rgba(232,200,74,.12);border:1px solid rgba(232,200,74,.22);color:var(--gold);font-weight:1000;min-width:115px;text-align:center}
 .draw-mode-select{display:none!important}
 @media(max-width:760px){.draw-lobby-head{flex-direction:column;align-items:stretch}.draw-lobby-modes{grid-template-columns:1fr}.draw-join-row{flex-direction:column}.draw-start-big{width:100%;min-width:0}}
+</style>
+<style id="doodle-painting-ui">.doodle-skin{
+    --board:#F6F7FA;
+    --board-dot: rgba(31,36,48,0.08);
+    --ink:#1F2430;
+    --ink-soft:#66707E;
+    --wood-1:#C08A56;
+    --wood-2:#8A5A34;
+    --wood-3:#A87244;
+    --blue:#2D6CDF;
+    --red:#E8483F;
+    --green:#1FA971;
+    --yellow:#F2A93B;
+    --purple:#8B5CF6;
+    --pink:#EC4899;
+    --teal:#12ABA0;
+    --black:#22262F;
+    --white:#FFFFFF;
+    --card:#FFFFFF;
+    --shadow-sm: 0 2px 8px rgba(31,36,48,0.10);
+    --shadow-md: 0 10px 24px rgba(31,36,48,0.14);
+    --shadow-lg: 0 20px 48px rgba(31,36,48,0.20);
+    --radius-lg:28px;
+    --radius-md:18px;
+    --radius-sm:12px;
+  }
+.doodle-skin *{box-sizing:border-box;}
+.doodle-skin button{font-family:inherit;}
+.doodle-skin input{font-family:inherit;}
+.doodle-skin ::selection{background:var(--yellow); color:var(--black);}
+.doodle-skin .board-frame{
+    width:min(980px, 100%);
+    background:linear-gradient(155deg, var(--wood-1), var(--wood-2) 60%, var(--wood-3));
+    border-radius:34px;
+    padding:16px;
+    box-shadow: var(--shadow-lg), inset 0 2px 0 rgba(255,255,255,0.15);
+    position:relative;
+  }
+.doodle-skin .board-frame::before{
+    content:"";
+    position:absolute; inset:6px;
+    border-radius:28px;
+    border:2px solid rgba(255,255,255,0.18);
+    pointer-events:none;
+  }
+.doodle-skin .paper{
+    background:
+      radial-gradient(var(--board-dot) 1px, transparent 1.4px) 0 0/ 22px 22px,
+      var(--board);
+    border-radius:22px;
+    min-height:min(720px, 82vh);
+    display:flex;
+    flex-direction:column;
+    box-shadow: inset 0 0 0 1px rgba(31,36,48,0.05), inset 0 6px 18px rgba(31,36,48,0.06);
+    overflow:hidden;
+  }
+.doodle-skin .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px;
+    border-bottom:2px dashed rgba(31,36,48,0.12);
+    display:none;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+.doodle-skin .topbar.show{display:flex;}
+.doodle-skin .topbar .brand{
+    font-family:"Kalam",cursive; font-weight:700; font-size:20px; color:var(--ink);
+    display:flex; align-items:center; gap:8px;
+  }
+.doodle-skin .round-pill{
+    background:var(--white); border-radius:999px; padding:6px 14px;
+    font-weight:800; font-size:13px; box-shadow:var(--shadow-sm);
+    letter-spacing:.3px;
+  }
+.doodle-skin .score-strip{display:flex; gap:8px; flex-wrap:wrap;}
+.doodle-skin .score-chip{
+    display:flex; align-items:center; gap:6px;
+    background:var(--white); border-radius:999px; padding:5px 12px 5px 6px;
+    font-weight:800; font-size:12.5px; box-shadow:var(--shadow-sm);
+  }
+.doodle-skin .score-chip .dot{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.15);}
+.doodle-skin main#app{flex:1; display:flex; overflow:auto;}
+.doodle-skin .screen{
+    display:none;
+    width:100%;
+    padding:28px 26px 30px;
+    flex-direction:column;
+    align-items:center;
+    animation:fadeUp .35s ease;
+  }
+.doodle-skin .screen.active{display:flex;}
+@keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+.doodle-skin h1,
+.doodle-skin h2,
+.doodle-skin h3{font-family:"Kalam",cursive; margin:0 0 6px; color:var(--ink);}
+.doodle-skin .eyebrow{
+    font-weight:800; letter-spacing:1.5px; text-transform:uppercase; font-size:12px;
+    color:var(--ink-soft); margin-bottom:6px;
+  }
+.doodle-skin .subtitle{color:var(--ink-soft); font-weight:600; margin-bottom:26px; text-align:center; max-width:520px;}
+.doodle-skin .hero-title{font-size:clamp(38px,6vw,58px); text-align:center; line-height:1.05; margin-top:6px;}
+.doodle-skin .hero-title .stroke{color:var(--blue); position:relative;}
+.doodle-skin .hero-title .stroke2{color:var(--red);}
+.doodle-skin .mode-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:20px; width:100%; max-width:720px; margin-top:10px;
+  }
+@media (max-width:640px){.doodle-skin .mode-grid{grid-template-columns:1fr;}}
+.doodle-skin .mode-card{
+    background:var(--card); border-radius:var(--radius-lg); padding:26px 22px;
+    box-shadow:var(--shadow-md); border:3px solid transparent; cursor:pointer;
+    text-align:left; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    display:flex; flex-direction:column; gap:10px;
+  }
+.doodle-skin .mode-card:hover{transform:translateY(-5px) rotate(-0.4deg); box-shadow:var(--shadow-lg);}
+.doodle-skin .mode-card:active{transform:translateY(-1px);}
+.doodle-skin .mode-card .icon{font-size:34px;}
+.doodle-skin .mode-card h3{font-size:24px;}
+.doodle-skin .mode-card p{margin:0; color:var(--ink-soft); font-weight:600; font-size:14.5px; line-height:1.4;}
+.doodle-skin .mode-card.blue-b{border-color:#eaf0fe;}
+.doodle-skin .mode-card.blue-b:hover{border-color:var(--blue);}
+.doodle-skin .mode-card.red-b{border-color:#fdece9;}
+.doodle-skin .mode-card.red-b:hover{border-color:var(--red);}
+.doodle-skin .mode-card .go{
+    margin-top:4px; font-weight:800; font-size:13px; color:var(--blue); display:flex; align-items:center; gap:4px;
+  }
+.doodle-skin .mode-card.red-b .go{color:var(--red);}
+.doodle-skin .setup-card{
+    background:var(--card); border-radius:var(--radius-lg); box-shadow:var(--shadow-md);
+    padding:26px; width:100%; max-width:620px; display:flex; flex-direction:column; gap:20px;
+  }
+.doodle-skin .field-row{display:flex; gap:14px; flex-wrap:wrap;}
+.doodle-skin .field{flex:1; min-width:180px; display:flex; flex-direction:column; gap:6px;}
+.doodle-skin .field label{font-weight:800; font-size:12.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.5px;}
+.doodle-skin .field input[type=text]{
+    border:2px solid #E6E2D8; border-radius:var(--radius-sm); padding:11px 14px; font-size:15px;
+    font-weight:700; outline:none; transition:border-color .15s;
+    background:#FCFBF8;
+  }
+.doodle-skin .field input[type=text]:focus{border-color:var(--blue);}
+.doodle-skin .section-label{font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--ink-soft); margin-bottom:2px;}
+.doodle-skin .chip-row{display:flex; gap:9px; flex-wrap:wrap;}
+.doodle-skin .chip{
+    border:2px solid #E6E2D8; background:#FCFBF8; padding:9px 16px; border-radius:999px;
+    font-weight:800; font-size:14px; cursor:pointer; color:var(--ink-soft); transition:.15s;
+  }
+.doodle-skin .chip:hover{border-color:var(--blue);}
+.doodle-skin .chip.selected{background:var(--ink); border-color:var(--ink); color:#fff;}
+.doodle-skin .toggle-row{display:flex; align-items:center; justify-content:space-between; background:#FCFBF8; border:2px solid #E6E2D8; padding:12px 16px; border-radius:var(--radius-sm);}
+.doodle-skin .toggle-row span{font-weight:800; font-size:14px;}
+.doodle-skin .switch{position:relative; width:46px; height:26px;}
+.doodle-skin .switch input{opacity:0; width:0; height:0;}
+.doodle-skin .slider-tog{position:absolute; cursor:pointer; inset:0; background:#D8D3C6; border-radius:999px; transition:.2s;}
+.doodle-skin .slider-tog::before{content:""; position:absolute; width:20px; height:20px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:var(--shadow-sm);}
+.doodle-skin .switch input:checked + .slider-tog{background:var(--green);}
+.doodle-skin .switch input:checked + .slider-tog::before{transform:translateX(20px);}
+.doodle-skin .team-card{border:2px solid #E6E2D8; border-radius:var(--radius-md); padding:16px; display:flex; flex-direction:column; gap:10px;}
+.doodle-skin .team-card-head{display:flex; align-items:center; gap:10px;}
+.doodle-skin .team-color-dot{width:22px; height:22px; border-radius:50%; flex:none; box-shadow:inset 0 -3px 0 rgba(0,0,0,.15);}
+.doodle-skin .team-name-input{flex:1;}
+.doodle-skin .member-list{display:flex; flex-direction:column; gap:8px;}
+.doodle-skin .member-row{display:flex; gap:8px; align-items:center;}
+.doodle-skin .member-row input{flex:1;}
+.doodle-skin .icon-btn{
+    border:none; background:#F1EEE6; color:var(--ink-soft); width:34px; height:34px; border-radius:10px;
+    font-weight:900; cursor:pointer; flex:none; font-size:16px; line-height:1; display:flex; align-items:center; justify-content:center;
+    transition:.15s;
+  }
+.doodle-skin .icon-btn:hover{background:#E6E2D8; color:var(--ink);}
+.doodle-skin .ghost-btn{
+    border:2px dashed #CFC9BB; background:transparent; color:var(--ink-soft); font-weight:800;
+    padding:9px 14px; border-radius:var(--radius-sm); cursor:pointer; font-size:13.5px; transition:.15s;
+    align-self:flex-start;
+  }
+.doodle-skin .ghost-btn:hover{border-color:var(--blue); color:var(--blue);}
+.doodle-skin #teamsList{display:flex; flex-direction:column; gap:14px;}
+.doodle-skin .btn{
+    border:none; border-radius:999px; padding:14px 28px; font-weight:900; font-size:15.5px;
+    cursor:pointer; box-shadow:var(--shadow-sm); transition:transform .12s ease, box-shadow .12s ease;
+    letter-spacing:.2px;
+  }
+.doodle-skin .btn:hover{transform:translateY(-2px); box-shadow:var(--shadow-md);}
+.doodle-skin .btn:active{transform:translateY(0);}
+.doodle-skin .btn-primary{background:linear-gradient(135deg, var(--blue), #1f4fb0); color:#fff;}
+.doodle-skin .btn-danger{background:linear-gradient(135deg, var(--red), #b8271f); color:#fff;}
+.doodle-skin .btn-outline{background:#fff; color:var(--ink); border:2px solid #E6E2D8;}
+.doodle-skin .btn-block{width:100%;}
+.doodle-skin .btn-lg{padding:17px 30px; font-size:17px;}
+.doodle-skin .btn:disabled{opacity:.5; cursor:not-allowed; transform:none;}
+.doodle-skin .back-link{align-self:flex-start; background:none; border:none; color:var(--ink-soft); font-weight:800; cursor:pointer; margin-bottom:10px; font-size:14px; display:flex; align-items:center; gap:5px;}
+.doodle-skin .back-link:hover{color:var(--ink);}
+.doodle-skin .center-stage{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; width:100%; max-width:560px;}
+.doodle-skin .avatar-badge{
+    width:96px; height:96px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:"Kalam",cursive; font-weight:700; font-size:38px; color:#fff; margin-bottom:18px;
+    box-shadow:var(--shadow-md);
+  }
+.doodle-skin .pass-name{font-size:clamp(30px,5vw,44px); margin-bottom:8px;}
+.doodle-skin .pass-hint{color:var(--ink-soft); font-weight:700; margin-bottom:26px;}
+.doodle-skin .word-options{display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:8px;}
+.doodle-skin .word-opt{
+    background:var(--card); border:3px solid #E6E2D8; border-radius:var(--radius-md);
+    padding:22px 28px; font-family:"Kalam",cursive; font-size:22px; font-weight:700; cursor:pointer;
+    box-shadow:var(--shadow-sm); transition:.15s;
+  }
+.doodle-skin .word-opt:hover{border-color:var(--yellow); transform:translateY(-3px); box-shadow:var(--shadow-md);}
+.doodle-skin .countdown-num{font-family:"Kalam",cursive; font-size:110px; color:var(--blue); line-height:1;}
+.doodle-skin .draw-wrap{width:100%; max-width:920px; display:flex; flex-direction:column; gap:14px;}
+.doodle-skin .draw-head{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;}
+.doodle-skin .who-row{display:flex; gap:18px; flex-wrap:wrap;}
+.doodle-skin .who{font-weight:800; font-size:13.5px; color:var(--ink-soft);}
+.doodle-skin .who b{color:var(--ink); font-family:"Kalam",cursive; font-size:16px; font-weight:700;}
+.doodle-skin .word-hint{font-family:"Kalam",cursive; font-size:22px; letter-spacing:6px; color:var(--ink);}
+.doodle-skin .timer-wrap{display:flex; align-items:center; gap:10px; min-width:180px;}
+.doodle-skin .timer-num{font-weight:900; font-size:20px; width:34px; text-align:center;}
+.doodle-skin .timer-track{flex:1; height:10px; background:#E9E5D9; border-radius:999px; overflow:hidden;}
+.doodle-skin .timer-fill{height:100%; background:linear-gradient(90deg, var(--green), var(--yellow) 70%, var(--red)); width:100%; transition:width 1s linear;}
+.doodle-skin .draw-body{display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;}
+.doodle-skin .canvas-card{
+    background:#fff; border-radius:var(--radius-md); box-shadow:var(--shadow-md); padding:10px;
+    flex:1; min-width:280px;
+  }
+.doodle-skin #drawCanvas{width:100%; height:auto; display:block; border-radius:12px; background:#fff; touch-action:none; cursor:crosshair;}
+.doodle-skin .toolbar{
+    display:flex; flex-direction:column; gap:14px; background:#fff; border-radius:var(--radius-md);
+    box-shadow:var(--shadow-md); padding:16px; width:230px;
+  }
+@media (max-width:760px){.doodle-skin .toolbar{width:100%; flex-direction:row; flex-wrap:wrap; align-items:center;}}
+.doodle-skin .marker-tray{display:flex; gap:6px; flex-wrap:wrap; justify-content:center; padding:4px 2px;}
+.doodle-skin .swatch{
+    width:24px; height:52px; border-radius:14px; position:relative; cursor:pointer; flex:none;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.18), 0 3px 6px rgba(0,0,0,0.18);
+    transform:rotate(-9deg); transition:transform .15s, box-shadow .15s;
+  }
+.doodle-skin .swatch::after{content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%); width:13px; height:13px; border-radius:50%; background:rgba(255,255,255,.85);}
+.doodle-skin .swatch:hover{transform:rotate(-3deg) translateY(-3px);}
+.doodle-skin .swatch.selected{transform:rotate(0deg) translateY(-6px); box-shadow:0 0 0 3px #fff, 0 0 0 5px var(--ink), 0 6px 10px rgba(0,0,0,.25);}
+.doodle-skin .tool-row{display:flex; gap:8px;}
+.doodle-skin .tool-btn{
+    flex:1; border:2px solid #E6E2D8; background:#FCFBF8; border-radius:12px; padding:9px 6px;
+    font-weight:800; font-size:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:var(--ink-soft); transition:.15s;
+  }
+.doodle-skin .tool-btn span.emo{font-size:17px;}
+.doodle-skin .tool-btn:hover{border-color:var(--blue); color:var(--ink);}
+.doodle-skin .tool-btn.active{background:var(--ink); border-color:var(--ink); color:#fff;}
+.doodle-skin .brush-row{display:flex; align-items:center; gap:8px;}
+.doodle-skin .brush-row input[type=range]{flex:1; accent-color:var(--blue);}
+.doodle-skin .brush-preview{width:16px;height:16px;border-radius:50%;background:var(--ink); flex:none;}
+.doodle-skin .guess-bar{display:flex; gap:10px; background:#fff; border-radius:var(--radius-md); box-shadow:var(--shadow-md); padding:12px; align-items:center; flex-wrap:wrap;}
+.doodle-skin .guess-bar input{flex:1; min-width:160px; border:2px solid #E6E2D8; border-radius:999px; padding:12px 18px; font-weight:700; font-size:15px; outline:none;}
+.doodle-skin .guess-bar input:focus{border-color:var(--blue);}
+.doodle-skin .guess-bar.shake{animation:shake .35s;}
+@keyframes shake{ 10%,90%{transform:translateX(-2px);} 20%,80%{transform:translateX(4px);} 30%,50%,70%{transform:translateX(-8px);} 40%,60%{transform:translateX(8px);} }
+.doodle-skin .feedback-msg{font-weight:800; font-size:13px; min-height:18px; text-align:center;}
+.doodle-skin .feedback-msg.wrong{color:var(--red);}
+.doodle-skin .result-card{background:#fff; border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:26px; width:100%; max-width:520px; text-align:center;}
+.doodle-skin .result-badge{display:inline-block; padding:7px 18px; border-radius:999px; font-weight:900; font-size:13px; margin-bottom:14px; letter-spacing:.3px;}
+.doodle-skin .result-badge.correct{background:#E4F8ED; color:var(--green);}
+.doodle-skin .result-badge.wrong{background:#FBE9E7; color:var(--red);}
+.doodle-skin .result-word{font-family:"Kalam",cursive; font-size:32px; margin-bottom:14px;}
+.doodle-skin .result-canvas-wrap{border-radius:16px; overflow:hidden; box-shadow:var(--shadow-sm); border:2px solid #EFECE3; margin-bottom:16px; background:#fff;}
+.doodle-skin .result-canvas-wrap img{width:100%; display:block;}
+.doodle-skin .points-line{font-weight:800; color:var(--ink-soft); margin-bottom:18px;}
+.doodle-skin .points-line b{color:var(--ink); font-size:19px;}
+.doodle-skin .final-wrap{width:100%; max-width:820px; display:flex; flex-direction:column; align-items:center; gap:24px;}
+.doodle-skin .trophy{font-size:56px;}
+.doodle-skin .winner-line{font-family:"Kalam",cursive; font-size:clamp(26px,4vw,36px); text-align:center;}
+.doodle-skin .standings{width:100%; max-width:460px; display:flex; flex-direction:column; gap:10px;}
+.doodle-skin .standing-row{
+    display:flex; align-items:center; gap:12px; background:#fff; border-radius:16px; padding:12px 16px;
+    box-shadow:var(--shadow-sm);
+  }
+.doodle-skin .standing-rank{font-family:"Kalam",cursive; font-size:20px; width:26px; color:var(--ink-soft);}
+.doodle-skin .standing-row.first{border:2px solid var(--yellow); background:#FFFBEF;}
+.doodle-skin .standing-name{flex:1; font-weight:800;}
+.doodle-skin .standing-score{font-weight:900; font-size:18px;}
+.doodle-skin .gallery-title{margin-top:6px;}
+.doodle-skin .gallery-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; width:100%;}
+.doodle-skin .gallery-item{background:#fff; border-radius:16px; box-shadow:var(--shadow-sm); overflow:hidden; text-align:left;}
+.doodle-skin .gallery-item img{width:100%; display:block; aspect-ratio:4/3; object-fit:cover; background:#fafafa;}
+.doodle-skin .gallery-meta{padding:10px 12px;}
+.doodle-skin .gallery-word{font-family:"Kalam",cursive; font-size:16px; display:flex; align-items:center; gap:6px;}
+.doodle-skin .gallery-sub{font-size:11.5px; color:var(--ink-soft); font-weight:700; margin-top:2px;}
+.doodle-skin .tag-ok{color:var(--green);}
+.doodle-skin .tag-no{color:var(--red);}
+.doodle-skin .final-actions{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
+.doodle-skin #confettiLayer{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:999;}
+.doodle-skin .confetti-piece{position:absolute; top:-20px; border-radius:2px; animation:confettiFall linear forwards;}
+@keyframes confettiFall{
+    to{ transform:translateY(105vh) rotate(540deg); opacity:0.9; }
+  }
+@media (max-width:520px){.doodle-skin .screen{padding:20px 14px 24px;}
+.doodle-skin .setup-card{padding:20px;}}
+.doodle-skin{--board:#F6F7FA;--board-dot:rgba(31,36,48,.08);--ink:#1F2430;--ink-soft:#66707E;--wood-1:#C08A56;--wood-2:#8A5A34;--wood-3:#A87244;--blue:#2D6CDF;--red:#E8483F;--green:#1FA971;--yellow:#F2A93B;--white:#fff;--card:#fff;--shadow-sm:0 2px 8px rgba(31,36,48,.10);--shadow-md:0 10px 24px rgba(31,36,48,.14);--shadow-lg:0 20px 48px rgba(31,36,48,.20);--radius-lg:28px;--radius-md:18px;--radius-sm:12px;color:var(--ink);font-family:'Nunito',system-ui,sans-serif;width:100%;min-height:100%;}
+.doodle-skin .paint-room-chip{background:#fff;border-radius:999px;padding:6px 12px;font-weight:900;font-size:12px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:7px;direction:ltr}.doodle-skin .paint-room-chip code{font-family:monospace;letter-spacing:2px;font-size:14px}.doodle-skin .paint-status{font-weight:800;color:var(--ink-soft);font-size:12px}.doodle-skin .paint-lobby-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;width:100%;max-width:820px}.doodle-skin .paint-panel{background:#fff;border-radius:var(--radius-md);box-shadow:var(--shadow-md);padding:18px}.doodle-skin .paint-panel h3{font-size:22px;margin:0 0 10px}.doodle-skin .paint-input{width:100%;border:2px solid #E6E2D8;border-radius:var(--radius-sm);padding:11px 14px;font-size:15px;font-weight:700;outline:none;background:#FCFBF8;color:var(--ink)}.doodle-skin .paint-input:focus{border-color:var(--blue)}.doodle-skin .paint-players{display:flex;flex-direction:column;gap:8px}.doodle-skin .painting-player{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#FCFBF8;border:2px solid #E6E2D8;border-radius:12px;padding:9px 12px;font-weight:800;font-size:13px}.doodle-skin .painting-player.leader{border-color:var(--yellow);background:#FFFBEF}.doodle-skin .paint-note{color:var(--ink-soft);font-weight:700;font-size:12px;margin-top:9px}.doodle-skin .paint-controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}.doodle-skin .paint-controls select{width:100%}.doodle-skin #paintingCanvas{width:100%;height:auto;display:block;border-radius:12px;background:#fff;touch-action:none;cursor:crosshair}.doodle-skin .paint-side{width:250px;display:flex;flex-direction:column;gap:14px}.doodle-skin .paint-side .paint-panel{padding:15px}.doodle-skin .paint-side .paint-panel h3{font-size:19px}.doodle-skin .paint-chat{height:150px;overflow:auto;background:#FCFBF8;border:2px solid #E6E2D8;border-radius:12px;padding:9px;font-size:12px;font-weight:700}.doodle-skin .paint-chat>div{margin-bottom:6px}.doodle-skin .paint-guess-row{display:flex;gap:8px;margin-top:9px}.doodle-skin .paint-guess-row .paint-input{min-width:0}.doodle-skin .paint-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#fff;border-radius:var(--radius-md);box-shadow:var(--shadow-md);padding:12px}.doodle-skin .paint-toolbar .tool-btn{flex:1;min-width:72px}.doodle-skin .paint-toolbar .btn{padding:10px 15px;font-size:13px}.doodle-skin .paint-hidden,.doodle-skin .painting-hidden{display:none!important}.doodle-skin .paint-result{width:100%;max-width:920px;text-align:center}.doodle-skin .paint-room-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.doodle-skin .paint-head-title{font-family:'Kalam',cursive;font-size:24px;font-weight:700}.doodle-skin .paint-head-sub{font-size:12px;color:var(--ink-soft);font-weight:800}.doodle-skin .paint-draw-layout{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}.doodle-skin .paint-main{flex:1;min-width:280px;display:flex;flex-direction:column;gap:14px}.doodle-skin .paint-reveal{width:100%;border-radius:16px;box-shadow:var(--shadow-sm);border:2px solid #EFECE3;background:#fff}.doodle-skin .paint-gallery{width:100%;max-width:920px;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-top:4px}.doodle-skin .paint-gallery .gallery-item{background:#fff;border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden}.doodle-skin .paint-gallery .gallery-item img{width:100%;display:block;aspect-ratio:4/3;object-fit:cover;background:#fafafa}.doodle-skin .paint-gallery .gallery-meta{padding:10px 12px;font-weight:800;font-size:12px}
+@media(max-width:760px){.doodle-skin .paint-lobby-grid{grid-template-columns:1fr}.doodle-skin .paint-side{width:100%}.doodle-skin .paint-room-top{justify-content:flex-start}.doodle-skin .board-frame{padding:9px;border-radius:25px}.doodle-skin .paper{min-height:0}.doodle-skin .screen{padding:20px 14px 24px}.doodle-skin .paint-draw-layout{flex-direction:column}.doodle-skin .paint-side{order:2}}
 </style>
 </head>
 <body>
@@ -5891,14 +6188,8 @@ function skip(){if(canDraw(room()))emit({type:'skipPainting',actor:meName()});}
 function setText(id,v){const e=document.getElementById(id);if(e&&e.textContent!==v)e.textContent=v;}
 function buildLobby(){
   const s=document.getElementById('drawLobbyScreen');if(!s)return;
-  s.innerHTML=`<div class="painting-wrap"><div class="painting-card"><div class="painting-head"><div><div class="painting-title">🎨 Painting Mode</div><div class="painting-sub">غرفة رسم حقيقية: لاعب يرسم والباقي يخمنون</div></div><button class="painting-btn secondary" id="paintBack">↩ رجوع</button></div>
-  <div class="painting-lobby-grid"><div class="painting-panel"><h3>👤 دخول الغرفة</h3><input id="paintName" class="painting-input" maxlength="18" autocomplete="off" placeholder="اكتب اسمك"><button id="paintJoin" class="painting-btn" style="width:100%;margin-top:10px">انضم إلى الغرفة</button><div id="paintMsg" class="painting-note">لا يوجد حد أدنى. 3–6 لاعبين تجربة ممتازة.</div></div>
-  <div class="painting-panel"><h3>👥 اللاعبون</h3><div id="paintCount" class="painting-muted"></div><div id="paintPlayers" class="painting-players"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><select id="paintCategory" class="painting-input">${Object.entries(CATEGORY_LABELS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><select id="paintMode" class="painting-input">${Object.entries(MODES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><button id="paintStart" class="painting-btn" style="width:100%;margin-top:12px">🎨 ابدأ Painting Mode</button><div id="paintStartHint" class="painting-note"></div></div></div></div></div>`;
-  document.getElementById('paintJoin').onclick=join;document.getElementById('paintStart').onclick=start;document.getElementById('paintBack').onclick=()=>{try{leaveRoom()}catch(e){try{show('modeScreen')}catch(_){}}};
-  document.getElementById('paintName').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();join();}};
-  document.getElementById('paintCategory').onchange=e=>{currentCategory=e.target.value;emit({type:'setPaintingCategory',actor:meName(),category:currentCategory});};
-  document.getElementById('paintMode').onchange=e=>emit({type:'setPaintingMode',actor:meName(),mode:e.target.value});
-  uiBuilt=true;
+  s.innerHTML=`<div class="doodle-skin"><div class="board-frame"><div class="paper"><div class="topbar show"><div class="brand">🖍️ Doodle Duel — Painting Mode</div><div class="paint-room-top"><div class="paint-room-chip">🔑 ROOM <code id="paintRoomCode">----</code></div><div class="paint-status" id="paintConnStatus">● Online</div><button class="btn btn-outline" id="paintBack">↩ رجوع</button></div></div><section class="screen active"><div class="eyebrow">Online drawing room</div><h1 class="hero-title">One <span class="stroke">draws</span>, everyone <span class="stroke2">guesses</span>.</h1><p class="subtitle">انضم إلى الغرفة، ارسم عندما يحين دورك، وخمّن رسومات اللاعبين الآخرين.</p><div class="paint-lobby-grid"><div class="setup-card"><div><div class="eyebrow">Join room</div><h2>👤 دخول الغرفة</h2></div><div class="field"><label>اسم اللاعب</label><input id="paintName" maxlength="18" autocomplete="off" placeholder="اكتب اسمك" type="text"></div><button id="paintJoin" class="btn btn-primary btn-block btn-lg">انضم إلى الغرفة 🚀</button><div id="paintMsg" class="paint-note">لا يوجد حد أدنى. 3–6 لاعبين تجربة ممتازة.</div></div><div class="setup-card"><div><div class="eyebrow">Players & settings</div><h2>👥 اللاعبون</h2><div id="paintCount" class="paint-note"></div></div><div id="paintPlayers" class="paint-players"></div><div class="section-label">Category / Mode</div><div class="paint-controls"><select id="paintCategory" class="paint-input">${Object.entries(CATEGORY_LABELS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><select id="paintMode" class="paint-input">${Object.entries(MODES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><button id="paintStart" class="btn btn-primary btn-block btn-lg">🎨 ابدأ Painting Mode</button><div id="paintStartHint" class="paint-note"></div></div></div></section></div></div></div>`;
+  document.getElementById('paintJoin').onclick=join;document.getElementById('paintStart').onclick=start;document.getElementById('paintBack').onclick=()=>{try{leaveRoom()}catch(e){try{show('modeScreen')}catch(_){}}};document.getElementById('paintName').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();join();}};document.getElementById('paintCategory').onchange=e=>{currentCategory=e.target.value;emit({type:'setPaintingCategory',actor:meName(),category:currentCategory});};document.getElementById('paintMode').onchange=e=>emit({type:'setPaintingMode',actor:meName(),mode:e.target.value});uiBuilt=true;
 }
 function join(){
   const r=ensure(room());const i=document.getElementById('paintName');const n=String(i?.value||'').trim().replace(/\s+/g,' ').slice(0,18);if(!n){setText('paintMsg','✏️ اكتب اسمك أولاً.');i?.focus();return;}
@@ -5908,13 +6199,13 @@ function join(){
   if(typeof guestConn!=='undefined'&&guestConn?.open){try{guestConn.send({type:'join',name:n,team});setText('paintMsg','⏳ جاري الانضمام...');}catch(e){setText('paintMsg','❌ تعذر إرسال طلب الانضمام.');}}else setText('paintMsg','❌ الاتصال غير جاهز.');
 }
 function renderLobby(r){
-  if(!uiBuilt)buildLobby();r=ensure(r);const hs=humans(r),mine=hs.some(p=>p.name===meName()),lead=isLeader(r);setText('paintCount',hs.length+' لاعب — يمكن البدء الآن');
+  if(!uiBuilt)buildLobby();r=ensure(r);setText('paintRoomCode',roomCode||r.code||'----');const hs=humans(r),mine=hs.some(p=>p.name===meName()),lead=isLeader(r);setText('paintCount',hs.length+' لاعب — يمكن البدء الآن');
   const p=document.getElementById('paintPlayers');if(p)p.innerHTML=hs.length?hs.map(x=>`<div class="painting-player ${x.name===r.leader?'leader':''}"><span>👤 ${esc(x.name)}</span><span>${x.name===r.leader?'👑 قائد':'✓ جاهز'}</span></div>`).join(''):'<div class="painting-muted">لم ينضم أي لاعب بعد.</div>';
   const cat=document.getElementById('paintCategory'),mode=document.getElementById('paintMode');if(cat){cat.value=r.draw.category||currentCategory;cat.disabled=!lead||r.phase!=='lobby';}if(mode){mode.value=r.draw.mode||'classic';mode.disabled=!lead||r.phase!=='lobby';}
   const jb=document.getElementById('paintJoin'),sb=document.getElementById('paintStart');if(jb)jb.disabled=mine||r.phase!=='lobby';if(sb)sb.disabled=!lead||!mine||r.phase!=='lobby';setText('paintStartHint',!mine?'✏️ اكتب اسمك ثم انضم.':!lead?'👑 القائد يبدأ اللعبة.':'✅ اختر التصنيف والوضع ثم ابدأ.');
 }
 function renderGame(r){
-  if(!uiBuilt)buildGame();r=ensure(r);const d=r.draw||{},artist=d.artists?.[d.artistIndex]||'',mine=artist===meName(),phase=d.phase||'lobby';
+  if(!uiBuilt)buildGame();r=ensure(r);setText('paintRoomCode',roomCode||r.code||'----');const d=r.draw||{},artist=d.artists?.[d.artistIndex]||'',mine=artist===meName(),phase=d.phase||'lobby';
   setText('paintRound','الجولة '+(d.round||1)+' / '+(d.rounds||d.artists?.length||1));
   const remain=d.deadline?Math.max(0,Math.ceil((d.deadline-Date.now())/1000)):0;setText('paintTimer','⏱ '+remain);
   setText('paintPhase',phase==='drawing'?'🎨 الرسم':phase==='guessing'?'🤔 التخمين':phase==='reveal'?'🎉 النتيجة':phase==='finished'?'🏆 انتهت اللعبة':'⏳ الانتظار');
@@ -5932,14 +6223,12 @@ function renderGame(r){
   const result=document.getElementById('paintResult');if(result){if(phase==='reveal'){result.classList.remove('painting-hidden');result.innerHTML='<div>🔓 الكلمة كانت</div><div class="painting-result-word">'+esc(sub?.prompt||window.__paintingHostSecrets[artist+'|'+d.round]||'')+'</div>'+(d.guesses?.length?d.guesses.map(g=>`<div>${esc(g.name)} → ${g.correct?'✅ صحيح':'❌ خطأ'}</div>`).join(''):'');}else result.classList.add('painting-hidden');}
   const gallery=document.getElementById('paintGallery');if(gallery)gallery.innerHTML=(d.gallery||[]).map(g=>{const gi=paintingImages[String(g.round)]||'';return `<div class="painting-panel"><div style="font-weight:900">🎨 ${esc(g.artist)} ${g.winner?'🏆 '+esc(g.winner):''}</div>${gi?`<img src="${gi}" alt="">`:''}<div class="painting-muted">📝 ${esc(g.prompt||'')}</div></div>`;}).join('');
   const chatBox=document.getElementById('paintChat');if(chatBox){chatBox.innerHTML=(r.chat||[]).slice(-60).map(m=>`<div><b>${esc(m.name)}</b> ${esc(m.text)}</div>`).join('');chatBox.scrollTop=chatBox.scrollHeight;}
-  const next=document.getElementById('paintNext');if(next)next.remove();if(phase==='reveal'&&isLeader(r)){const b=document.createElement('button');b.id='paintNext';b.className='painting-btn';b.textContent=d.artistIndex+1<(d.artists||[]).length?'➡️ الرسام التالي':'🏆 إنهاء';b.onclick=()=>emit({type:'nextPainting',actor:meName()});document.querySelector('#drawScreen .painting-card')?.appendChild(b);}
+  const next=document.getElementById('paintNext');if(next)next.remove();if(phase==='reveal'&&isLeader(r)){const b=document.createElement('button');b.id='paintNext';b.className='btn btn-primary';b.textContent=d.artistIndex+1<(d.artists||[]).length?'➡️ الرسام التالي':'🏆 إنهاء';b.onclick=()=>emit({type:'nextPainting',actor:meName()});document.querySelector('#drawScreen .doodle-skin .paper')?.appendChild(b);}
   const phaseKey=phase+':'+d.round+':'+artist;if(phaseKey!==lastPhaseKey){lastPhaseKey=phaseKey;if(phase==='guessing'&&canGuess)setTimeout(()=>document.getElementById('paintGuess')?.focus(),30);if(phase==='drawing'&&d.round!==lastRound){lastRound=d.round;clearCanvas();}}
 }
 function buildGame(){
   const s=document.getElementById('drawScreen');if(!s)return;
-  s.innerHTML=`<div class="painting-wrap"><div class="painting-card"><div class="painting-head"><div><div class="painting-title">🎨 Painting Mode</div><div id="paintRound" class="painting-sub"></div></div><div><span id="paintTimer" class="painting-timer">⏱ 0</span> <button class="painting-btn secondary" id="paintLeave">↩ رجوع</button></div></div>
-  <div class="painting-game-grid"><main><div class="painting-panel"><div id="paintPhase"></div><div id="paintPrompt" class="painting-prompt"></div><div id="paintInfo" class="painting-muted"></div></div><div class="painting-canvas-wrap"><canvas id="paintingCanvas" width="1000" height="650"></canvas></div><div class="painting-tools"><button id="paintBlack">⚫</button><button id="paintRed">🔴</button><button id="paintBlue">🔵</button><button id="paintEraser">🧽</button><button id="paintClear">🧹 مسح</button><label class="painting-muted">حجم <input id="paintSize" type="range" min="2" max="24" value="8"></label><button id="paintSkip" class="painting-btn secondary">⏭️ تخطي</button><button id="paintSubmit" class="painting-btn">✅ أرسل الرسم</button></div><img id="paintRevealImage" class="painting-hidden" style="width:100%;border-radius:14px;margin-top:14px" alt="drawing"><div id="paintResult" class="painting-panel painting-hidden" style="margin-top:14px"></div></main>
-  <aside class="painting-side"><div class="painting-panel"><h3>🤔 خمن الكلمة</h3><div id="paintGuessState" class="painting-muted">اكتب تخمينك أثناء التخمين.</div><div class="painting-guess-row"><input id="paintGuess" class="painting-input" placeholder="اكتب تخمينك..." autocomplete="off"><button id="paintGuessBtn" class="painting-btn">خمن</button></div></div><div class="painting-panel"><h3>👥 اللاعبون</h3><div id="paintGamePlayers"></div></div><div class="painting-panel"><h3>💬 Chat</h3><div id="paintChat" class="painting-chat"></div><div class="painting-guess-row"><input id="paintChatInput" class="painting-input" placeholder="اكتب رسالة..." autocomplete="off"><button id="paintChatBtn" class="painting-btn">إرسال</button></div></div></aside></div><div id="paintGallery" class="painting-gallery"></div></div></div>`;
+  s.innerHTML=`<div class="doodle-skin"><div class="board-frame"><div class="paper"><div class="topbar show"><div class="brand">🖍️ Doodle Duel — Painting Mode</div><div class="paint-room-top"><div class="round-pill" id="paintRound">الجولة 1 / 1</div><div class="paint-room-chip">🔑 ROOM <code id="paintRoomCode">----</code></div><div class="paint-room-chip" id="paintTimer">⏱ 0</div><button class="btn btn-outline" id="paintLeave">↩ رجوع</button></div></div><section class="screen active"><div class="draw-wrap"><div class="draw-head"><div><div class="paint-head-title">🎨 Painting Mode</div><div class="paint-head-sub" id="paintPhase">⏳ الانتظار</div></div><div class="word-hint" id="paintPrompt">جاهز؟</div><div class="paint-status" id="paintInfo"></div></div><div class="paint-draw-layout"><main class="paint-main"><div class="canvas-card"><canvas id="paintingCanvas" width="1000" height="700"></canvas></div><div class="paint-toolbar"><button class="tool-btn" id="paintBlack"><span class="emo">⚫</span>Black</button><button class="tool-btn" id="paintRed"><span class="emo">🔴</span>Red</button><button class="tool-btn" id="paintBlue"><span class="emo">🔵</span>Blue</button><button class="tool-btn" id="paintEraser"><span class="emo">🧽</span>Erase</button><button class="tool-btn" id="paintClear"><span class="emo">🗑️</span>Clear</button><div class="brush-row"><div class="brush-preview"></div><input id="paintSize" type="range" min="2" max="28" value="8"></div><button id="paintSkip" class="btn btn-outline">Reveal & skip</button><button id="paintSubmit" class="btn btn-primary">Submit drawing ✅</button></div><img id="paintRevealImage" class="paint-reveal paint-hidden" alt="drawing"><div id="paintResult" class="result-card paint-result paint-hidden"></div></main><aside class="paint-side"><div class="paint-panel"><h3>🤔 خمن الكلمة</h3><div id="paintGuessState" class="paint-note">اكتب تخمينك أثناء التخمين.</div><div class="paint-guess-row"><input id="paintGuess" class="paint-input" placeholder="اكتب تخمينك..." autocomplete="off"><button id="paintGuessBtn" class="btn btn-primary">Guess ✅</button></div></div><div class="paint-panel"><h3>👥 اللاعبون</h3><div id="paintGamePlayers" class="paint-players"></div></div><div class="paint-panel"><h3>💬 Chat</h3><div id="paintChat" class="paint-chat"></div><div class="paint-guess-row"><input id="paintChatInput" class="paint-input" placeholder="اكتب رسالة..." autocomplete="off"><button id="paintChatBtn" class="btn btn-outline">إرسال</button></div></div></aside></div><div id="paintGallery" class="paint-gallery"></div></div></section></div></div></div>`;
   canvas=document.getElementById('paintingCanvas');initCanvas();document.getElementById('paintBlack').onclick=()=>{color='#111';eraser=false};document.getElementById('paintRed').onclick=()=>{color='#e53935';eraser=false};document.getElementById('paintBlue').onclick=()=>{color='#1976d2';eraser=false};document.getElementById('paintEraser').onclick=()=>{eraser=true};document.getElementById('paintClear').onclick=clearCanvas;document.getElementById('paintSize').oninput=e=>size=Number(e.target.value)||8;document.getElementById('paintSkip').onclick=skip;document.getElementById('paintSubmit').onclick=submit;document.getElementById('paintGuessBtn').onclick=guess;document.getElementById('paintGuess').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();guess();}};document.getElementById('paintChatBtn').onclick=chat;document.getElementById('paintChatInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();chat();}};document.getElementById('paintLeave').onclick=()=>{try{leaveRoom()}catch(e){try{show('modeScreen')}catch(_){}}};uiBuilt=true;
 }
 function scheduleTimeout(r){if(timer)clearTimeout(timer);const d=r?.draw;if(!d?.timeLimit)return;timer=setTimeout(()=>{const latest=ensure(room());const ld=latest.draw;if(ld.phase==='drawing'&&ld.deadline&&Date.now()>=ld.deadline){const a=ld.artists[ld.artistIndex];hostEvent({type:'skipPainting',actor:a});}},d.timeLimit*1000+150);}

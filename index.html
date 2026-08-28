@@ -6383,7 +6383,18 @@ function lobby(){
   $('cfLR').onchange=()=>settings({rounds:+$('cfLR').value});
   $('cfLT').onchange=()=>settings({timeLimit:+$('cfLT').value});
   $('cfLC').onchange=()=>settings({category:$('cfLC').value});
-  $('cfStart').onclick=()=>api('/draw/'+room+'/start',{playerId:me.id}).then(r=>setState(r.state)).catch(e=>toast('❌ '+e.message));
+ $('cfStart').onclick=() =>
+  api(
+    '/draw/' +
+    room +
+    '/start?playerId=' +
+    encodeURIComponent(me.id),
+    {
+      playerId: me.id
+    }
+  )
+  .then(r => setState(r.state))
+  .catch(e => toast('❌ ' + e.message));
  }
 }
 

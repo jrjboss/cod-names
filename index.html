@@ -6215,13 +6215,13 @@ setInterval(paintTick,1000);bindPaint();
 const API='https://codenames-matchmaking.junaidalbalushi123456789.workers.dev';
 const COLORS=['#22262f','#2d6cdf','#e8483f','#1fa971','#f2a93b','#8b5cf6','#ec4899','#12aba0','#ff6b35','#7c3aed','#0f766e','#111827'];
 const CATS={
- mixed:['Elephant','Pizza','Guitar','Rocket','Sunglasses','Waterfall','Skateboard','Dragon','Umbrella','Cactus','Robot','Snowman','Bicycle','Volcano','Butterfly','Camera','Lighthouse','Astronaut','Campfire','Kangaroo','Rainbow','Spaceship','Pirate ship','Mermaid','Dinosaur','Waffle','Tornado','Jellyfish','Skyscraper','Penguin','Ninja','Wizard','Octopus','Sandcastle','Telescope','Violin','Compass','Cupcake','Parachute','Panda','فيل','أسد','بيتزا','غيتار','صاروخ','نظارة','شلال','تزلج','تنين','مظلة','صبار','روبوت','رجل ثلج','دراجة','بركان','فراشة','كاميرا','منارة','رائد فضاء','مخيم','كنغر','قوس قزح','سفينة فضاء','سفينة قراصنة','حورية البحر','ديناصور','وافل','إعصار','قنديل بحر','ناطحة سحاب','بطريق','نينجا','ساحر','أخطبوط','قلعة رملية','تلسكوب','كمان','بوصلة','كب كيك','مظلة هبوط','باندا','طاووس','خيمة','فانوس','جسر','نحلة','عجلة','مرساة','عش','أسد البحر'],
- animals:['Cat','Dog','Lion','Elephant','Horse','Eagle','Shark','Butterfly','Penguin','Octopus','Tiger','Bear','Monkey','Rabbit','Turtle','Crocodile','Dolphin','Whale','Owl','Fox','Wolf','Panda','Kangaroo','Cheetah','فيل','أسد','قطة','كلب','حصان','نسر','قرش','فراشة','بطريق','أخطبوط','نمر','دب','قرد','أرنب','سلحفاة','تمساح','دولفين','حوت','بومة','ثعلب','ذئب','باندا','كنغر','فهد'],
- food:['Pizza','Burger','Ice cream','Apple','Banana','Watermelon','Cake','Donut','Fries','Chocolate','Sushi','Taco','Kebab','Falafel','Coffee','Tea','Waffle','Popcorn','Pancakes','Cupcake','بيتزا','برغر','آيس كريم','تفاحة','موزة','بطيخ','كعكة','دونات','بطاطس','شوكولاتة','سوشي','تاكو','كباب','فلافل','قهوة','شاي','وافل','بوشار','بان كيك','كب كيك'],
- objects:['Phone','Camera','Computer','Guitar','Crown','Umbrella','Clock','Glasses','Lamp','Key','Chair','Book','Pen','Scissors','Bag','Mirror','Cup','Spoon','Ball','Microphone','هاتف','كاميرا','كمبيوتر','غيتار','تاج','مظلة','ساعة','نظارة','مصباح','مفتاح','كرسي','كتاب','قلم','مقص','حقيبة','مرآة','كوب','ملعقة','كرة','ميكروفون'],
- places:['House','Castle','Beach','Island','Mountain','Volcano','School','Stadium','Airport','City','Village','Farm','Museum','Theater','Library','Garden','Desert','Forest','Harbor','Bridge','بيت','قلعة','شاطئ','جزيرة','جبل','بركان','مدرسة','ملعب','مطار','مدينة','قرية','مزرعة','متحف','مسرح','مكتبة','حديقة','صحراء','غابة','ميناء','جسر'],
- fantasy:['Dragon','Robot','Wizard','Space ship','Unicorn','Galaxy','Planet','Knight','Magic crown','Portal','Giant','Genie','Monster','Fairy','Phoenix','تنين','روبوت','ساحر','سفينة فضاء','وحيد قرن','مجرة','كوكب','فارس','تاج سحري','بوابة','عملاق','جني','وحش','جنية','فينيق'],
- anime:['Naruto','Goku','Luffy','Saitama','Itachi','Sasuke','Ichigo','Eren','Levi','Gojo','Sukuna','Tanjiro','Nezuko','Zenitsu','Zoro','Sanji','Shanks','Deku','Bakugo','Todoroki','Gon','Killua','نينجا','ساموراي','بطلة سحرية','روبوت عملاق','نينجا آلي','محارب مقنّع','شخصية شعرها طويل','وحش أنمي','سيف طاقة','بطل خارق']
+ mixed:['Elephant','Pizza','Guitar','Rocket','Sunglasses','Waterfall','Skateboard','Dragon','Umbrella','Cactus','Robot','Snowman','Bicycle','Volcano','Butterfly','Camera','Lighthouse','Astronaut','Campfire','Kangaroo','Rainbow','Spaceship','Pirate ship','Mermaid','Dinosaur','Waffle','Tornado','Jellyfish','Skyscraper','Penguin','Ninja','Wizard','Octopus','Sandcastle','Telescope','Violin','Compass','Cupcake','Parachute','Panda'],
+ animals:['Cat','Dog','Lion','Elephant','Horse','Eagle','Shark','Butterfly','Penguin','Octopus','Tiger','Bear','Monkey','Rabbit','Turtle','Crocodile','Dolphin','Whale','Owl','Fox','Wolf','Panda','Kangaroo','Cheetah'],
+ food:['Pizza','Burger','Ice cream','Apple','Banana','Watermelon','Cake','Donut','Fries','Chocolate','Sushi','Taco','Kebab','Falafel','Coffee','Tea','Waffle','Popcorn','Pancakes','Cupcake'],
+ objects:['Phone','Camera','Computer','Guitar','Crown','Umbrella','Clock','Glasses','Lamp','Key','Chair','Book','Pen','Scissors','Bag','Mirror','Cup','Spoon','Ball','Microphone'],
+ places:['House','Castle','Beach','Island','Mountain','Volcano','School','Stadium','Airport','City','Village','Farm','Museum','Theater','Library','Garden','Desert','Forest','Harbor','Bridge'],
+ fantasy:['Dragon','Robot','Wizard','Space ship','Unicorn','Galaxy','Planet','Knight','Magic crown','Portal','Giant','Genie','Monster','Fairy','Phoenix'],
+ anime:['Naruto','Goku','Luffy','Saitama','Itachi','Sasuke','Ichigo','Eren','Levi','Gojo','Sukuna','Tanjiro','Nezuko','Zenitsu','Zoro','Sanji','Shanks','Deku','Bakugo','Todoroki','Gon','Killua']
 };
 const CATN={mixed:'Mixed',animals:'Animals',food:'Food',objects:'Objects',places:'Places',fantasy:'Fantasy',anime:'Anime'};
 const $=id=>document.getElementById(id);
@@ -6506,8 +6506,8 @@ async function sendFinishedImage(blob){
  reader.onload=async()=>{
   try{
    didSubmit=true;
-   const dataUrl = reader.result;
-  const r=await api('/draw/'+room+'/submit',{playerId:me.id,image:dataUrl,contentType:'image/jpeg'});
+   const base64=String(reader.result).split(',')[1]||'';
+   const r=await api('/draw/'+room+'/submit',{playerId:me.id,image:base64,contentType:'image/jpeg'});
    setState(r.state);
   }catch(e){
    didSubmit=false;
@@ -6525,7 +6525,6 @@ function game(){
  // *** FIX START: Save current canvas before re-rendering ***
  let savedCanvas = null;
  if(canvas) savedCanvas = canvas.toDataURL();
-
  // *** FIX END ***
 
  main.innerHTML=`

@@ -1,4 +1,4 @@
-name = "codenames-matchmaking"
+﻿name = "codenames-matchmaking"
 main = "worker.js"
 compatibility_date = "2026-08-27"
 
@@ -12,4 +12,8 @@ class_name = "DrawingRoom"
 
 [[migrations]]
 tag = "v1"
-new_sqlite_classes = ["Matchmaker", "DrawingRoom"]
+new_sqlite_classes = ["Matchmaker"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["DrawingRoom"]

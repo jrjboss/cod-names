@@ -6506,8 +6506,8 @@ async function sendFinishedImage(blob){
  reader.onload=async()=>{
   try{
    didSubmit=true;
-   const base64=String(reader.result).split(',')[1]||'';
-   const r=await api('/draw/'+room+'/submit',{playerId:me.id,image:base64,contentType:'image/jpeg'});
+   const dataUrl = reader.result;
+  const r=await api('/draw/'+room+'/submit',{playerId:me.id,image:dataUrl,contentType:'image/jpeg'});
    setState(r.state);
   }catch(e){
    didSubmit=false;
